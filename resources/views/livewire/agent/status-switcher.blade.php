@@ -31,8 +31,8 @@
                    bg-zinc-900 shadow-xl z-50">
 
             @foreach ($statuses as $status)
-                <button
-                    wire:click="setStatus({{ $status->id }})"
+                <button type="button"
+                    wire:click.prevent="setStatus({{ $status->id }})"
                     @click="open = false"
                     class="flex w-full items-center gap-2
                            px-3 py-2 text-sm text-zinc-200
