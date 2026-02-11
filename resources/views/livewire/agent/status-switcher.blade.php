@@ -61,35 +61,3 @@
 
 </div>
 
-<script>
-    function statusTimer(startedAt) {
-        return {
-            startedAt,
-            time: '00:00:00',
-            interval: null,
-
-            start() {
-                this.tick()
-                this.interval = setInterval(() => this.tick(), 1000)
-            },
-
-            tick() {
-                if (!this.startedAt) return
-
-                const start = new Date(this.startedAt).getTime()
-                const now = Date.now()
-                const diff = Math.floor((now - start) / 1000)
-
-                const h = String(Math.floor(diff / 3600)).padStart(2, '0')
-                const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0')
-                const s = String(diff % 60).padStart(2, '0')
-
-                this.time = `${h}:${m}:${s}`
-            },
-
-            destroy() {
-                clearInterval(this.interval)
-            }
-        }
-    }
-</script>
