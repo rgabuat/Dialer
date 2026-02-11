@@ -23,11 +23,11 @@
         <div class="flex-1 flex flex-col">
 
             <!-- Topbar -->
-            {{-- <x-topbar title="Dashboard">
+            <x-topbar title="Dashboard">
                 <span class="text-sm text-gray-600">
                     {{ auth()->user()->name ?? 'User' }}
                 </span>
-            </x-topbar> --}}
+            </x-topbar>
             <div class="flex items-center justify-center py-2">
                 {{-- AGENT CONTROL BAR --}}
                 <div x-data="agentPhone()"
