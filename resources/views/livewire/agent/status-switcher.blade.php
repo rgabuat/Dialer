@@ -51,13 +51,14 @@
 
     {{-- LIVE TIMER --}}
     <div
-        wire:key="agent-status-timer-{{ $startedAt }}"
-        x-data="statusTimer('{{ $startedAt }}')"
-        x-init="start()"
-        class="rounded-md bg-zinc-900 px-3 py-1
-               text-xs font-mono text-zinc-400">
-        <span x-text="time"></span>
-    </div>
+    wire:ignore
+    x-data="statusTimer(@js($startedAt))"
+    x-init="start()"
+    x-effect="update(@js($startedAt))"
+    class="rounded-md bg-zinc-900 px-3 py-1 text-xs font-mono text-zinc-400"
+>
+    <span x-text="time"></span>
+</div>
 
 </div>
 
