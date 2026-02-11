@@ -2,7 +2,7 @@
 
     {{-- STATUS DROPDOWN --}}
     <div class="relative" x-data="{ open: false }">
-        <button
+        <button type="button"
             @click="open = !open"
             class="flex items-center gap-2 rounded-lg
                    bg-zinc-800 px-3 py-2 text-sm
