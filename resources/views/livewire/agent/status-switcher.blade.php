@@ -61,7 +61,7 @@
 
 </div>
 
-<script>
+{{-- <script>
     function statusTimer(startedAt) {
         return {
             startedAt,
@@ -92,4 +92,4 @@
             }
         }
     }
-</script>
+</script> --}}
