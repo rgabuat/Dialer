@@ -1,0 +1,64 @@
+# =========================
+# Dependencies
+# =========================
+/vendor/
+/node_modules/
+
+# =========================
+# Laravel
+# =========================
+/public/storage
+/storage/*.key
+/storage/app/*
+!/storage/app/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Laravel environment
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+
+# =========================
+# Build files
+# =========================
+/public/build
+/public/hot
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Testing
+# =========================
+/coverage
+
+# =========================
+# Misc
+# =========================
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
