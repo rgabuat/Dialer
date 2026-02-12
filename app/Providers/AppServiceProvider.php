@@ -36,10 +36,6 @@ class AppServiceProvider extends ServiceProvider
                 );
             });
 
-            Livewire::setUpdateRoute(function ($handle) use ($basePath) {
-                return Route::post($basePath . '/livewire/update', $handle);
-            });
-
         });
     }
 }
