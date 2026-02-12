@@ -69,8 +69,23 @@
             interval: null,
 
             start() {
+            this.startInterval()
+
+                window.addEventListener('agent-status-changed', (e) => {
+                    this.startedAt = e.detail.startedAt
+                    this.reset()
+                })
+            },
+
+            startInterval() {
                 this.tick()
                 this.interval = setInterval(() => this.tick(), 1000)
+            },
+
+            reset() {
+                clearInterval(this.interval)
+                this.time = '00:00:00'
+                this.startInterval()
             },
 
             tick() {

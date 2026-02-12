@@ -37,7 +37,10 @@ class StatusSwitcher extends Component
         $this->startedAt = now()->toIso8601String();
 
         // Optional: let other components react
-        $this->dispatch('agent-status-changed');
+        $this->dispatch(
+            'agent-status-changed',
+            startedAt: $this->startedAt
+        );
     }
 
     public function render()
