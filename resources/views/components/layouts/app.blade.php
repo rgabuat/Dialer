@@ -30,46 +30,7 @@
             </x-topbar>
             <div class="flex items-center justify-center py-2">
                 {{-- AGENT CONTROL BAR --}}
-<div
-    x-data="agentPhone()"
-    class="mb-2 flex items-center justify-between gap-4
-           rounded-xl border border-zinc-800 bg-zinc-900
-           px-4 py-3">
 
-    {{-- LEFT: STATUS DROPDOWN --}}
-    <div>
-        @livewire('agent.status-switcher')
-    </div>
-
-    {{-- RIGHT: CALL CONTROLS --}}
-    <div class="flex items-center gap-3">
-
-        {{-- ENABLE CALLING --}}
-        <button
-            @click="enableCalling"
-            :disabled="!canAcceptCalls"
-            class="rounded-lg px-5 py-2 text-sm font-semibold transition
-                   shadow
-                   "
-            :class="canAcceptCalls
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'">
-            Enable Calling
-        </button>
-
-        {{-- DIAL --}}
-        <button
-            @click="openDialer"
-            :disabled="!deviceReady"
-            class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-            :class="deviceReady
-                ? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
-                : 'bg-zinc-900 text-zinc-500 cursor-not-allowed'">
-            Dial
-        </button>
-
-    </div>
-</div>
 
                 {{-- DIAL MODAL --}}
 <div

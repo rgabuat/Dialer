@@ -18,7 +18,6 @@ class LeadCreate extends Component
 
     public function save()
     {
-        dd(auth()->check(), auth()->user());
         $this->validate();
 
         Lead::create([

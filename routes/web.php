@@ -47,7 +47,7 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 });
 
-Route::middleware(['auth'])->group(function () {
+
     Route::get('/', function () {
         return view('livewire.app.dashboard');
     })->name('dashboard');
@@ -95,5 +95,5 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/phone/access-token', [TwilioController::class, 'getAccessToken'])->name('twilio.getAccessToken');
 
-});
+
 
