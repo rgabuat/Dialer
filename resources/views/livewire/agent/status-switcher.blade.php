@@ -51,14 +51,45 @@
 
     {{-- LIVE TIMER --}}
     <div
-    wire:ignore
-    x-data="statusTimer(@js($startedAt))"
-    x-init="start()"
-    x-effect="update(@js($startedAt))"
-    class="rounded-md bg-zinc-900 px-3 py-1 text-xs font-mono text-zinc-400"
->
-    <span x-text="time"></span>
-</div>
+        wire:ignore
+        x-data="statusTimer(@js($startedAt))"
+        x-init="start()"
+        class="rounded-md bg-zinc-900 px-3 py-1 text-xs font-mono text-zinc-400"
+    >
+        <span x-text="time"></span>
+    </div>
 
 </div>
 
+<script>
+    function statusTimer(startedAt) {
+        return {
+            startedAt,
+            time: '00:00:00',
+            interval: null,
+
+            start() {
+                this.tick()
+                this.interval = setInterval(() => this.tick(), 1000)
+            },
+
+            tick() {
+                if (!this.startedAt) return
+
+                const start = new Date(this.startedAt).getTime()
+                const now = Date.now()
+                const diff = Math.floor((now - start) / 1000)
+
+                const h = String(Math.floor(diff / 3600)).padStart(2, '0')
+                const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0')
+                const s = String(diff % 60).padStart(2, '0')
+
+                this.time = `${h}:${m}:${s}`
+            },
+
+            destroy() {
+                clearInterval(this.interval)
+            }
+        }
+    }
+</script>
