@@ -26,15 +26,36 @@
 
     {{-- Permissions --}}
     <div class="mb-8">
-        <h2 class="text-sm font-semibold text-zinc-300 mb-3">
-            Assign Permissions
-        </h2>
+        @php $allPermNames = $groupedPermissions->flatten()->pluck('name')->toArray(); @endphp
+
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold text-zinc-300">Assign Permissions</h2>
+            <label class="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none">
+                <input
+                    type="checkbox"
+                    wire:click="toggleAll({{ json_encode($allPermNames) }})"
+                    @checked(count(array_diff($allPermNames, $permissions)) === 0 && count($allPermNames) > 0)
+                    class="rounded border-zinc-700 bg-zinc-900 text-blue-500 focus:ring-blue-500/30"
+                >
+                Select All
+            </label>
+        </div>
 
         @forelse($groupedPermissions as $module => $perms)
+            @php $modulePermNames = $perms->pluck('name')->toArray(); @endphp
             <div class="mb-5 border border-zinc-800 rounded-lg p-4">
 
-                <div class="text-xs uppercase font-semibold text-zinc-400 mb-3">
-                    {{ $module }}
+                <div class="flex items-center justify-between mb-3">
+                    <div class="text-xs uppercase font-semibold text-zinc-400">{{ $module }}</div>
+                    <label class="flex items-center gap-2 text-xs text-zinc-500 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            wire:click="toggleModule({{ json_encode($modulePermNames) }})"
+                            @checked(count(array_diff($modulePermNames, $permissions)) === 0)
+                            class="rounded border-zinc-700 bg-zinc-900 text-blue-500 focus:ring-blue-500/30"
+                        >
+                        All
+                    </label>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -42,7 +63,7 @@
                         <label class="flex items-center gap-2 text-sm text-white">
                             <input
                                 type="checkbox"
-                                wire:model.defer="permissions"
+                                wire:model="permissions"
                                 value="{{ $permission->name }}"
                                 class="rounded border-zinc-700 bg-zinc-900
                                        text-blue-500 focus:ring-blue-500/30"

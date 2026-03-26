@@ -6,6 +6,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Database\Seeders\DefaultSeeder;
 use Database\Seeders\AgentStatusTypeSeeder;
+use Database\Seeders\PermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,5 +24,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DefaultSeeder::class);
         $this->call(TimezoneSeeder::class);
         $this->call(AgentStatusTypeSeeder::class);
+        $this->call(PermissionSeeder::class);
     }
 }

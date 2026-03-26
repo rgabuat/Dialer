@@ -20,6 +20,26 @@ class RolesCreate extends Component
         ];
     }
 
+    public function toggleModule(array $perms): void
+    {
+        $allChecked = count(array_diff($perms, $this->permissions)) === 0;
+
+        if ($allChecked) {
+            $this->permissions = array_values(array_diff($this->permissions, $perms));
+        } else {
+            $this->permissions = array_values(array_unique(array_merge($this->permissions, $perms)));
+        }
+    }
+
+    public function toggleAll(array $allPerms): void
+    {
+        if (count(array_diff($allPerms, $this->permissions)) === 0) {
+            $this->permissions = [];
+        } else {
+            $this->permissions = array_values(array_unique(array_merge($this->permissions, $allPerms)));
+        }
+    }
+
     public function save()
     {
         $this->validate();
