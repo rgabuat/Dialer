@@ -27,7 +27,7 @@ return [
         'route' => 'users.index',
         'icon'  => 'heroicon-o-users',
         'segment' => 'users',
-        'permission' => null,
+        'permission' => 'user.view',
     ],
 
     [
@@ -35,7 +35,7 @@ return [
         'route' => 'roles.index',
         'icon'  => 'heroicon-o-shield-check',
         'segment' => 'roles',
-        'permission' => null,
+        'permission' => 'user.view',
     ],
 
     /*
@@ -49,7 +49,7 @@ return [
         'route' => 'reports.index',
         'icon'  => 'heroicon-o-chart-bar',
         'segment' => 'reports',
-        'permission' => null,
+        'permission' => 'audit_log.view',
     ],
 
     [
@@ -57,7 +57,7 @@ return [
         'route' => 'activitylogs.index',
         'icon'  => 'heroicon-o-clock',
         'segment' => 'activitylogs',
-        'permission' => null,
+        'permission' => 'activity_log.view',
     ],
 
     [
@@ -65,7 +65,7 @@ return [
         'route' => 'agent.status.index',
         'icon'  => 'heroicon-o-signal',
         'segment' => 'agent-status',
-        'permission' => null,
+        'permission' => 'agent_status.view',
     ],
 
     [
@@ -73,7 +73,7 @@ return [
         'route' => 'stores.index',
         'icon'  => 'heroicon-o-building-storefront',
         'segment' => 'stores',
-        'permission' => null,
+        'permission' => 'store.view',
     ],
 
     [
@@ -81,7 +81,7 @@ return [
         'route' => 'leads.index',
         'icon'  => 'heroicon-o-user-group',
         'segment' => 'leads',
-        'permission' => null,
+        'permission' => 'lead.view',
     ],
 
     /*

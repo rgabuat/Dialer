@@ -49,12 +49,10 @@
                 $icon       = $item['icon'] ?? null;
                 $permission = $item['permission'] ?? null;
 
-                // Permission check (safe if not logged in)
+                // Permission check
                 $canView = true;
-                if ($permission && auth()->check()) {
-                    $canView = auth()->user()->can($permission);
-                } elseif ($permission && !auth()->check()) {
-                    $canView = true;
+                if ($permission) {
+                    $canView = auth()->check() && auth()->user()->can($permission);
                 }
 
                 // Active state (safe)
@@ -68,7 +66,7 @@
                     : '#';
             @endphp
 
-           
+            @if ($canView)
                 <a
                     href="{{ $url }}"
                     wire:navigate
@@ -93,7 +91,7 @@
 
                     <span>{{ $label }}</span>
                 </a>
-            
+            @endif
 
         @empty
             <p class="text-sm text-gray-400 px-3">
