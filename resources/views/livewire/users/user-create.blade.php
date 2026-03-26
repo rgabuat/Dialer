@@ -83,6 +83,26 @@
                 </div>
             </div>
 
+            {{-- USER GROUP --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-zinc-800 pb-10">
+                <div>
+                    <h2 class="font-medium">User Group</h2>
+                    <p class="text-sm text-zinc-400">Assign the user to a group (required). The group determines which campaigns the user can access.</p>
+                </div>
+                <div class="md:col-span-3 space-y-3">
+                    <select wire:model.defer="selectedUserGroup"
+                        class="mt-1 w-full rounded-md bg-zinc-900 border border-zinc-800 px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                        <option value="">Select user group</option>
+                        @foreach ($userGroups as $group)
+                            <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('selectedUserGroup')
+                        <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
             {{-- META --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>

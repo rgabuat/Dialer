@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Campaign;
+use App\Models\UserGroup;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -35,5 +37,26 @@ class DefaultSeeder extends Seeder
         $superAdmin->syncPermissions(Permission::all());
 
         $admin->assignRole($superAdmin);
+
+        $campaign = Campaign::firstOrCreate(
+            ['name' => 'Admin Campaign'],
+            [
+                'description'  => 'Default campaign assigned to the Super Admin account.',
+                'phone_number' => env('TWILIO_PHONE_NUMBER', '+10000000000'),
+                'is_active'    => true,
+            ]
+        );
+
+        $group = UserGroup::firstOrCreate(
+            ['name' => 'Admin Group'],
+            [
+                'description' => 'Default user group for Super Admin.',
+                'is_active'   => true,
+            ]
+        );
+
+        $group->campaigns()->syncWithoutDetaching([$campaign->id]);
+
+        $admin->update(['user_group_id' => $group->id]);
     }
 }

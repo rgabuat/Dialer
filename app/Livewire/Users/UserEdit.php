@@ -3,6 +3,7 @@
 namespace App\Livewire\Users;
 
 use App\Models\User;
+use App\Models\UserGroup;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,10 @@ class UserEdit extends Component
     public array $roles = [];
     public string $selectedRole = '';
 
+    // User Group
+    public array $userGroups = [];
+    public ?int $selectedUserGroup = null;
+
     public function mount(User $user)
     {
         $this->user = $user;
@@ -45,6 +50,10 @@ class UserEdit extends Component
         // Fill role
         $this->roles        = Role::orderBy('name')->pluck('name')->toArray();
         $this->selectedRole = $user->roles->first()?->name ?? '';
+
+        // Fill user group
+        $this->userGroups        = UserGroup::where('is_active', true)->orderBy('name')->get(['id', 'name'])->toArray();
+        $this->selectedUserGroup = $user->user_group_id;
     }
 
     public function save()
@@ -63,6 +72,7 @@ class UserEdit extends Component
             'job_title'    => ['nullable', 'string', 'max:255'],
             'mobile'       => ['nullable', 'string', 'max:50'],
             'selectedRole' => ['nullable', 'string', 'exists:roles,name'],
+            'selectedUserGroup' => ['nullable', 'integer', 'exists:user_groups,id'],
         ]);
 
         // 🔹 Update user (UserObserver will log diffs)
@@ -83,6 +93,9 @@ class UserEdit extends Component
         if ($this->selectedRole) {
             $this->user->syncRoles([$this->selectedRole]);
         }
+
+        // 🔹 Update user group
+        $this->user->update(['user_group_id' => $this->selectedUserGroup]);
 
         $this->dispatch(
             'toast',

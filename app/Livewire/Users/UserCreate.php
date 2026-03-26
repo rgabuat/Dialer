@@ -3,6 +3,7 @@
 namespace App\Livewire\Users;
 
 use App\Models\User;
+use App\Models\UserGroup;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -34,11 +35,18 @@ class UserCreate extends Component
     public string $selectedRole = '';
 
     /* ============================
+     | User Group
+     |============================ */
+    public array $userGroups = [];
+    public ?int $selectedUserGroup = null;
+
+    /* ============================
      | Lifecycle
      |============================ */
     public function mount(): void
     {
-        $this->roles = Role::orderBy('name')->pluck('name')->toArray();
+        $this->roles      = Role::orderBy('name')->pluck('name')->toArray();
+        $this->userGroups = UserGroup::where('is_active', true)->orderBy('name')->get(['id', 'name'])->toArray();
     }
 
     /* ============================
@@ -52,12 +60,13 @@ class UserCreate extends Component
         );
 
         $data = $this->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name'  => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'unique:users,email'],
-            'password'   => ['required', Password::min(8)],
-            'job_title'  => ['nullable', 'string', 'max:255'],
-            'mobile'     => ['nullable', 'string', 'max:50'],
+            'first_name'        => ['required', 'string', 'max:255'],
+            'last_name'         => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'email', 'unique:users,email'],
+            'password'          => ['required', Password::min(8)],
+            'job_title'         => ['nullable', 'string', 'max:255'],
+            'mobile'            => ['nullable', 'string', 'max:50'],
+            'selectedUserGroup' => ['required', 'integer', 'exists:user_groups,id'],
         ]);
 
         $user = User::create([
@@ -69,6 +78,8 @@ class UserCreate extends Component
         ]);
 
         $user->assignRole($this->selectedRole);
+
+        $user->update(['user_group_id' => $this->selectedUserGroup]);
 
         if ($this->job_title) {
             $user->setMeta('job_title', $this->job_title);

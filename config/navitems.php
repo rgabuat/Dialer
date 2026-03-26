@@ -84,6 +84,22 @@ return [
         'permission' => 'lead.view',
     ],
 
+    [
+        'label' => 'Campaigns',
+        'route' => 'campaigns.index',
+        'icon'  => 'heroicon-o-megaphone',
+        'segment' => 'campaigns',
+        'permission' => 'campaign.view',
+    ],
+
+    [
+        'label' => 'User Groups',
+        'route' => 'user-groups.index',
+        'icon'  => 'heroicon-o-user-group',
+        'segment' => 'user-groups',
+        'permission' => 'user_group.view',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Settings

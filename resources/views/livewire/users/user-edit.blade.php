@@ -69,6 +69,21 @@
                         </div>
 
                         <div>
+                            <label class="text-sm text-zinc-400">User Group</label>
+                            <select wire:model.defer="selectedUserGroup"
+                                class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
+                                       px-3 py-2 text-white focus:border-indigo-500 focus:outline-none text-sm">
+                                <option value="">No group</option>
+                                @foreach ($userGroups as $group)
+                                    <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('selectedUserGroup')
+                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
                             <label class="text-sm text-zinc-400">New password <span class="text-zinc-600">(leave blank to keep current)</span></label>
                             <input wire:model.defer="password" type="password"
                                 class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800

@@ -61,12 +61,7 @@ class LoginController extends Controller
             subject: auth()->user()
         );
 
-        $otherStatus = AgentStatusType::where('slug', 'other')->first();
-        if ($otherStatus) {
-            AgentStatusService::change(auth()->user(), $otherStatus->id);
-        }
-
-        return redirect()->route('dashboard');
+        return redirect()->route('campaign.select');
     }
 
     public function logout(Request $request)
@@ -88,6 +83,7 @@ class LoginController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        // active_campaign_id is cleared with the session above
 
         return redirect('/login');
     }

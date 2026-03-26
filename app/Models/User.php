@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\UsersMeta;
+use App\Models\UserGroup;
 use App\Observers\UserObserver;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'remember_token',
         'email',    
         'password',
+        'user_group_id',
     ];
 
     /**
@@ -87,5 +89,26 @@ class User extends Authenticatable
             $meta->value = $value;
             $meta->save(); // ✅ safe, observer WILL fire
         }
+    }
+
+    public function userGroup()
+    {
+        return $this->belongsTo(UserGroup::class);
+    }
+
+    public function campaigns()
+    {
+        if (! $this->user_group_id || ! $this->userGroup) {
+            return collect();
+        }
+        return $this->userGroup->campaigns();
+    }
+
+    public function activeCampaign(): ?Campaign
+    {
+        $id = session('active_campaign_id');
+        if (! $id) return null;
+        if (! $this->user_group_id) return null;
+        return $this->userGroup->campaigns()->find($id);
     }
 }
