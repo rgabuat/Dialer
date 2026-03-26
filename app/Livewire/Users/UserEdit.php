@@ -7,6 +7,7 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rules\Password;
 
 class UserEdit extends Component
@@ -24,6 +25,10 @@ class UserEdit extends Component
     public ?string $job_title = null;
     public ?string $mobile = null;
 
+    // Role
+    public array $roles = [];
+    public string $selectedRole = '';
+
     public function mount(User $user)
     {
         $this->user = $user;
@@ -36,6 +41,10 @@ class UserEdit extends Component
         // Fill meta
         $this->job_title = $user->getMeta('job_title');
         $this->mobile    = $user->getMeta('mobile');
+
+        // Fill role
+        $this->roles        = Role::orderBy('name')->pluck('name')->toArray();
+        $this->selectedRole = $user->roles->first()?->name ?? '';
     }
 
     public function save()
@@ -47,12 +56,13 @@ class UserEdit extends Component
         );
 
         $data = $this->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name'  => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'unique:users,email,' . $this->user->id],
-            'password'   => ['nullable', Password::min(8)],
-            'job_title'  => ['nullable', 'string', 'max:255'],
-            'mobile'     => ['nullable', 'string', 'max:50'],
+            'first_name'   => ['required', 'string', 'max:255'],
+            'last_name'    => ['required', 'string', 'max:255'],
+            'email'        => ['required', 'email', 'unique:users,email,' . $this->user->id],
+            'password'     => ['nullable', Password::min(8)],
+            'job_title'    => ['nullable', 'string', 'max:255'],
+            'mobile'       => ['nullable', 'string', 'max:50'],
+            'selectedRole' => ['nullable', 'string', 'exists:roles,name'],
         ]);
 
         // 🔹 Update user (UserObserver will log diffs)
@@ -68,6 +78,11 @@ class UserEdit extends Component
         // 🔹 Update meta (UsersMetaObserver will log diffs)
         $this->user->setMeta('job_title', $this->job_title);
         $this->user->setMeta('mobile', $this->mobile);
+
+        // 🔹 Sync role
+        if ($this->selectedRole) {
+            $this->user->syncRoles([$this->selectedRole]);
+        }
 
         $this->dispatch(
             'toast',

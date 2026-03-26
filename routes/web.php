@@ -19,6 +19,7 @@ use App\Livewire\Settings\Preferences;
 use App\Http\Controllers\TwilioController;
 use App\Livewire\Permissions\PermissionsIndex;
 use App\Livewire\Activitylogs\ActivitylogsIndex;
+use App\Livewire\Agent\AgentStatusIndex;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -72,6 +73,9 @@ Route::middleware(['auth'])->group(function () {
     //activity logs
     Route::get('/activity-logs',ActivitylogsIndex::class)->name('activitylogs.index');
     Route::get('/activity-log/{log}/',ActivitylogsIndex::class)->name('activitylog.view');
+
+    //agent status
+    Route::get('/agent-status', AgentStatusIndex::class)->name('agent.status.index');
 
     //roles and permission
     Route::get('/roles',RolesIndex::class)->name('roles.index');

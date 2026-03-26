@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Livewire\Auth;
 use Illuminate\Http\Request;
 use App\Services\ActivityLogger;
 use App\Services\AuditLogService;
+use App\Services\AgentStatusService;
+use App\Models\AgentStatusType;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,6 +61,11 @@ class LoginController extends Controller
             subject: auth()->user()
         );
 
+        $otherStatus = AgentStatusType::where('slug', 'other')->first();
+        if ($otherStatus) {
+            AgentStatusService::change(auth()->user(), $otherStatus->id);
+        }
+
         return redirect()->route('dashboard');
     }
 
@@ -71,6 +78,11 @@ class LoginController extends Controller
             actor: auth()->user(),
             subject: auth()->user()
         );
+
+        $offlineStatus = AgentStatusType::where('slug', 'offline')->first();
+        if ($offlineStatus) {
+            AgentStatusService::change(auth()->user(), $offlineStatus->id);
+        }
 
         Auth::logout();
 

@@ -61,6 +61,14 @@ return [
     ],
 
     [
+        'label' => 'Agent Status',
+        'route' => 'agent.status.index',
+        'icon'  => 'heroicon-o-signal',
+        'segment' => 'agent-status',
+        'permission' => null,
+    ],
+
+    [
         'label' => 'Stores',
         'route' => 'stores.index',
         'icon'  => 'heroicon-o-building-storefront',

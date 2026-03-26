@@ -32,7 +32,7 @@
             </x-topbar>
             <div class="flex items-center justify-center py-2">
                 {{-- AGENT CONTROL BAR --}}
-                <div x-data="agentPhone()"
+                <div wire:ignore x-data="agentPhone()"
                     class="mb-2 flex items-center justify-between gap-4
            rounded-xl border border-zinc-800 bg-zinc-900
            px-4 py-3">

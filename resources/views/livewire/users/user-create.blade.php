@@ -83,46 +83,6 @@
                 </div>
             </div>
 
-            {{-- PERMISSIONS --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-zinc-800 pb-10">
-                <div>
-                    <h2 class="font-medium">Permissions</h2>
-                    <p class="text-sm text-zinc-400">
-                        Role permissions are locked. Extra permissions can be granted per user.
-                    </p>
-                </div>
-
-                <div class="md:col-span-3">
-
-                    @if ($allPermissions->isEmpty())
-                        <p class="text-sm text-zinc-500 italic">
-                            No permissions available.
-                        </p>
-                    @else
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div wire:key="permissions-for-role-{{ $selectedRole }}">
-                                @foreach ($allPermissions as $permission)
-                                    <label class="flex items-center gap-2">
-                                        <input type="checkbox" value="{{ $permission->name }}"
-                                            @if (in_array($permission->name, $rolePermissions, true)) checked
-                                                disabled
-                                            @else
-                                                wire:model.live="userPermissions" @endif />
-
-                                        <span>{{ $permission->name }}</span>
-
-                                        @if (in_array($permission->name, $rolePermissions, true))
-                                            <span class="text-xs text-zinc-400">(from role)</span>
-                                        @endif
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                </div>
-            </div>
-
             {{-- META --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>

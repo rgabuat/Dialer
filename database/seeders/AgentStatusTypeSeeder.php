@@ -55,6 +55,14 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_productive' => false,
                 'is_break' => false,
             ],
+            [
+                'name' => 'Offline',
+                'slug' => 'offline',
+                'color' => '#6b7280',
+                'is_available' => false,
+                'is_productive' => false,
+                'is_break' => false,
+            ],
         ]);
     }
 }

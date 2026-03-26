@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Models\AgentStatusType;
 use App\Services\ActivityLogger;
+use App\Services\AgentStatusService;
 
 class UserObserver
 {
@@ -28,6 +30,11 @@ class UserObserver
                     ->toArray(),
             ]
         );
+
+        $offlineStatus = AgentStatusType::where('slug', 'offline')->first();
+        if ($offlineStatus) {
+            AgentStatusService::change($user, $offlineStatus->id);
+        }
     }
 
     /**

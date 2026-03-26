@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\AgentStatus;
 use App\Models\AgentStatusLog;
+use App\Models\AgentStatusType;
+use App\Events\AgentStatusUpdated;
 
 class AgentStatusService
 {
@@ -40,5 +42,16 @@ class AgentStatusService
             'status_type_id' => $statusTypeId,
             'started_at' => $now,
         ]);
+
+        $statusType = AgentStatusType::find($statusTypeId);
+
+        broadcast(new AgentStatusUpdated([
+            'user_id'      => $user->id,
+            'user_name'    => $user->first_name . ' ' . $user->last_name,
+            'status_name'  => $statusType->name,
+            'status_color' => $statusType->color,
+            'is_available' => (bool) $statusType->is_available,
+            'started_at'   => $now->toIso8601String(),
+        ]));
     }
 }

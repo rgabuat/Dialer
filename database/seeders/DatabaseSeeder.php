@@ -21,9 +21,9 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $this->call(PermissionSeeder::class);
         $this->call(DefaultSeeder::class);
         $this->call(TimezoneSeeder::class);
         $this->call(AgentStatusTypeSeeder::class);
-        $this->call(PermissionSeeder::class);
     }
 }

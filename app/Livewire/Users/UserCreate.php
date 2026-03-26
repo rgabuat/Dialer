@@ -7,8 +7,6 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Collection;
 
 use Illuminate\Validation\Rules\Password;
 
@@ -35,72 +33,12 @@ class UserCreate extends Component
     public array $roles = [];
     public string $selectedRole = '';
 
-    /** @var \Illuminate\Support\Collection<int, Permission> */
-    public Collection $allPermissions;
-
-    /** @var string[] */
-    public array $rolePermissions = [];
-
-    /** @var string[] */
-    public array $userPermissions = [];
-
     /* ============================
      | Lifecycle
      |============================ */
     public function mount(): void
     {
         $this->roles = Role::orderBy('name')->pluck('name')->toArray();
-        $this->allPermissions = Permission::orderBy('name')->get();
-
-        if ($this->roles !== []) {
-            $this->selectedRole = $this->roles[0];
-            $this->loadRolePermissions();
-        }
-    }
-
-    public function updatedSelectedRole(): void
-    {
-        $this->resetPermissionState();
-        $this->loadRolePermissions();
-    }
-
-    /* ============================
-     | Permission Logic
-     |============================ */
-    protected function loadRolePermissions(): void
-    {
-        $role = Role::where('name', $this->selectedRole)->first();
-
-        $this->rolePermissions = $role
-            ? $role->permissions->pluck('name')->all()
-            : [];
-
-        // Remove inherited permissions from user overrides
-        $this->userPermissions = array_values(
-            array_diff($this->userPermissions, $this->rolePermissions)
-        );
-    }
-
-    protected function resetPermissionState(): void
-    {
-        $this->rolePermissions = [];
-        $this->userPermissions = [];
-    }
-
-    public function effectivePermissions(): array
-    {
-        return array_values(
-            array_unique([
-                ...$this->rolePermissions,
-                ...$this->userPermissions,
-            ])
-        );
-    }
-
-    public function permissionChecked(string $permission): bool
-    {
-        return in_array($permission, $this->rolePermissions, true)
-            || in_array($permission, $this->userPermissions, true);
     }
 
     /* ============================
@@ -131,14 +69,6 @@ class UserCreate extends Component
         ]);
 
         $user->assignRole($this->selectedRole);
-
-        // Only sync user-level overrides
-        $user->syncPermissions(
-            collect($this->userPermissions)
-                ->diff($this->rolePermissions)
-                ->values()
-                ->all()
-        );
 
         if ($this->job_title) {
             $user->setMeta('job_title', $this->job_title);

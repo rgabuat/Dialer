@@ -45,6 +45,41 @@
                     </div>
                 </div>
 
+                {{-- ACCESS --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-zinc-800 pb-10">
+                    <div>
+                        <h2 class="font-medium text-white">Access</h2>
+                        <p class="text-sm text-zinc-400">Role & password.</p>
+                    </div>
+
+                    <div class="md:col-span-3 space-y-6">
+                        <div>
+                            <label class="text-sm text-zinc-400">Role</label>
+                            <select wire:model="selectedRole"
+                                class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
+                                       px-3 py-2 text-white focus:border-indigo-500 focus:outline-none text-sm">
+                                <option value="">No role</option>
+                                @foreach ($roles as $role)
+                                    <option value="{{ $role }}">{{ ucfirst($role) }}</option>
+                                @endforeach
+                            </select>
+                            @error('selectedRole')
+                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-zinc-400">New password <span class="text-zinc-600">(leave blank to keep current)</span></label>
+                            <input wire:model.defer="password" type="password"
+                                class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
+                                       px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
+                            @error('password')
+                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ACTIONS --}}
                 <div class="flex justify-end pt-8">
                     <button type="submit"
