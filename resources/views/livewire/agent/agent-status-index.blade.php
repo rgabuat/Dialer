@@ -9,7 +9,11 @@
             window.dispatchEvent(new CustomEvent('agent-row-update', { detail: e }));
         }
     });">
-
+    {{-- Page title --}}
+    <div>
+        <h1 class="font-bold text-zinc-100 text-xl">Agent Status</h1>
+        <p class="mt-0.5 text-zinc-500 text-sm">Real-time status and availability of all agents.</p>
+    </div>
     {{-- STAT CARDS --}}
     <div class="gap-4 grid grid-cols-2 lg:grid-cols-4">
 
@@ -139,12 +143,16 @@
                                 sinceLabel: @js($status->started_at?->format('M d, H:i') ?? '—'),
                                 time: '00:00:00',
                                 interval: null,
-                                start() { this.tick();
-                                    this.interval = setInterval(() => this.tick(), 1000); },
-                                reset(s) { clearInterval(this.interval);
+                                start() {
+                                    this.tick();
+                                    this.interval = setInterval(() => this.tick(), 1000);
+                                },
+                                reset(s) {
+                                    clearInterval(this.interval);
                                     this.startedAt = s;
                                     this.time = '00:00:00';
-                                    this.start(); },
+                                    this.start();
+                                },
                                 tick() {
                                     if (!this.startedAt) return;
                                     const d = Math.floor((Date.now() - new Date(this.startedAt).getTime()) / 1000);

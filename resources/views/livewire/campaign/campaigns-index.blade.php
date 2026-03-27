@@ -1,4 +1,10 @@
-<div class="p-6">
+<div class="space-y-4 p-6">
+
+    {{-- Page title --}}
+    <div>
+        <h1 class="font-bold text-zinc-100 text-xl">Campaigns</h1>
+        <p class="mt-0.5 text-zinc-500 text-sm">Manage your outbound and inbound call campaigns.</p>
+    </div>
 
     {{-- CAMPAIGNS TABLE --}}
     <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">

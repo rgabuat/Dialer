@@ -1,4 +1,10 @@
-<div class="p-6">
+<div class="space-y-4 p-6">
+
+    {{-- Page title --}}
+    <div>
+        <h1 class="font-bold text-zinc-100 text-xl">Roles &amp; Permissions</h1>
+        <p class="mt-0.5 text-zinc-500 text-sm">Define roles and control what each role can access.</p>
+    </div>
 
     {{-- ROLES TABLE --}}
     <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
