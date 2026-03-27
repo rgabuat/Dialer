@@ -1,55 +1,54 @@
 <div class="p-6">
-    <div class="flex justify-between mb-4">
-        <h1 class="text-lg text-white font-semibold">Roles</h1>
-        <a href="{{ route('roles.create') }}" class="px-3 py-1.5 text-sm text-white rounded-md bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 ">New Role</a>
+
+    {{-- ROLES TABLE --}}
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+
+        {{-- Header --}}
+        <div class="flex justify-between items-center px-5 py-4 border-zinc-800 border-b">
+            <h2 class="font-bold text-white text-base">Roles</h2>
+            <a href="{{ route('roles.create') }}"
+                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition">
+                <x-heroicon-o-plus class="w-4 h-4" />
+                New Role
+            </a>
+        </div>
+
+        {{-- Table --}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-white text-sm">
+                <thead>
+                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                        <th class="px-5 py-3 text-left">Role</th>
+                        <th class="px-5 py-3 text-left">Permissions</th>
+                        <th class="px-5 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($roles as $role)
+                        <tr class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition">
+                            <td class="px-5 py-4 font-semibold text-white">{{ $role->name }}</td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">
+                                @if ($role->permissions_count > 0)
+                                    {{ $role->permissions_count }} permissions
+                                @else
+                                    <span class="italic">No permissions yet</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <a href="{{ route('roles.edit', $role) }}"
+                                    class="text-zinc-400 hover:text-white text-xs transition">Edit</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-5 py-16 text-zinc-500 text-center italic">No roles created yet.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
     </div>
 
-    <table class="w-full text-sm border border-zinc-800 rounded-lg overflow-hidden">
-        <thead class="bg-zinc-900 text-zinc-400 border-b border-zinc-800">
-            <tr class="text-left text-xs uppercase text-white">
-                <th class="px-4 py-3 font-medium">Role</th>
-                <th class="px-4 py-3 font-medium">Permissions</th>
-                <th class="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-        </thead>
-
-        <tbody class="divide-y divide-zinc-800 bg-zinc-900 text-white">
-
-        @forelse($roles as $role)
-            <tr class="hover:bg-zinc-800/40 transition">
-                <td class="px-4 py-3 font-medium">
-                    {{ $role->name }}
-                </td>
-
-                <td class="px-4 py-3">
-                    @if($role->permissions_count > 0)
-                        {{ $role->permissions_count }} permissions
-                    @else
-                        <span class="italic text-zinc-400">
-                            No permissions yet
-                        </span>
-                    @endif
-                </td>
-
-                <td class="px-4 py-3 text-right">
-                    <a
-                        href="{{ route('roles.edit', $role) }}"
-                        class="text-blue-400 hover:text-blue-300 transition"
-                    >
-                        Edit
-                    </a>
-                </td>
-            </tr>
-
-        @empty
-            <tr>
-                <td colspan="3" class="px-4 py-6 text-center text-zinc-400">
-                    No roles created yet
-                </td>
-            </tr>
-        @endforelse
-
-    </tbody>
-
-    </table>
 </div>

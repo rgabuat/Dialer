@@ -1,44 +1,57 @@
-<div class="text-zinc-100">
+<div class="p-6">
 
-    <div class="flex justify-between mb-6">
-        <h1 class="text-2xl font-semibold">Leads</h1>
-        <a href="{{ route('lead.create') }}" class="px-3 py-2 bg-blue-600 rounded-md text-sm">
-            + New Lead
-        </a>
-    </div>
+    {{-- LEADS TABLE --}}
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
 
-    <div class="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-        <table class="w-full text-sm">
-            <thead class="border-b border-zinc-800 text-zinc-400">
-                <tr>
-                    <th class="px-4 py-3 text-left">Name</th>
-                    <th class="px-4 py-3 text-left">Phone</th>
-                    <th class="px-4 py-3 text-left">Email</th>
-                    <th class="px-4 py-3 text-left">Store</th>
-                    <th class="px-4 py-3 text-left">Created By</th>
-                </tr>
-            </thead>
+        {{-- Header --}}
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
+            <h2 class="font-bold text-white text-base">Leads</h2>
+            <a href="{{ route('lead.create') }}"
+                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition">
+                <x-heroicon-o-plus class="w-4 h-4" />
+                New Lead
+            </a>
+        </div>
 
-            <tbody class="divide-y divide-zinc-800">
-                @foreach ($leads as $lead)
-                    <tr
-                        onclick="window.location='{{ route('lead.edit', $lead->id) }}'"
-                        class="hover:bg-zinc-800/40 cursor-pointer"
-                    >
-                        <td class="px-4 py-3 font-medium">
-                            {{ $lead->first_name }} {{ $lead->last_name }}
-                        </td>
-                        <td class="px-4 py-3">{{ $lead->phone ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ $lead->email ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ $lead->store->name }}</td>
-                        <td class="px-4 py-3">{{ $lead->creator->name }}</td>
+        {{-- Table --}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-white text-sm">
+                <thead>
+                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                        <th class="px-5 py-3 text-left">Name</th>
+                        <th class="px-5 py-3 text-left">Phone</th>
+                        <th class="px-5 py-3 text-left">Email</th>
+                        <th class="px-5 py-3 text-left">Store</th>
+                        <th class="px-5 py-3 text-left">Created By</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($leads as $lead)
+                        <tr onclick="window.location='{{ route('lead.edit', $lead->id) }}'"
+                            class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition cursor-pointer">
+                            <td class="px-5 py-4">
+                                <div class="font-semibold text-white">{{ $lead->first_name }} {{ $lead->last_name }}
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->phone ?? '—' }}</td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->email ?? '—' }}</td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->store->name }}</td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->creator->name }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-5 py-16 text-zinc-500 text-center italic">No leads found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-        <div class="px-4 py-3 border-t border-zinc-800">
+        {{-- Pagination --}}
+        <div class="px-5 py-3 border-zinc-800 border-t">
             {{ $leads->links('pagination::simple-tailwind') }}
         </div>
+
     </div>
+
 </div>

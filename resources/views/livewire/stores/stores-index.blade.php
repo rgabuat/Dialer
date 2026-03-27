@@ -1,86 +1,61 @@
-<div class="min-h-screen text-zinc-100">
+<div class="p-6">
 
-    {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight">Stores</h1>
-        <p class="text-sm text-zinc-400">Search stores.</p>
-    </div>
+    {{-- STORES TABLE --}}
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
 
-    {{-- Filters --}}
-    <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-2">
-            <button class="px-3 py-1.5 text-sm rounded-md bg-zinc-900 border border-zinc-800 hover:bg-zinc-800">
-                Brands
-            </button>
-
-            <button class="px-3 py-1.5 text-sm rounded-md bg-zinc-900 border border-zinc-800 hover:bg-zinc-800">
-                Stores
-            </button>
-
-            <button
-                class="w-8 h-8 flex items-center justify-center rounded-md bg-zinc-900 border border-zinc-800 hover:bg-zinc-800">
-                +
-            </button>
+        {{-- Header --}}
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
+            <h2 class="font-bold text-white text-base">Stores</h2>
+            <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search stores..."
+                class="bg-zinc-800 px-3 py-1.5 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 w-44 text-white text-sm placeholder-zinc-500">
         </div>
 
-        <div class="relative">
-            <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search"
-                class="w-64 pl-3 pr-10 py-2 text-sm rounded-md bg-zinc-900 border border-zinc-800 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600" />
-            <span class="absolute right-3 top-2.5 text-zinc-500">⌕</span>
-        </div>
-    </div>
-
-    {{-- Table --}}
-    <div class="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-
-        <table class="w-full text-sm">
-            <thead class="bg-zinc-900 text-zinc-400 border-b border-zinc-800">
-                <tr>
-                    <th class="px-4 py-3 text-left font-medium">Store Name</th>
-                    <th class="px-4 py-3 text-left font-medium">Address</th>
-                    <th class="px-4 py-3 text-left font-medium">Brand</th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-zinc-800">
-                @foreach ($stores as $store)
-                    <tr class="hover:bg-zinc-800/40 transition cursor-pointer"
-                        onclick="window.location='{{ route('store.edit', $store->id) }}'">
-                        {{-- Store Name --}}
-                        <td class="px-4 py-3">
-                            <div class="font-medium">
-                                {{ $store->name }}
-                            </div>
-                        </td>
-
-
-                        {{-- Address --}}
-                        <td class="px-4 py-3 text-zinc-300">
-                            {{ $store->address }}
-                        </td>
-
-                        {{-- Brand --}}
-                        <td class="px-4 py-3">
-                            <span
-                                class="inline-flex items-center px-2 py-1 text-xs rounded-md
-                                         bg-zinc-800 text-zinc-200">
-                                {{ $store->brand }}
-                            </span>
-                        </td>
+        {{-- Table --}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-white text-sm">
+                <thead>
+                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                        <th class="px-5 py-3 text-left">Store Name</th>
+                        <th class="px-5 py-3 text-left">Address</th>
+                        <th class="px-5 py-3 text-left">Brand</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($stores as $store)
+                        <tr class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition cursor-pointer"
+                            onclick="window.location='{{ route('store.edit', $store->id) }}'">
+                            <td class="px-5 py-4 font-semibold text-white">{{ $store->name }}</td>
+                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $store->address }}</td>
+                            <td class="px-5 py-4">
+                                <span
+                                    class="inline-flex items-center bg-zinc-800 px-2.5 py-1 rounded-md font-medium text-zinc-300 text-xs">
+                                    {{ $store->brand }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-5 py-16 text-zinc-500 text-center italic">No stores found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
         {{-- Pagination --}}
-        <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-800 text-sm text-zinc-400">
-            <span>
-                {{ $stores->firstItem() }} – {{ $stores->lastItem() }} of {{ $stores->total() }}
-            </span>
-
-            <div>
+        @if ($stores->hasPages())
+            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
+                <span class="text-zinc-500 text-xs">
+                    Showing
+                    <span class="font-medium text-white">{{ $stores->firstItem() }} – {{ $stores->lastItem() }}</span>
+                    of
+                    <span class="font-medium text-white">{{ number_format($stores->total()) }}</span>
+                    stores
+                </span>
                 {{ $stores->links('pagination::simple-tailwind') }}
             </div>
-        </div>
+        @endif
+
     </div>
+
 </div>
