@@ -47,7 +47,7 @@ x-init="
                                 statusColor: e.status_color,
                                 isAvailable: e.is_available,
                             }
-                        }));
+                        })); 
                     }
                 });
         " @endauth
@@ -57,13 +57,42 @@ x-init="
 
         <!-- Main column -->
         <div class="flex flex-col flex-1">
+            @php
+                // Resolve the active nav item label for the topbar title
+                $navItems = config('navitems');
+                $currentSegment = request()->segment(1);
+                $activeNavLabel = 'Dashboard';
+
+                foreach ($navItems as $_item) {
+                    if (!empty($_item['route']) && request()->routeIs($_item['route'])) {
+                        $activeNavLabel = $_item['label'];
+                        break;
+                    }
+                    foreach ($_item['segments'] ?? [] as $_seg) {
+                        if ($currentSegment === $_seg) {
+                            $activeNavLabel = $_item['label'];
+                            break 2;
+                        }
+                    }
+                    foreach ($_item['children'] ?? [] as $_child) {
+                        if (!empty($_child['segment']) && $currentSegment === $_child['segment']) {
+                            $activeNavLabel = $_item['label'];
+                            break 2;
+                        }
+                        if (!empty($_child['route']) && request()->routeIs($_child['route'])) {
+                            $activeNavLabel = $_item['label'];
+                            break 2;
+                        }
+                    }
+                }
+            @endphp
 
             <!-- Topbar -->
-            <x-topbar title="Dashboard">
-                <span class="text-gray-600 text-sm">
-                    {{ auth()->user()->name ?? 'User' }}
-                </span>
-            </x-topbar>
+            <x-topbar :title="$activeNavLabel" />
+
+            <!-- Section sub-navigation (tabs) -->
+            <x-subnav />
+
             <!-- Page content -->
             <main class="flex-1 bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto">
                 {{ $slot }}
