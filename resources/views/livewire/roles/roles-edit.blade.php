@@ -1,119 +1,148 @@
-<div class="max-w-4xl mx-auto p-6">
+<div class="max-w-4xl mx-auto px-6 py-8 space-y-6">
 
-    <h1 class="text-lg font-semibold text-white mb-6">
-        Edit Role: <span class="text-blue-400">{{ $role->name }}</span>
-    </h1>
+    {{-- Page Header --}}
+    <div>
+        <h1 class="text-2xl font-black uppercase tracking-wide text-white">
+            Edit Role: {{ strtoupper($role->name) }}
+        </h1>
+        <p class="text-sm text-zinc-400 mt-1 max-w-xl leading-relaxed">
+            Modify global permissions for the high-level administrative role. Changes will take effect immediately
+            for all associated team members.
+        </p>
+    </div>
 
-    {{-- Flash message --}}
+    {{-- Flash Messages --}}
     @if (session()->has('success'))
-        <div class="mb-4 rounded bg-green-700/30 border border-green-600 px-4 py-2 text-sm text-green-300">
+        <div class="rounded bg-green-700/30 border border-green-600 px-4 py-2 text-sm text-green-300">
             {{ session('success') }}
         </div>
     @endif
 
-    {{-- Role Name --}}
-    <div class="mb-6">
-        <label class="block text-sm text-zinc-400 mb-1">Role Name</label>
+    @if (session()->has('error'))
+        <div class="rounded bg-red-700/30 border border-red-600 px-4 py-2 text-sm text-red-300">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    {{-- Internal Role Name --}}
+    <div class="border border-zinc-700 rounded-lg p-5 bg-zinc-900/40">
+        <label class="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
+            Internal Role Name
+        </label>
         <input
             type="text"
-            wire:model="name"
-            class="w-full rounded bg-zinc-900 border border-zinc-800
-                   px-3 py-2 text-white focus:outline-none
-                   focus:ring focus:ring-blue-500/20"
+            wire:model.blur="name"
+            wire:blur="saveName"
+            class="w-full max-w-sm rounded bg-zinc-900 border border-zinc-700
+                   px-4 py-2.5 text-white font-semibold text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50
+                   transition"
         >
         @error('name')
             <div class="text-xs text-red-400 mt-1">{{ $message }}</div>
         @enderror
     </div>
 
-    {{-- Permissions --}}
-    <div class="mb-6">
-        <h2 class="text-sm font-semibold text-zinc-300 mb-3">Permissions</h2>
+    {{-- Module Permissions Table --}}
+    <div class="border border-zinc-700 rounded-lg overflow-hidden bg-zinc-900/40">
 
-        @forelse($groupedPermissions as $module => $perms)
-            <div class="mb-4 border border-zinc-800 rounded-lg p-4">
+        {{-- Table Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-700">
+            <span class="text-xs font-bold uppercase tracking-widest text-zinc-300">Module Permissions</span>
+            <span class="text-xs text-zinc-500">Auto-save: Enabled</span>
+        </div>
 
-                <div class="text-xs uppercase font-semibold text-zinc-400 mb-3">
-                    {{ $module }}
+        {{-- Column Headers --}}
+        <div class="grid grid-cols-5 gap-0 px-5 py-3 border-b border-zinc-800">
+            <div class="text-xs font-bold uppercase tracking-widest text-zinc-500">Module</div>
+            @foreach(['view', 'create', 'update', 'delete'] as $col)
+                <div class="text-xs font-bold uppercase tracking-widest text-zinc-500 text-center">
+                    {{ $col }}
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Module Rows --}}
+        @forelse($moduleActions as $module => $actions)
+            <div class="grid grid-cols-5 gap-0 items-center px-5 py-4 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-800/20 transition">
+                {{-- Module Label --}}
+                <div class="text-sm font-medium text-white">
+                    {{ ucwords(str_replace(['_', '-', '.'], ' ', $module)) }}
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    @foreach($perms as $permission)
-                        <div class="flex items-center justify-between gap-2">
-                            <label class="flex items-center gap-2 text-sm text-white">
-                                <input
-                                    type="checkbox"
-                                    wire:model="permissions"
-                                    value="{{ $permission->name }}"
-                                    class="rounded border-zinc-700 bg-zinc-900
-                                           text-blue-500 focus:ring-blue-500/30"
-                                >
-                                {{ $permission->name }}
-                            </label>
-
+                {{-- Action Toggles --}}
+                @foreach(['view', 'create', 'update', 'delete'] as $action)
+                    @php
+                        $permName   = $module . '.' . $action;
+                        $permExists = array_key_exists($action, $actions);
+                        $enabled    = in_array($permName, $permissions);
+                    @endphp
+                    <div class="flex justify-center">
+                        @if ($permExists)
                             <button
-                                wire:click="deletePermission({{ $permission->id }})"
-                                wire:confirm="Delete permission '{{ $permission->name }}' from the system? This affects all roles."
-                                class="text-zinc-600 hover:text-red-400 transition text-xs"
-                                title="Delete permission"
+                                wire:click="togglePermission('{{ $permName }}')"
+                                title="{{ $enabled ? 'Revoke' : 'Grant' }} {{ $permName }}"
+                                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
+                                       border-2 border-transparent transition-colors duration-200 ease-in-out
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500/30
+                                       {{ $enabled ? 'bg-blue-500' : 'bg-zinc-700' }}"
                             >
-                                &times;
+                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full
+                                             bg-white shadow ring-0 transition duration-200 ease-in-out
+                                             {{ $enabled ? 'translate-x-5' : 'translate-x-0' }}"></span>
                             </button>
-                        </div>
-                    @endforeach
-                </div>
-
+                        @else
+                            <span class="inline-flex h-6 w-11 rounded-full bg-zinc-800 opacity-25 cursor-not-allowed"></span>
+                        @endif
+                    </div>
+                @endforeach
             </div>
         @empty
-            <div class="text-sm italic text-zinc-500">No permissions available yet.</div>
+            <div class="px-5 py-6 text-sm italic text-zinc-500">No permissions defined yet.</div>
         @endforelse
+
     </div>
 
-    {{-- Add New Permission --}}
-    <div class="mb-8 border border-zinc-800 rounded-lg p-4">
-        <h2 class="text-sm font-semibold text-zinc-300 mb-3">Add New Permission</h2>
-        <p class="text-xs text-zinc-500 mb-3">Use dot notation, e.g. <code class="text-zinc-300">users.create</code></p>
+    {{-- Add New Permission Attribute --}}
+    <div class="relative border border-zinc-700 rounded-lg p-5 bg-zinc-900/40 overflow-hidden">
 
-        <div class="flex gap-2">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-300 mb-5">
+            Add New Permission Attribute
+        </h2>
+
+        <label class="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-2">
+            Dot-Notation Permission
+        </label>
+
+        <div class="flex gap-3">
             <input
                 type="text"
                 wire:model="newPermission"
                 wire:keydown.enter="addPermission"
-                placeholder="module.action"
-                class="flex-1 rounded bg-zinc-900 border border-zinc-800
-                       px-3 py-2 text-white text-sm focus:outline-none
-                       focus:ring focus:ring-blue-500/20"
+                placeholder="e.g., users.create.advanced"
+                class="flex-1 rounded bg-zinc-900 border border-zinc-700
+                       px-4 py-2.5 text-white text-sm placeholder-zinc-600
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50
+                       transition"
             >
             <button
                 wire:click="addPermission"
-                class="px-4 py-2 bg-zinc-700 hover:bg-zinc-600
-                       text-white text-sm rounded transition"
+                class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600
+                       text-white text-sm font-medium rounded transition whitespace-nowrap"
             >
-                Add
+                + Add
             </button>
         </div>
 
         @error('newPermission')
-            <div class="text-xs text-red-400 mt-1">{{ $message }}</div>
+            <div class="text-xs text-red-400 mt-2">{{ $message }}</div>
         @enderror
-    </div>
 
-    {{-- Actions --}}
-    <div class="flex items-center gap-3">
-        <button
-            wire:click="save"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-500
-                   text-white text-sm rounded transition"
-        >
-            Save Changes
-        </button>
+        <p class="text-xs text-zinc-600 mt-4 max-w-xl">
+            Advanced dot-notation allows for granular control over sub-resources. Ensure the schema is registered
+            in the core logic before deployment.
+        </p>
 
-        <a
-            href="{{ route('roles.index') }}"
-            class="text-sm text-zinc-400 hover:text-zinc-200"
-        >
-            Cancel
-        </a>
     </div>
 
 </div>

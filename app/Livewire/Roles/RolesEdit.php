@@ -18,7 +18,7 @@ class RolesEdit extends Component
         return [
             'name'          => 'required|string|unique:roles,name,' . $this->role->id,
             'permissions'   => 'array',
-            'newPermission' => 'nullable|string|regex:/^[a-z0-9_]+\.[a-z0-9_]+$/i',
+            'newPermission' => 'nullable|string|regex:/^[a-z0-9_]+(\.[a-z0-9_]+)+$/i',
         ];
     }
 
@@ -40,6 +40,25 @@ class RolesEdit extends Component
         session()->flash('success', 'Role updated successfully.');
     }
 
+    public function saveName(): void
+    {
+        $this->validateOnly('name');
+        $this->role->update(['name' => $this->name]);
+    }
+
+    public function togglePermission(string $permissionName): void
+    {
+        if (in_array($permissionName, $this->permissions)) {
+            $this->permissions = array_values(
+                array_filter($this->permissions, fn ($p) => $p !== $permissionName)
+            );
+        } else {
+            $this->permissions[] = $permissionName;
+        }
+
+        $this->role->syncPermissions($this->permissions);
+    }
+
     public function addPermission()
     {
         $this->validateOnly('newPermission');
@@ -52,6 +71,7 @@ class RolesEdit extends Component
             $this->permissions[] = $permission->name;
         }
 
+        $this->role->syncPermissions($this->permissions);
         $this->newPermission = '';
     }
 
@@ -71,10 +91,25 @@ class RolesEdit extends Component
 
     public function render()
     {
+        $moduleActions = [];
+
+        foreach (Permission::all() as $permission) {
+            $parts  = explode('.', $permission->name);
+            $module = $parts[0];
+            $action = $parts[1] ?? null;
+
+            // Only map standard 2-part permissions into the toggle table;
+            // sub-resource permissions (3+ parts) are skipped to avoid
+            // overwriting their parent entry.
+            if ($action !== null && count($parts) === 2) {
+                $moduleActions[$module][$action] = $permission;
+            }
+        }
+
+        ksort($moduleActions);
+
         return view('livewire.roles.roles-edit', [
-            'groupedPermissions' => Permission::all()->groupBy(
-                fn ($p) => explode('.', $p->name)[0]
-            ),
+            'moduleActions' => $moduleActions,
         ])->layout('components.layouts.app');
     }
 }
