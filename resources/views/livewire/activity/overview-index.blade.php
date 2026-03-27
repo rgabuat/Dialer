@@ -7,12 +7,12 @@
     </div>
 
     {{-- GRID: 2 columns on large screens --}}
-    <div class="gap-4 grid grid-cols-1 lg:grid-cols-2">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 stagger-children">
 
         {{-- ──────────────── LEFT COLUMN ──────────────── --}}
 
         {{-- Volume --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Volume</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>
@@ -31,7 +31,7 @@
         </div>
 
         {{-- Service --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Service</h3>
             <div class="gap-4 grid grid-cols-2">
                 <div>
@@ -50,7 +50,7 @@
         </div>
 
         {{-- Handled --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Handled</h3>
             <div class="gap-4 grid grid-cols-4">
                 <div>
@@ -73,7 +73,7 @@
         </div>
 
         {{-- Sales --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Sales</h3>
             <div class="gap-4 grid grid-cols-2">
                 <div class="flex items-center gap-3">
@@ -94,7 +94,7 @@
         </div>
 
         {{-- Abandoned Calls --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Abandoned Calls</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>
@@ -116,7 +116,7 @@
         </div>
 
         {{-- Agents --}}
-        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="space-y-4 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Agents</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>

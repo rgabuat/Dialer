@@ -15,10 +15,10 @@
         <p class="mt-0.5 text-zinc-500 text-sm">Real-time status and availability of all agents.</p>
     </div>
     {{-- STAT CARDS --}}
-    <div class="gap-4 grid grid-cols-2 lg:grid-cols-4">
+    <div class="gap-4 grid grid-cols-2 lg:grid-cols-4 stagger-children">
 
         {{-- Total Agents --}}
-        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <div class="flex justify-between items-start">
                 <span class="font-semibold text-zinc-500 text-xs uppercase tracking-widest">Total Agents</span>
                 <x-heroicon-o-user class="w-5 h-5 text-zinc-700" />
@@ -27,7 +27,7 @@
         </div>
 
         {{-- Available --}}
-        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <div class="flex justify-between items-start">
                 <span class="font-semibold text-zinc-500 text-xs uppercase tracking-widest">Available</span>
                 <x-heroicon-o-check-circle class="w-5 h-5 text-zinc-700" />
@@ -45,7 +45,7 @@
         </div>
 
         {{-- Unavailable --}}
-        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <div class="flex justify-between items-start">
                 <span class="font-semibold text-zinc-500 text-xs uppercase tracking-widest">Unavailable</span>
                 <x-heroicon-o-clock class="w-5 h-5 text-zinc-700" />
@@ -63,7 +63,7 @@
         </div>
 
         {{-- Avg. Time Offline --}}
-        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl">
+        <div class="flex flex-col gap-3 bg-zinc-900 p-5 border border-zinc-800 rounded-xl card-hover">
             <div class="flex justify-between items-start">
                 <span class="font-semibold text-zinc-500 text-xs uppercase tracking-widest">Avg. Offline</span>
                 <x-heroicon-o-no-symbol class="w-5 h-5 text-zinc-700" />
@@ -119,7 +119,7 @@
 
         {{-- Table --}}
         <div class="overflow-x-auto">
-            <table class="min-w-full text-white text-sm">
+            <table class="min-w-full text-white text-sm stagger-rows">
                 <thead>
                     <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Agent</th>

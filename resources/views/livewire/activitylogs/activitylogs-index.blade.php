@@ -1,4 +1,4 @@
-<div class="space-y-4 p-6">
+<div class="space-y-4 p-6 stagger-children">
 
     {{-- Page title --}}
     <div>
@@ -56,7 +56,7 @@
 
         {{-- Table --}}
         <div class="overflow-x-auto">
-            <table class="min-w-full text-white text-sm">
+            <table class="min-w-full text-white text-sm stagger-rows">
                 <thead>
                     <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Actor</th>

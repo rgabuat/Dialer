@@ -2,7 +2,9 @@
     --auth-bg: url('../images/background/diverImg.jpg');
 }
 
-/* Smooth theme transitions on all layout surfaces */
+/* ============================================================
+   Smooth theme transitions
+   ============================================================ */
 aside,
 header,
 nav,
@@ -23,4 +25,176 @@ select:-webkit-autofill {
     -webkit-box-shadow: 0 0 0px 1000px #0a0a0a inset;
     -webkit-text-fill-color: #ffffff;
     transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+
+/* Page / section fade-up */
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-up {
+    animation: fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Staggered children – add nth-child delays via CSS */
+.stagger-children>* {
+    animation: fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger-children>*:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.stagger-children>*:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.stagger-children>*:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.stagger-children>*:nth-child(4) {
+    animation-delay: 150ms;
+}
+
+.stagger-children>*:nth-child(5) {
+    animation-delay: 200ms;
+}
+
+.stagger-children>*:nth-child(6) {
+    animation-delay: 250ms;
+}
+
+.stagger-children>*:nth-child(7) {
+    animation-delay: 300ms;
+}
+
+.stagger-children>*:nth-child(8) {
+    animation-delay: 350ms;
+}
+
+.stagger-children>*:nth-child(9) {
+    animation-delay: 400ms;
+}
+
+.stagger-children>*:nth-child(10) {
+    animation-delay: 450ms;
+}
+
+.stagger-children>*:nth-child(n+11) {
+    animation-delay: 500ms;
+}
+
+/* Table row stagger */
+.stagger-rows tbody tr {
+    animation: fade-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger-rows tbody tr:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.stagger-rows tbody tr:nth-child(2) {
+    animation-delay: 40ms;
+}
+
+.stagger-rows tbody tr:nth-child(3) {
+    animation-delay: 80ms;
+}
+
+.stagger-rows tbody tr:nth-child(4) {
+    animation-delay: 120ms;
+}
+
+.stagger-rows tbody tr:nth-child(5) {
+    animation-delay: 160ms;
+}
+
+.stagger-rows tbody tr:nth-child(6) {
+    animation-delay: 200ms;
+}
+
+.stagger-rows tbody tr:nth-child(7) {
+    animation-delay: 240ms;
+}
+
+.stagger-rows tbody tr:nth-child(8) {
+    animation-delay: 280ms;
+}
+
+.stagger-rows tbody tr:nth-child(9) {
+    animation-delay: 320ms;
+}
+
+.stagger-rows tbody tr:nth-child(10) {
+    animation-delay: 360ms;
+}
+
+.stagger-rows tbody tr:nth-child(n+11) {
+    animation-delay: 400ms;
+}
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+    from {
+        background-position: -400px 0;
+    }
+
+    to {
+        background-position: 400px 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+/* Navigate progress bar */
+#nprogress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+    z-index: 9999;
+    transition: width 0.25s ease, opacity 0.4s ease;
+    box-shadow: 0 0 8px #6366f160;
+    border-radius: 0 2px 2px 0;
+}
+
+#nprogress-bar.done {
+    width: 100% !important;
+    opacity: 0;
+}
+
+/* Card hover lift */
+.card-hover {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Button press */
+button:not([disabled]):active,
+a[class*="rounded"]:active {
+    transform: scale(0.97);
 }

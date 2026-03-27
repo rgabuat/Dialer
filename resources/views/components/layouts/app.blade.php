@@ -37,9 +37,73 @@
 
     {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Navigate progress bar --}}
+    <style>
+        #nprogress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: linear-gradient(90deg, #6366f1, #818cf8);
+            z-index: 9999;
+            transition: width .25s ease, opacity .5s ease;
+            box-shadow: 0 0 8px #6366f160;
+            border-radius: 0 2px 2px 0;
+            pointer-events: none;
+        }
+
+        #nprogress-bar.done {
+            width: 100% !important;
+            opacity: 0;
+        }
+    </style>
+    <script>
+        (function() {
+            var bar = null;
+            var timer = null;
+
+            function getBar() {
+                if (!bar) {
+                    bar = document.getElementById('nprogress-bar');
+                }
+                return bar;
+            }
+
+            function start() {
+                var b = getBar();
+                if (!b) return;
+                b.classList.remove('done');
+                b.style.opacity = '1';
+                var w = 0;
+                clearInterval(timer);
+                timer = setInterval(function() {
+                    w = w < 70 ? w + Math.random() * 8 : w < 90 ? w + 1 : w;
+                    b.style.width = w + '%';
+                }, 120);
+            }
+
+            function done() {
+                var b = getBar();
+                if (!b) return;
+                clearInterval(timer);
+                b.style.width = '100%';
+                setTimeout(function() {
+                    b.classList.add('done');
+                    b.style.width = '0%';
+                }, 400);
+            }
+            document.addEventListener('livewire:navigate', start);
+            document.addEventListener('livewire:navigated', done);
+        })();
+    </script>
 </head>
 
 <body class="bg-zinc-100 dark:bg-[#0f1115] m-0 h-screen min-h-screen overflow-hidden transition-colors duration-300">
+
+    {{-- Navigate progress bar element --}}
+    <div id="nprogress-bar"></div>
 
     <div x-data="{ sidebarOpen: false }"
         @auth
@@ -119,8 +183,12 @@ x-init="
 
             <!-- Page content -->
             <main
-                class="flex-1 bg-zinc-100 dark:bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300">
-                {{ $slot }}
+                class="flex-1 bg-zinc-100 dark:bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300"
+                x-data
+                x-on:livewire:navigated.document="$el.classList.remove('animate-fade-up'); void $el.offsetWidth; $el.classList.add('animate-fade-up')">
+                <div class="animate-fade-up">
+                    {{ $slot }}
+                </div>
             </main>
         </div>
     </div>
