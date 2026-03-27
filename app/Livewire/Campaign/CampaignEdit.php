@@ -4,6 +4,8 @@ namespace App\Livewire\Campaign;
 
 use Livewire\Component;
 use App\Models\Campaign;
+use App\Models\User;
+use App\Events\CampaignDeleted;
 
 class CampaignEdit extends Component
 {
@@ -51,7 +53,18 @@ class CampaignEdit extends Component
 
     public function delete(): void
     {
+        $campaignId = $this->campaign->id;
+
+        // Collect all users in the campaign's user groups before deleting
+        $groupIds = $this->campaign->userGroups()->pluck('id');
+        $userIds  = User::whereIn('user_group_id', $groupIds)->pluck('id');
+
         $this->campaign->delete();
+
+        // Notify each affected user — they will be logged out if this was their active campaign
+        foreach ($userIds as $userId) {
+            broadcast(new CampaignDeleted($userId, $campaignId));
+        }
 
         $this->redirect(route('campaigns.index'), navigate: true);
     }

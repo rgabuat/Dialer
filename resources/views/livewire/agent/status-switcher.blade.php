@@ -1,7 +1,18 @@
+<div>{{-- single Livewire root --}}
 <div class="flex items-center gap-3">
 
     {{-- STATUS DROPDOWN --}}
-    <div class="relative" x-data="{ open: false }">
+    <div class="relative"
+        x-data="{
+            open: false,
+            statusName:  @js($currentStatus->name  ?? 'Other'),
+            statusColor: @js($currentStatus->color ?? '#6b7280'),
+        }"
+        @agent-status-changed.window="
+            statusName  = $event.detail.statusName;
+            statusColor = $event.detail.statusColor;
+        "
+    >
         <button type="button"
             @click="open = !open"
             class="flex items-center gap-2 rounded-lg
@@ -10,10 +21,10 @@
 
             <span
                 class="h-2 w-2 rounded-full"
-                style="background: {{ $currentStatus->color ?? '#6b7280' }}"
+                :style="`background: ${statusColor}`"
             ></span>
 
-            {{ $currentStatus->name ?? 'Other' }}
+            <span x-text="statusName"></span>
 
             <svg class="h-4 w-4 opacity-60" fill="none" stroke="currentColor"
                  viewBox="0 0 24 24">
@@ -108,3 +119,4 @@
         }
     }
 </script>
+</div>

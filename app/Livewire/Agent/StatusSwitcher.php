@@ -30,17 +30,21 @@ class StatusSwitcher extends Component
     public function setStatus(int $statusId)
     {
         // Change status via service (logs + history + broadcast)
-        AgentStatusService::change(auth()->user(), $statusId);
+        $startedAt = AgentStatusService::change(auth()->user(), $statusId);
 
         $statusType = AgentStatusType::find($statusId);
-        $now = now()->toIso8601String();
+        $now = $startedAt->toIso8601String();
 
         // Update local UI state
         $this->currentStatus = $statusType;
         $this->startedAt = $now;
 
         // Let status timer in this component react
-        $this->dispatch('agent-status-changed', startedAt: $now);
+        $this->dispatch('agent-status-changed',
+            startedAt:   $now,
+            statusName:  $statusType->name,
+            statusColor: $statusType->color,
+        );
 
         // Let the agent status index react (same browser tab, self-update)
         $this->dispatch('agent-row-update', [

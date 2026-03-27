@@ -17,7 +17,41 @@
 
 <body class="bg-gray-100 min-h-screen h-screen m-0 overflow-hidden">
 
-    <div x-data="{ sidebarOpen: false }" class="flex h-full">
+    <div x-data="{ sidebarOpen: false }"
+        @auth
+        x-init="
+            const activeCampaignId = {{ session('active_campaign_id', 0) }};
+            const currentUserId    = {{ auth()->id() }};
+
+            // Logout this tab if the active campaign was deleted
+            window.Echo.private('App.Models.User.' + currentUserId)
+                .listen('.CampaignDeleted', function (e) {
+                    if (activeCampaignId && parseInt(e.campaign_id) === parseInt(activeCampaignId)) {
+                        fetch('{{ route('logout') }}', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                        }).finally(function () {
+                            window.location.href = '{{ route('login') }}';
+                        });
+                    }
+                });
+
+            // Sync the status switcher button across all open tabs via broadcast
+            window.Echo.private('agent-status')
+                .listen('.AgentStatusUpdated', function (e) {
+                    if (e.user_id === currentUserId) {
+                        window.dispatchEvent(new CustomEvent('agent-status-changed', {
+                            detail: {
+                                startedAt:   e.started_at,
+                                statusName:  e.status_name,
+                                statusColor: e.status_color,
+                            }
+                        }));
+                    }
+                });
+        "
+        @endauth
+        class="flex h-full">
         <!-- Sidebar -->
         <x-sidebar />
 

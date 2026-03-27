@@ -10,7 +10,7 @@ use App\Events\AgentStatusUpdated;
 
 class AgentStatusService
 {
-    public static function change(User $user, int $statusTypeId): void
+    public static function change(User $user, int $statusTypeId): \Carbon\Carbon
     {
         $now = now();
 
@@ -46,12 +46,17 @@ class AgentStatusService
         $statusType = AgentStatusType::find($statusTypeId);
 
         broadcast(new AgentStatusUpdated([
-            'user_id'      => $user->id,
-            'user_name'    => $user->first_name . ' ' . $user->last_name,
-            'status_name'  => $statusType->name,
-            'status_color' => $statusType->color,
-            'is_available' => (bool) $statusType->is_available,
-            'started_at'   => $now->toIso8601String(),
+            'user_id'         => $user->id,
+            'user_name'       => $user->first_name . ' ' . $user->last_name,
+            'user_email'      => $user->email,
+            'user_group_id'   => $user->user_group_id,
+            'user_group_name' => $user->userGroup?->name ?? 'Unassigned',
+            'status_name'     => $statusType->name,
+            'status_color'    => $statusType->color,
+            'is_available'    => (bool) $statusType->is_available,
+            'started_at'      => $now->toIso8601String(),
         ]));
+
+        return $now;
     }
 }

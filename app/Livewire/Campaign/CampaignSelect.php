@@ -42,7 +42,7 @@ class CampaignSelect extends Component
     }
 
     public function render()
-    {
+{
         $user  = auth()->user();
         $group = $user->userGroup;
 

@@ -3,31 +3,17 @@
 namespace App\Livewire\Agent;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\AgentStatus;
 use App\Models\AgentStatusType;
-use App\Models\User;
 
 class AgentStatusIndex extends Component
 {
-    use WithPagination;
-
     public string $search = '';
     public string $filterStatus = '';
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatingFilterStatus(): void
-    {
-        $this->resetPage();
-    }
-
     public function render()
     {
-        $query = AgentStatus::with(['user', 'statusType'])
+        $statuses = AgentStatus::with(['user.userGroup', 'statusType'])
             ->when($this->search, function ($q) {
                 $q->whereHas('user', fn ($u) =>
                     $u->where('first_name', 'like', "%{$this->search}%")
@@ -40,11 +26,15 @@ class AgentStatusIndex extends Component
                     $s->where('name', $this->filterStatus)
                 )
             )
-            ->latest('created_at');
+            ->get();
+
+        $groups = $statuses
+            ->groupBy(fn ($s) => $s->user->userGroup?->name ?? 'Unassigned')
+            ->sortKeys();
 
         return view('livewire.agent.agent-status-index', [
-            'statuses'     => $query->paginate(20),
-            'statusTypes'  => AgentStatusType::orderBy('name')->get(),
+            'groups'      => $groups,
+            'statusTypes' => AgentStatusType::orderBy('name')->get(),
         ])->layout('components.layouts.app');
     }
 }
