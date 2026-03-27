@@ -5,7 +5,7 @@
 - Area: Operations
 - Purpose: manage campaign listing, creation, editing, and selection.
 - Source: `app/Livewire/Campaign/`
-- Diagram: [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd)
+- Diagram: [../diagrams/modules/campaign.mmd](../diagrams/modules/campaign.mmd)
 
 ## Components
 
@@ -20,7 +20,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/agent.md](docs/modules/agent.md)
-3. [docs/modules/leads.md](docs/modules/leads.md)
-4. [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd)
+1. [README.md](README.md)
+2. [agent.md](agent.md)
+3. [leads.md](leads.md)
+4. [../diagrams/modules/campaign.mmd](../diagrams/modules/campaign.mmd)

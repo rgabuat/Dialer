@@ -4,14 +4,14 @@ This document describes how the Dialer repository is organized and where the mai
 
 ## Navigation
 
-1. [docs/README.md](docs/README.md)
-2. [docs/tech-stack.md](docs/tech-stack.md)
-3. [docs/modules/README.md](docs/modules/README.md)
-4. [docs/diagrams/README.md](docs/diagrams/README.md)
+1. [README.md](README.md)
+2. [tech-stack.md](tech-stack.md)
+3. [modules/README.md](modules/README.md)
+4. [diagrams/README.md](diagrams/README.md)
 
 ## Diagram
 
-See [docs/diagrams/app-structure.mmd](docs/diagrams/app-structure.mmd).
+See [diagrams/app-structure.mmd](diagrams/app-structure.mmd).
 
 ## Repository Layout
 
@@ -60,7 +60,7 @@ Feature-facing UI modules are grouped in `app/Livewire/` by business area:
 - Access Control: `Auth/`, `Permissions/`, `Roles/`
 - Administration: `Settings/`, `UserGroups/`, `Users/`
 
-Detailed module documentation lives in [docs/modules](docs/modules).
+Detailed module documentation lives in [modules/README.md](modules/README.md).
 
 ## Supporting Areas
 

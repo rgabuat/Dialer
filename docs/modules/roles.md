@@ -5,7 +5,7 @@
 - Area: Access Control
 - Purpose: manage role definitions and role editing.
 - Source: `app/Livewire/Roles/`
-- Diagram: [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd)
+- Diagram: [../diagrams/modules/roles.mmd](../diagrams/modules/roles.mmd)
 
 ## Components
 
@@ -20,7 +20,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/permissions.md](docs/modules/permissions.md)
-3. [docs/modules/settings.md](docs/modules/settings.md)
-4. [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd)
+1. [README.md](README.md)
+2. [permissions.md](permissions.md)
+3. [settings.md](settings.md)
+4. [../diagrams/modules/roles.mmd](../diagrams/modules/roles.mmd)

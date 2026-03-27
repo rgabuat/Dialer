@@ -5,7 +5,7 @@
 - Area: Operations
 - Purpose: manage lead records associated with campaigns.
 - Source: `app/Livewire/Leads/`
-- Diagram: [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd)
+- Diagram: [../diagrams/modules/leads.mmd](../diagrams/modules/leads.mmd)
 
 ## Components
 
@@ -19,7 +19,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/campaign.md](docs/modules/campaign.md)
-3. [docs/modules/stores.md](docs/modules/stores.md)
-4. [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd)
+1. [README.md](README.md)
+2. [campaign.md](campaign.md)
+3. [stores.md](stores.md)
+4. [../diagrams/modules/leads.mmd](../diagrams/modules/leads.mmd)

@@ -4,20 +4,20 @@ This directory centralizes application documentation so operational guides, modu
 
 ## Navigation
 
-1. [docs/app-structure.md](docs/app-structure.md)
-2. [docs/tech-stack.md](docs/tech-stack.md)
-3. [docs/modules/README.md](docs/modules/README.md)
-4. [docs/diagrams/README.md](docs/diagrams/README.md)
+1. [app-structure.md](app-structure.md)
+2. [tech-stack.md](tech-stack.md)
+3. [modules/README.md](modules/README.md)
+4. [diagrams/README.md](diagrams/README.md)
 
 ## Core Documentation
 
-- [docs/app-structure.md](docs/app-structure.md): repository and `app/` layout.
-- [docs/tech-stack.md](docs/tech-stack.md): frameworks, libraries, and tooling.
+- [app-structure.md](app-structure.md): repository and `app/` layout.
+- [tech-stack.md](tech-stack.md): frameworks, libraries, and tooling.
 
 ## Indexes
 
-- [docs/modules/README.md](docs/modules/README.md): module-by-module documentation.
-- [docs/diagrams/README.md](docs/diagrams/README.md): Mermaid source index.
+- [modules/README.md](modules/README.md): module-by-module documentation.
+- [diagrams/README.md](diagrams/README.md): Mermaid source index.
 
 ## Source Code Reference
 

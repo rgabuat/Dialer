@@ -4,35 +4,35 @@ Module guides are split by domain so feature documentation stays small and easy 
 
 ## Navigation
 
-1. [docs/README.md](docs/README.md)
-2. [docs/app-structure.md](docs/app-structure.md)
-3. [docs/tech-stack.md](docs/tech-stack.md)
-4. [docs/diagrams/README.md](docs/diagrams/README.md)
+1. [../README.md](../README.md)
+2. [../app-structure.md](../app-structure.md)
+3. [../tech-stack.md](../tech-stack.md)
+4. [../diagrams/README.md](../diagrams/README.md)
 
 ## Operations
 
-- [docs/modules/activitylogs.md](docs/modules/activitylogs.md): activity history and audit visibility.
-- [docs/modules/agent.md](docs/modules/agent.md): agent status management.
-- [docs/modules/campaign.md](docs/modules/campaign.md): campaign creation and selection.
-- [docs/modules/leads.md](docs/modules/leads.md): lead management.
-- [docs/modules/stores.md](docs/modules/stores.md): store management.
+- [activitylogs.md](activitylogs.md): activity history and audit visibility.
+- [agent.md](agent.md): agent status management.
+- [campaign.md](campaign.md): campaign creation and selection.
+- [leads.md](leads.md): lead management.
+- [stores.md](stores.md): store management.
 
 ## Access Control
 
-- [docs/modules/auth.md](docs/modules/auth.md): authentication flows.
-- [docs/modules/permissions.md](docs/modules/permissions.md): permission administration.
-- [docs/modules/roles.md](docs/modules/roles.md): role administration.
+- [auth.md](auth.md): authentication flows.
+- [permissions.md](permissions.md): permission administration.
+- [roles.md](roles.md): role administration.
 
 ## Administration
 
-- [docs/modules/settings.md](docs/modules/settings.md): user settings and preferences.
-- [docs/modules/user-groups.md](docs/modules/user-groups.md): group-based user organization.
-- [docs/modules/users.md](docs/modules/users.md): user administration.
+- [settings.md](settings.md): user settings and preferences.
+- [user-groups.md](user-groups.md): group-based user organization.
+- [users.md](users.md): user administration.
 
 ## Related Diagrams
 
-- High-level module map: [docs/diagrams/modules.mmd](docs/diagrams/modules.mmd)
-- Module diagram sources: [docs/diagrams/README.md](docs/diagrams/README.md)
+- High-level module map: [../diagrams/modules.mmd](../diagrams/modules.mmd)
+- Module diagram sources: [../diagrams/README.md](../diagrams/README.md)
 
 ## Source Location
 

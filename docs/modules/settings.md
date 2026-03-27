@@ -5,7 +5,7 @@
 - Area: Administration
 - Purpose: manage profile, password, picture, layout, and preferences.
 - Source: `app/Livewire/Settings/`
-- Diagram: [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd)
+- Diagram: [../diagrams/modules/settings.mmd](../diagrams/modules/settings.mmd)
 
 ## Components
 
@@ -22,7 +22,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/roles.md](docs/modules/roles.md)
-3. [docs/modules/user-groups.md](docs/modules/user-groups.md)
-4. [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd)
+1. [README.md](README.md)
+2. [roles.md](roles.md)
+3. [user-groups.md](user-groups.md)
+4. [../diagrams/modules/settings.mmd](../diagrams/modules/settings.mmd)

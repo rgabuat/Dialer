@@ -5,7 +5,7 @@
 - Area: Administration
 - Purpose: manage user creation, editing, listing, and deletion.
 - Source: `app/Livewire/Users/`
-- Diagram: [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd)
+- Diagram: [../diagrams/modules/users.mmd](../diagrams/modules/users.mmd)
 
 ## Components
 
@@ -22,6 +22,6 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/user-groups.md](docs/modules/user-groups.md)
-3. [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd)
+1. [README.md](README.md)
+2. [user-groups.md](user-groups.md)
+3. [../diagrams/modules/users.mmd](../diagrams/modules/users.mmd)

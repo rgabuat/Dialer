@@ -4,10 +4,10 @@ This document lists the core frameworks, libraries, and tooling currently used b
 
 ## Navigation
 
-1. [docs/README.md](docs/README.md)
-2. [docs/app-structure.md](docs/app-structure.md)
-3. [docs/modules/README.md](docs/modules/README.md)
-4. [docs/diagrams/README.md](docs/diagrams/README.md)
+1. [README.md](README.md)
+2. [app-structure.md](app-structure.md)
+3. [modules/README.md](modules/README.md)
+4. [diagrams/README.md](diagrams/README.md)
 
 ## Backend
 

@@ -4,34 +4,34 @@ This directory stores Mermaid source files used by the documentation.
 
 ## Navigation
 
-1. [docs/README.md](docs/README.md)
-2. [docs/app-structure.md](docs/app-structure.md)
-3. [docs/tech-stack.md](docs/tech-stack.md)
-4. [docs/modules/README.md](docs/modules/README.md)
+1. [../README.md](../README.md)
+2. [../app-structure.md](../app-structure.md)
+3. [../tech-stack.md](../tech-stack.md)
+4. [../modules/README.md](../modules/README.md)
 
 ## Core Diagrams
 
-- [docs/diagrams/app-structure.mmd](docs/diagrams/app-structure.mmd): repository structure overview.
-- [docs/diagrams/modules.mmd](docs/diagrams/modules.mmd): high-level feature module map.
+- [app-structure.mmd](app-structure.mmd): repository structure overview.
+- [modules.mmd](modules.mmd): high-level feature module map.
 
 ## Module Diagrams
 
 ### Operations
 
-- [docs/diagrams/modules/activitylogs.mmd](docs/diagrams/modules/activitylogs.mmd)
-- [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd)
-- [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd)
-- [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd)
-- [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd)
+- [modules/activitylogs.mmd](modules/activitylogs.mmd)
+- [modules/agent.mmd](modules/agent.mmd)
+- [modules/campaign.mmd](modules/campaign.mmd)
+- [modules/leads.mmd](modules/leads.mmd)
+- [modules/stores.mmd](modules/stores.mmd)
 
 ### Access Control
 
-- [docs/diagrams/modules/auth.mmd](docs/diagrams/modules/auth.mmd)
-- [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd)
-- [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd)
+- [modules/auth.mmd](modules/auth.mmd)
+- [modules/permissions.mmd](modules/permissions.mmd)
+- [modules/roles.mmd](modules/roles.mmd)
 
 ### Administration
 
-- [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd)
-- [docs/diagrams/modules/user-groups.mmd](docs/diagrams/modules/user-groups.mmd)
-- [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd)
+- [modules/settings.mmd](modules/settings.mmd)
+- [modules/user-groups.mmd](modules/user-groups.mmd)
+- [modules/users.mmd](modules/users.mmd)

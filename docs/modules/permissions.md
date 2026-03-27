@@ -5,7 +5,7 @@
 - Area: Access Control
 - Purpose: manage permission definitions used by authorization.
 - Source: `app/Livewire/Permissions/`
-- Diagram: [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd)
+- Diagram: [../diagrams/modules/permissions.mmd](../diagrams/modules/permissions.mmd)
 
 ## Components
 
@@ -17,7 +17,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/auth.md](docs/modules/auth.md)
-3. [docs/modules/roles.md](docs/modules/roles.md)
-4. [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd)
+1. [README.md](README.md)
+2. [auth.md](auth.md)
+3. [roles.md](roles.md)
+4. [../diagrams/modules/permissions.mmd](../diagrams/modules/permissions.mmd)

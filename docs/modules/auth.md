@@ -5,7 +5,7 @@
 - Area: Access Control
 - Purpose: handle sign-in, registration, and password recovery.
 - Source: `app/Livewire/Auth/`
-- Diagram: [docs/diagrams/modules/auth.mmd](docs/diagrams/modules/auth.mmd)
+- Diagram: [../diagrams/modules/auth.mmd](../diagrams/modules/auth.mmd)
 
 ## Components
 
@@ -20,7 +20,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/stores.md](docs/modules/stores.md)
-3. [docs/modules/permissions.md](docs/modules/permissions.md)
-4. [docs/diagrams/modules/auth.mmd](docs/diagrams/modules/auth.mmd)
+1. [README.md](README.md)
+2. [stores.md](stores.md)
+3. [permissions.md](permissions.md)
+4. [../diagrams/modules/auth.mmd](../diagrams/modules/auth.mmd)

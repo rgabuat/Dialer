@@ -5,7 +5,7 @@
 - Area: Operations
 - Purpose: manage store records used by the application.
 - Source: `app/Livewire/Stores/`
-- Diagram: [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd)
+- Diagram: [../diagrams/modules/stores.mmd](../diagrams/modules/stores.mmd)
 
 ## Components
 
@@ -18,7 +18,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/leads.md](docs/modules/leads.md)
-3. [docs/modules/auth.md](docs/modules/auth.md)
-4. [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd)
+1. [README.md](README.md)
+2. [leads.md](leads.md)
+3. [auth.md](auth.md)
+4. [../diagrams/modules/stores.mmd](../diagrams/modules/stores.mmd)

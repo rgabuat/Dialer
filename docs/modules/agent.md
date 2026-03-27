@@ -5,7 +5,7 @@
 - Area: Operations
 - Purpose: manage agent visibility and status switching.
 - Source: `app/Livewire/Agent/`
-- Diagram: [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd)
+- Diagram: [../diagrams/modules/agent.mmd](../diagrams/modules/agent.mmd)
 
 ## Components
 
@@ -21,7 +21,7 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/activitylogs.md](docs/modules/activitylogs.md)
-3. [docs/modules/campaign.md](docs/modules/campaign.md)
-4. [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd)
+1. [README.md](README.md)
+2. [activitylogs.md](activitylogs.md)
+3. [campaign.md](campaign.md)
+4. [../diagrams/modules/agent.mmd](../diagrams/modules/agent.mmd)

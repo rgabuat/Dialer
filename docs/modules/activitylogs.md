@@ -5,7 +5,7 @@
 - Area: Operations
 - Purpose: review recorded activity and audit history.
 - Source: `app/Livewire/Activitylogs/`
-- Diagram: [docs/diagrams/modules/activitylogs.mmd](docs/diagrams/modules/activitylogs.mmd)
+- Diagram: [../diagrams/modules/activitylogs.mmd](../diagrams/modules/activitylogs.mmd)
 
 ## Components
 
@@ -18,6 +18,6 @@
 
 ## Navigation
 
-1. [docs/modules/README.md](docs/modules/README.md)
-2. [docs/modules/agent.md](docs/modules/agent.md)
-3. [docs/diagrams/modules/activitylogs.mmd](docs/diagrams/modules/activitylogs.mmd)
+1. [README.md](README.md)
+2. [agent.md](agent.md)
+3. [../diagrams/modules/activitylogs.mmd](../diagrams/modules/activitylogs.mmd)
