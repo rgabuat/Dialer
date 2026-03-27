@@ -6,6 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Prevent theme flash: apply class before paint --}}
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme');
+            document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
+        })();
+    </script>
+
+    {{-- Alpine theme store (registered before Alpine boots) --}}
+    <script>
+        document.addEventListener('alpine:init', function() {
+            Alpine.store('theme', {
+                isDark: localStorage.getItem('theme') !== 'light',
+                toggle: function() {
+                    this.isDark = !this.isDark;
+                    var cls = document.documentElement.classList;
+                    cls.toggle('dark', this.isDark);
+                    cls.toggle('light', !this.isDark);
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                }
+            });
+        });
+    </script>
+
     <title>{{ $title ?? 'Client Area - csrpro' }}</title>
 
     {{-- Livewire styles --}}
@@ -15,7 +39,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-gray-100 m-0 h-screen min-h-screen overflow-hidden">
+<body class="bg-zinc-100 dark:bg-[#0f1115] m-0 h-screen min-h-screen overflow-hidden transition-colors duration-300">
 
     <div x-data="{ sidebarOpen: false }"
         @auth
@@ -94,7 +118,8 @@ x-init="
             <x-subnav />
 
             <!-- Page content -->
-            <main class="flex-1 bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto">
+            <main
+                class="flex-1 bg-zinc-100 dark:bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300">
                 {{ $slot }}
             </main>
         </div>

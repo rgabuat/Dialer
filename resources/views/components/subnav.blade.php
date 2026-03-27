@@ -40,7 +40,8 @@
 @endphp
 
 @if ($activeParent && !empty($visibleChildren))
-    <div class="flex items-center gap-0 bg-[#0c0e12] px-6 border-zinc-800 border-b shrink-0">
+    <div
+        class="flex items-center gap-0 bg-white dark:bg-[#0c0e12] px-6 border-zinc-200 dark:border-zinc-800 border-b transition-colors duration-300 shrink-0">
 
         {{-- Child tabs --}}
         <nav class="flex items-center gap-0 overflow-x-auto" x-data>
@@ -56,7 +57,9 @@
                     class="relative px-4 py-3 text-sm font-medium whitespace-nowrap
                            transition-all duration-200 ease-in-out outline-none select-none
                            group
-                           {{ $isChildActive ? 'text-white' : 'text-zinc-400 hover:text-white' }}">
+                           {{ $isChildActive
+                               ? 'text-zinc-900 dark:text-white'
+                               : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white' }}">
 
                     {{-- Label --}}
                     <span class="z-10 relative">{{ $child['label'] }}</span>
@@ -65,7 +68,9 @@
                     <span
                         class="absolute inset-x-1 inset-y-1.5 rounded-md
                                  transition-all duration-200 ease-in-out
-                                 {{ $isChildActive ? 'bg-zinc-800/70' : 'bg-zinc-800/0 group-hover:bg-zinc-800/70' }}">
+                                 {{ $isChildActive
+                                     ? 'bg-zinc-200 dark:bg-zinc-800/70'
+                                     : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800/70' }}">
                     </span>
 
                     {{-- Bottom indicator bar --}}
