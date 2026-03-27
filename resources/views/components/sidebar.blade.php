@@ -88,7 +88,7 @@
     </div>
 
     <!-- Main Navigation -->
-    <nav class="flex-1 space-y-0.5 px-2 py-2 overflow-y-auto">
+    <nav class="flex-1 space-y-0.5 py-2 overflow-y-auto">
         @foreach ($mainItems as $item)
             @php
                 if (!$canViewItem($item)) {
@@ -100,7 +100,7 @@
             @endphp
 
             <a href="{{ $url }}" wire:navigate
-                class="group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
                       transition-colors cursor-pointer
                       {{ $isActive
                           ? 'bg-zinc-900/8 dark:bg-white/10 text-zinc-900 dark:text-white'
@@ -123,7 +123,7 @@
     </nav>
 
     <!-- Bottom: Settings etc. -->
-    <div class="space-y-0.5 px-2 py-2 border-zinc-200 dark:border-zinc-800/60 border-t shrink-0">
+    <div class="space-y-0.5 py-2 border-zinc-200 dark:border-zinc-800/60 border-t shrink-0">
         @foreach ($bottomItems as $item)
             @php
                 if (!$canViewItem($item)) {
@@ -135,7 +135,7 @@
             @endphp
 
             <a href="{{ $url }}" wire:navigate
-                class="group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
                       transition-colors cursor-pointer
                       {{ $isActive
                           ? 'bg-zinc-900/8 dark:bg-white/10 text-zinc-900 dark:text-white'
