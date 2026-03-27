@@ -79,7 +79,7 @@
 
 <!-- Sidebar -->
 <aside
-    class="lg:top-0 left-0 z-50 lg:z-auto lg:static fixed lg:sticky inset-y-0 flex flex-col bg-white dark:bg-[#0c0e12] border-zinc-200 dark:border-zinc-800/60 border-r w-52 lg:h-screen transition-transform -translate-x-full lg:translate-x-0 duration-300 transform [transition:background-color_0.3s,border-color_0.3s,transform_0.3s]"
+    class="lg:top-0 left-0 z-50 lg:z-auto lg:static fixed lg:sticky inset-y-0 flex flex-col bg-white dark:bg-[#0c0e12] border-zinc-200 dark:border-zinc-800/60 border-r w-64 lg:h-screen transition-transform -translate-x-full lg:translate-x-0 duration-300 transform [transition:background-color_0.3s,border-color_0.3s,transform_0.3s]"
     :class="sidebarOpen ? 'translate-x-0' : ''">
 
     <!-- Logo -->

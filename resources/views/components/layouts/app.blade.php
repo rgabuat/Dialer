@@ -144,7 +144,7 @@ x-init="
         <x-sidebar />
 
         <!-- Main column -->
-        <div class="flex flex-col flex-1">
+        <div class="flex flex-col flex-1 min-w-0">
             @php
                 // Resolve the active nav item label for the topbar title
                 $navItems = config('navitems');
