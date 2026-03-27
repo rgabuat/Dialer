@@ -10,7 +10,7 @@
             <x-heroicon-o-bars-3 class="w-6 h-6" />
         </button>
 
-        <h1 class="font-semibold text-zinc-900 dark:text-white text-lg">
+        <h1 class="ml-4 font-semibold text-zinc-900 dark:text-white text-lg">
             {{ $title ?? 'Dashboard' }}
         </h1>
     </div>
