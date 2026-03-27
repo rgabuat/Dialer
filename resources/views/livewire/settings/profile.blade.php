@@ -1,109 +1,92 @@
-<div class="max-w-4xl">
+<div class="space-y-4">
 
-    <form wire:submit.prevent="save">
+    {{-- Page title --}}
+    <div>
+        <h1 class="font-bold text-zinc-100 text-xl">Profile</h1>
+        <p class="mt-0.5 text-zinc-500 text-sm">Manage your personal information and how you appear to others.</p>
+    </div>
 
-        <h1 class="text-2xl font-semibold text-white mb-1">
-            Profile
-        </h1>
+    <form wire:submit.prevent="save" class="space-y-4">
 
-        <p class="text-sm text-neutral-400 mb-10">
-            Your profile information determines how you will appear to other users.
-        </p>
-
-        {{-- BASICS --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
-            <div>
-                <h3 class="text-lg font-semibold text-white mb-1">Basics</h3>
-                <p class="text-sm text-neutral-400">
-                    Enter your basic information.
-                </p>
+        {{-- Basics --}}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-zinc-800 border-b">
+                <h2 class="font-semibold text-zinc-100 text-sm">Basics</h2>
+                <p class="mt-0.5 text-zinc-500 text-xs">Your basic account information.</p>
             </div>
-
-            <div class="space-y-5">
-                {{-- First Name --}}
-                <div>
-                    <label class="block text-sm text-neutral-400 mb-1">
-                        First Name
-                    </label>
-                    <input wire:model.defer="first_name"
-                        class="w-full rounded-lg bg-neutral-950 border border-neutral-800
-                               px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
-                    @error('first_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            <div class="space-y-4 px-6 py-5">
+                <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">First Name</label>
+                        <input wire:model.defer="first_name"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                        @error('first_name')
+                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Last Name</label>
+                        <input wire:model.defer="last_name"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                        @error('last_name')
+                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
-
-                {{-- Last Name --}}
-                <div>
-                    <label class="block text-sm text-neutral-400 mb-1">
-                        Last Name
-                    </label>
-                    <input wire:model.defer="last_name"
-                        class="w-full rounded-lg bg-neutral-950 border border-neutral-800
-                               px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
-                    @error('last_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Job Title --}}
-                <div>
-                    <label class="block text-sm text-neutral-400 mb-1">
-                        Job Title
-                    </label>
-                    <input wire:model.defer="job_title"
-                        class="w-full rounded-lg bg-neutral-950 border border-neutral-800
-                               px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Nickname</label>
+                        <input wire:model.defer="nickname" placeholder="Optional"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                    </div>
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Job Title</label>
+                        <input wire:model.defer="job_title" placeholder="Optional"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <hr class="border-neutral-800 mb-12">
-
-        {{-- CONTACT --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
-            <div>
-                <h3 class="text-lg font-semibold text-white mb-1">Contact</h3>
-                <p class="text-sm text-neutral-400">
-                    Manage your contact information.
-                </p>
+        {{-- Contact --}}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-zinc-800 border-b">
+                <h2 class="font-semibold text-zinc-100 text-sm">Contact</h2>
+                <p class="mt-0.5 text-zinc-500 text-xs">Manage your contact details.</p>
             </div>
-
-            <div class="space-y-5">
-                {{-- Email --}}
-                <div>
-                    <label class="block text-sm text-neutral-400 mb-1">
-                        Email
-                    </label>
-                    <input wire:model.defer="email" type="email"
-                        class="w-full rounded-lg bg-neutral-950 border border-neutral-800
-                               px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
-                    @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Mobile --}}
-                <div>
-                    <label class="block text-sm text-neutral-400 mb-1">
-                        Mobile Number
-                    </label>
-                    <input wire:model.defer="mobile" type="tel"
-                        class="w-full rounded-lg bg-neutral-950 border border-neutral-800
-                               px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+            <div class="px-6 py-5">
+                <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Email</label>
+                        <input wire:model.defer="email" type="email"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                        @error('email')
+                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Mobile Number</label>
+                        <input wire:model.defer="mobile" type="tel"
+                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center justify-end gap-4">
+        {{-- Save bar --}}
+        <div class="flex justify-end items-center gap-3 py-1">
             @if ($saved)
-                <span class="text-sm text-green-500">
-                    Profile updated successfully
+                <span class="flex items-center gap-1.5 text-green-400 text-sm">
+                    <x-heroicon-o-check-circle class="w-4 h-4" />
+                    Saved
                 </span>
             @endif
-
-            <button
-                type="submit"
-                class="px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500
-                       text-white font-medium transition"
-            >
-                Update
+            <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg font-medium text-white text-sm transition">
+                Save changes
             </button>
         </div>
 
     </form>
+
 </div>

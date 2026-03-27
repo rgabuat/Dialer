@@ -1,69 +1,48 @@
 <x-layouts.app>
-<div class="h-screen w-full overflow-hidden">
-    <div class="flex flex-col md:flex-row gap-6 h-full">
+    <div class="flex gap-6 min-h-full">
 
-        {{-- LEFT SIDEBAR --}}
-        <aside
-            class="w-full md:w-72 shrink-0 rounded-2xl
-                   bg-gradient-to-b from-[#151a20] to-[#0f1115]
-                   border border-white/5 p-5
-                   sticky top-0 h-screen
-                   "
-        >
-            @php
-                $groups = config('settingsubitems', []);
-                $currentRoute = request()->route()?->getName();
-            @endphp
+        {{-- LEFT SETTINGS NAV --}}
+        <aside class="w-52 shrink-0">
+            <div class="top-0 sticky bg-zinc-900 p-3 border border-zinc-800 rounded-xl">
+                @php
+                    $groups = config('settingsubitems', []);
+                    $currentRoute = request()->route()?->getName();
+                @endphp
 
-            @foreach ($groups as $group)
-                <div class="mb-8">
-                    <h4 class="text-xs font-semibold uppercase text-gray-400 mb-3">
-                        {{ $group['group'] }}
-                    </h4>
+                @foreach ($groups as $group)
+                    <div class="mb-5 last:mb-0">
+                        <p class="mb-1.5 px-2 font-semibold text-[10px] text-zinc-500 uppercase tracking-widest">
+                            {{ $group['group'] }}
+                        </p>
 
-                    <div class="space-y-1">
-                        @foreach ($group['items'] as $item)
-                            @php
-                                // expects keys like: profile, password, preferences
-                                $routeName = 'settings.' . $item['key'];
-                                $isActive = $currentRoute === $routeName;
-                            @endphp
+                        <div class="space-y-0.5">
+                            @foreach ($group['items'] as $item)
+                                @php
+                                    $routeName = 'settings.' . $item['key'];
+                                    $isActive = $currentRoute === $routeName;
+                                @endphp
 
-                            <a
-                                href="{{ route($routeName) }}"
-                                wire:navigate
-                                class="w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                                       text-sm transition
-                                       {{ $isActive
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                       }}"
-                            >
-                                @if (!empty($item['icon']))
-                                    <x-dynamic-component
-                                        :component="$item['icon']"
-                                        class="w-5 h-5"
-                                    />
-                                @endif
-
-                                <span>{{ $item['label'] }}</span>
-                            </a>
-                        @endforeach
+                                <a href="{{ route($routeName) }}" wire:navigate
+                                    class="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-all
+                                      {{ $isActive
+                                          ? 'bg-zinc-800 text-zinc-100 font-medium'
+                                          : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200' }}">
+                                    @if (!empty($item['icon']))
+                                        <x-dynamic-component :component="$item['icon']" class="w-4 h-4 shrink-0" />
+                                    @endif
+                                    <span>{{ $item['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </aside>
 
         {{-- RIGHT CONTENT --}}
-        <main
-            class="flex-1 rounded-2xl
-                   bg-gradient-to-b from-[#151a20] to-[#0f1115]
-                   border border-white/5 p-8"
-        >
+        <div class="flex-1 min-w-0">
             {{ $slot }}
-        </main>
+        </div>
 
     </div>
-</div>
-
 </x-layouts.app>
