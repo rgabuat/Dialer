@@ -3,38 +3,95 @@
 namespace App\Livewire\Agent;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\AgentStatus;
 use App\Models\AgentStatusType;
+use App\Models\UserGroup;
 
 class AgentStatusIndex extends Component
 {
-    public string $search = '';
-    public string $filterStatus = '';
+  use WithPagination;
 
-    public function render()
-    {
-        $statuses = AgentStatus::with(['user.userGroup', 'statusType'])
-            ->when($this->search, function ($q) {
-                $q->whereHas('user', fn ($u) =>
-                    $u->where('first_name', 'like', "%{$this->search}%")
-                      ->orWhere('last_name', 'like', "%{$this->search}%")
-                      ->orWhere('email', 'like', "%{$this->search}%")
-                );
-            })
-            ->when($this->filterStatus, fn ($q) =>
-                $q->whereHas('statusType', fn ($s) =>
-                    $s->where('name', $this->filterStatus)
-                )
-            )
-            ->get();
+  public string $search = "";
+  public string $filterStatus = "";
+  public string $filterGroup = "";
 
-        $groups = $statuses
-            ->groupBy(fn ($s) => $s->user->userGroup?->name ?? 'Unassigned')
-            ->sortKeys();
+  protected $queryString = [
+    "search" => ["except" => ""],
+    "filterStatus" => ["except" => ""],
+    "filterGroup" => ["except" => ""],
+  ];
 
-        return view('livewire.agent.agent-status-index', [
-            'groups'      => $groups,
-            'statusTypes' => AgentStatusType::orderBy('name')->get(),
-        ])->layout('components.layouts.app');
-    }
+  public function updatingSearch(): void
+  {
+    $this->resetPage();
+  }
+  public function updatingFilterStatus(): void
+  {
+    $this->resetPage();
+  }
+  public function updatingFilterGroup(): void
+  {
+    $this->resetPage();
+  }
+
+  public function render()
+  {
+    $baseQuery = AgentStatus::with(["user.userGroup", "statusType"])
+      ->when(
+        $this->search,
+        fn($q) => $q->whereHas(
+          "user",
+          fn($u) => $u
+            ->where("first_name", "like", "%{$this->search}%")
+            ->orWhere("last_name", "like", "%{$this->search}%")
+            ->orWhere("email", "like", "%{$this->search}%")
+        )
+      )
+      ->when(
+        $this->filterStatus,
+        fn($q) => $q->whereHas(
+          "statusType",
+          fn($s) => $s->where("name", $this->filterStatus)
+        )
+      )
+      ->when(
+        $this->filterGroup,
+        fn($q) => $q->whereHas(
+          "user.userGroup",
+          fn($g) => $g->where("name", $this->filterGroup)
+        )
+      );
+
+    $statuses = $baseQuery->paginate(25);
+    $totalCount = AgentStatus::count();
+    $availCount = AgentStatus::whereHas(
+      "statusType",
+      fn($q) => $q->where("is_available", true)
+    )->count();
+    $unavailCnt = $totalCount - $availCount;
+
+    // Average seconds in current status for unavailable agents
+    $avgSeconds = AgentStatus::whereHas(
+      "statusType",
+      fn($q) => $q->where("is_available", false)
+    )
+      ->selectRaw("AVG(TIMESTAMPDIFF(SECOND, started_at, NOW())) as avg_sec")
+      ->value("avg_sec");
+    $avgMinutes = $avgSeconds ? round($avgSeconds / 60) : 0;
+    $avgLabel =
+      $avgMinutes >= 60
+        ? floor($avgMinutes / 60) . "h " . $avgMinutes % 60 . "m"
+        : $avgMinutes . "m";
+
+    return view("livewire.agent.agent-status-index", [
+      "statuses" => $statuses,
+      "statusTypes" => AgentStatusType::orderBy("name")->get(),
+      "userGroups" => UserGroup::orderBy("name")->get(),
+      "totalCount" => $totalCount,
+      "availCount" => $availCount,
+      "unavailCnt" => $unavailCnt,
+      "avgLabel" => $avgLabel,
+    ])->layout("components.layouts.app");
+  }
 }
