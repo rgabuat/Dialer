@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Settings\Preferences;
 use App\Http\Controllers\TwilioController;
 use App\Livewire\Permissions\PermissionsIndex;
+use App\Livewire\Activity\OverviewIndex;
 use App\Livewire\Activitylogs\ActivitylogsIndex;
 use App\Livewire\Agent\AgentStatusIndex;
 use App\Livewire\Campaign\CampaignSelect;
@@ -29,7 +30,6 @@ use App\Livewire\UserGroups\UserGroupCreate;
 use App\Livewire\UserGroups\UserGroupEdit;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -47,71 +47,104 @@ use App\Http\Controllers\Livewire\Settings\ProfileController;
 // });
 
 Livewire::setScriptRoute(function ($handle) {
-    return Route::get('/livewire/livewire.js', $handle);
+  return Route::get("/livewire/livewire.js", $handle);
 });
 
-Route::middleware(['guest'])->group(function () {
-    Route::get('/login', [LoginController::class, 'index'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::middleware(["guest"])->group(function () {
+  Route::get("/login", [LoginController::class, "index"])->name("login");
+  Route::post("/login", [LoginController::class, "login"])->name("login.post");
 });
 
-Route::middleware(['auth'])->group(function () {
-    // Campaign selection — exempt from campaign.selected check
-    Route::get('/campaign/select', CampaignSelect::class)->name('campaign.select');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::middleware(["auth"])->group(function () {
+  // Campaign selection — exempt from campaign.selected check
+  Route::get("/campaign/select", CampaignSelect::class)->name(
+    "campaign.select"
+  );
+  Route::post("/logout", [LoginController::class, "logout"])->name("logout");
 
-    // All other authenticated routes require a campaign to be selected
-    Route::middleware(['campaign.selected'])->group(function () {
-        Route::get('/', function () {
-            return view('livewire.app.dashboard');
-        })->name('dashboard');
+  // All other authenticated routes require a campaign to be selected
+  Route::middleware(["campaign.selected"])->group(function () {
+    Route::get("/", function () {
+      return view("livewire.app.dashboard");
+    })->name("dashboard");
 
-        //settings
-        Route::get('/settings/profile', Profile::class)->name('settings.profile');
-        Route::get('/settings/knowledge', Profile::class)->name('settings.knowledge');
-        Route::get('/settings/password', Password::class)->name('settings.password');
-        Route::get('/settings/picture', Profile::class)->name('settings.picture');
-        Route::get('/settings/preferences', Preferences::class)->name('settings.preferences');
+    //settings
+    Route::get("/settings/profile", Profile::class)->name("settings.profile");
+    Route::get("/settings/knowledge", Profile::class)->name(
+      "settings.knowledge"
+    );
+    Route::get("/settings/password", Password::class)->name(
+      "settings.password"
+    );
+    Route::get("/settings/picture", Profile::class)->name("settings.picture");
+    Route::get("/settings/preferences", Preferences::class)->name(
+      "settings.preferences"
+    );
 
-        //users
-        Route::get('/users', UsersIndex::class)->name('users.index');
-        Route::get('/user/create', UserCreate::class)->name('user.create');
-        Route::get('/user/{user}/edit', UserEdit::class)->name('user.edit');
+    //users
+    Route::get("/users", UsersIndex::class)->name("users.index");
+    Route::get("/user/create", UserCreate::class)->name("user.create");
+    Route::get("/user/{user}/edit", UserEdit::class)->name("user.edit");
 
-        //activity logs
-        Route::get('/activity-logs', ActivitylogsIndex::class)->name('activitylogs.index');
-        Route::get('/activity-log/{log}/', ActivitylogsIndex::class)->name('activitylog.view');
+    //activity
+    Route::get("/activity-overview", OverviewIndex::class)->name(
+      "activity.overview"
+    );
 
-        //agent status
-        Route::get('/agent-status', AgentStatusIndex::class)->name('agent.status.index');
+    //activity logs
+    Route::get("/activity-logs", ActivitylogsIndex::class)->name(
+      "activitylogs.index"
+    );
+    Route::get("/activity-log/{log}/", ActivitylogsIndex::class)->name(
+      "activitylog.view"
+    );
 
-        //roles and permission
-        Route::get('/roles', RolesIndex::class)->name('roles.index');
-        Route::get('/role/create', RolesCreate::class)->name('roles.create');
-        Route::get('/role/{role}/edit', RolesEdit::class)->name('roles.edit');
-        Route::get('/permissions', PermissionsIndex::class)->name('permissions.index');
+    //agent status
+    Route::get("/agent-status", AgentStatusIndex::class)->name(
+      "agent.status.index"
+    );
 
-        //stores
-        Route::get('/stores', StoresIndex::class)->name('stores.index');
-        Route::get('/stores/{store}/edit', StoreEdit::class)->name('store.edit');
+    //roles and permission
+    Route::get("/roles", RolesIndex::class)->name("roles.index");
+    Route::get("/role/create", RolesCreate::class)->name("roles.create");
+    Route::get("/role/{role}/edit", RolesEdit::class)->name("roles.edit");
+    Route::get("/permissions", PermissionsIndex::class)->name(
+      "permissions.index"
+    );
 
-        //Leads
-        Route::get('/leads', LeadsIndex::class)->name('leads.index');
-        Route::get('/lead/create', LeadCreate::class)->name('lead.create');
-        Route::get('/lead/{lead}/edit', LeadEdit::class)->name('lead.edit');
+    //stores
+    Route::get("/stores", StoresIndex::class)->name("stores.index");
+    Route::get("/stores/{store}/edit", StoreEdit::class)->name("store.edit");
 
-        //Campaigns
-        Route::get('/campaigns', CampaignsIndex::class)->name('campaigns.index');
-        Route::get('/campaign/create', CampaignCreate::class)->name('campaign.create');
-        Route::get('/campaign/{campaign}/edit', CampaignEdit::class)->name('campaign.edit');
+    //Leads
+    Route::get("/leads", LeadsIndex::class)->name("leads.index");
+    Route::get("/lead/create", LeadCreate::class)->name("lead.create");
+    Route::get("/lead/{lead}/edit", LeadEdit::class)->name("lead.edit");
 
-        //User Groups
-        Route::get('/user-groups', UserGroupsIndex::class)->name('user-groups.index');
-        Route::get('/user-group/create', UserGroupCreate::class)->name('user-group.create');
-        Route::get('/user-group/{group}/edit', UserGroupEdit::class)->name('user-group.edit');
+    //Campaigns
+    Route::get("/campaigns", CampaignsIndex::class)->name("campaigns.index");
+    Route::get("/campaign/create", CampaignCreate::class)->name(
+      "campaign.create"
+    );
+    Route::get("/campaign/{campaign}/edit", CampaignEdit::class)->name(
+      "campaign.edit"
+    );
 
-        //Twilio
-        Route::get('/phone/access-token', [TwilioController::class, 'getAccessToken'])->name('twilio.getAccessToken');
-    });
+    //User Groups
+    Route::get("/user-groups", UserGroupsIndex::class)->name(
+      "user-groups.index"
+    );
+    Route::get("/user-group/create", UserGroupCreate::class)->name(
+      "user-group.create"
+    );
+    Route::get("/user-group/{group}/edit", UserGroupEdit::class)->name(
+      "user-group.edit"
+    );
+
+    //Twilio
+    Route::get("/phone/access-token", [
+      TwilioController::class,
+      "getAccessToken",
+    ])->name("twilio.getAccessToken");
+  });
 });
-

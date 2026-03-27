@@ -59,10 +59,21 @@ return [
   [
     "label" => "Activity",
     "icon" => "heroicon-o-signal",
-    "segments" => ["activity-logs", "activity-log", "agent-status"],
+    "segments" => [
+      "activity-overview",
+      "activity-logs",
+      "activity-log",
+      "agent-status",
+    ],
     "permission" => null,
     "bottom" => false,
     "children" => [
+      [
+        "label" => "Overview",
+        "route" => "activity.overview",
+        "segment" => "activity-overview",
+        "permission" => null,
+      ],
       [
         "label" => "Activity Logs",
         "route" => "activitylogs.index",
