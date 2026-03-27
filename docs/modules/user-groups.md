@@ -1,16 +1,11 @@
 # User Groups Module
 
-## Purpose
+## Summary
 
-This module organizes users into groups and associates those groups with campaigns.
-
-## Diagram
-
-See [docs/diagrams/modules/user-groups.mmd](docs/diagrams/modules/user-groups.mmd).
-
-## Source Location
-
-- `app/Livewire/UserGroups/`
+- Area: Administration
+- Purpose: organize users into groups and associate groups with campaigns.
+- Source: `app/Livewire/UserGroups/`
+- Diagram: [docs/diagrams/modules/user-groups.mmd](docs/diagrams/modules/user-groups.mmd)
 
 ## Components
 
@@ -18,11 +13,14 @@ See [docs/diagrams/modules/user-groups.mmd](docs/diagrams/modules/user-groups.mm
 - `UserGroupCreate`: creates a group.
 - `UserGroupEdit`: updates a group.
 
-## Related Domain Objects
+## Related Types
 
 - `UserGroup`
 - `Campaign`
 
-## Notes
+## Navigation
 
-- This module connects users to shared operational campaign context.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/settings.md](docs/modules/settings.md)
+3. [docs/modules/users.md](docs/modules/users.md)
+4. [docs/diagrams/modules/user-groups.mmd](docs/diagrams/modules/user-groups.mmd)

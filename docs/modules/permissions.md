@@ -1,25 +1,23 @@
 # Permissions Module
 
-## Purpose
+## Summary
 
-This module provides the UI for reviewing and managing permission definitions used by authorization.
-
-## Diagram
-
-See [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd).
-
-## Source Location
-
-- `app/Livewire/Permissions/`
+- Area: Access Control
+- Purpose: manage permission definitions used by authorization.
+- Source: `app/Livewire/Permissions/`
+- Diagram: [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd)
 
 ## Components
 
-- `PermissionsIndex`: lists permission definitions and related administration actions.
+- `PermissionsIndex`: lists permission definitions and related actions.
 
-## Related Services
+## Related Types
 
 - `PermissionRegistrar`
 
-## Notes
+## Navigation
 
-- This module supports the role and permission security model used across the app.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/auth.md](docs/modules/auth.md)
+3. [docs/modules/roles.md](docs/modules/roles.md)
+4. [docs/diagrams/modules/permissions.mmd](docs/diagrams/modules/permissions.mmd)

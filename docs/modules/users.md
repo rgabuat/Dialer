@@ -1,16 +1,11 @@
 # Users Module
 
-## Purpose
+## Summary
 
-This module manages user administration flows including creation, editing, listing, and deletion.
-
-## Diagram
-
-See [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd).
-
-## Source Location
-
-- `app/Livewire/Users/`
+- Area: Administration
+- Purpose: manage user creation, editing, listing, and deletion.
+- Source: `app/Livewire/Users/`
+- Diagram: [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd)
 
 ## Components
 
@@ -19,12 +14,14 @@ See [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd).
 - `UserEdit`: updates user data.
 - `UserDelete`: removes a user.
 
-## Related Domain Objects
+## Related Types
 
 - `User`
 - `UsersMeta`
 - `UserGroup`
 
-## Notes
+## Navigation
 
-- This module is the main administrative surface for user lifecycle management.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/user-groups.md](docs/modules/user-groups.md)
+3. [docs/diagrams/modules/users.mmd](docs/diagrams/modules/users.mmd)

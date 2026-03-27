@@ -1,16 +1,11 @@
 # Leads Module
 
-## Purpose
+## Summary
 
-This module manages lead records associated with campaign activity.
-
-## Diagram
-
-See [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd).
-
-## Source Location
-
-- `app/Livewire/Leads/`
+- Area: Operations
+- Purpose: manage lead records associated with campaigns.
+- Source: `app/Livewire/Leads/`
+- Diagram: [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd)
 
 ## Components
 
@@ -18,10 +13,13 @@ See [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd).
 - `LeadCreate`: creates a new lead.
 - `LeadEdit`: updates an existing lead.
 
-## Related Domain Objects
+## Related Types
 
 - `Lead`
 
-## Notes
+## Navigation
 
-- Leads provide the contact records used by campaign workflows.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/campaign.md](docs/modules/campaign.md)
+3. [docs/modules/stores.md](docs/modules/stores.md)
+4. [docs/diagrams/modules/leads.mmd](docs/diagrams/modules/leads.mmd)

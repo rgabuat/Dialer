@@ -1,29 +1,27 @@
 # Agent Module
 
-## Purpose
+## Summary
 
-This module manages agent status visibility and agent-side status switching.
-
-## Diagram
-
-See [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd).
-
-## Source Location
-
-- `app/Livewire/Agent/`
+- Area: Operations
+- Purpose: manage agent visibility and status switching.
+- Source: `app/Livewire/Agent/`
+- Diagram: [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd)
 
 ## Components
 
 - `AgentStatusIndex`: presents agent status data.
-- `StatusSwitcher`: lets an agent change status within the dialer workflow.
+- `StatusSwitcher`: changes agent status during workflow execution.
 
-## Related Domain Objects And Services
+## Related Types
 
 - `AgentStatus`
 - `AgentStatusLog`
 - `AgentStatusType`
 - `AgentStatusService`
 
-## Notes
+## Navigation
 
-- This module sits close to real-time operational behavior and status tracking.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/activitylogs.md](docs/modules/activitylogs.md)
+3. [docs/modules/campaign.md](docs/modules/campaign.md)
+4. [docs/diagrams/modules/agent.mmd](docs/diagrams/modules/agent.mmd)

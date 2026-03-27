@@ -1,28 +1,26 @@
 # Campaign Module
 
-## Purpose
+## Summary
 
-This module manages campaign lifecycle actions such as listing, creating, editing, and selecting campaigns.
-
-## Diagram
-
-See [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd).
-
-## Source Location
-
-- `app/Livewire/Campaign/`
+- Area: Operations
+- Purpose: manage campaign listing, creation, editing, and selection.
+- Source: `app/Livewire/Campaign/`
+- Diagram: [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd)
 
 ## Components
 
 - `CampaignsIndex`: lists available campaigns.
 - `CampaignCreate`: creates a new campaign.
 - `CampaignEdit`: updates an existing campaign.
-- `CampaignSelect`: selects campaign context for workflow use.
+- `CampaignSelect`: selects campaign context.
 
-## Related Domain Objects
+## Related Types
 
 - `Campaign`
 
-## Notes
+## Navigation
 
-- Campaigns are a central organizing entity for dialer operations.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/agent.md](docs/modules/agent.md)
+3. [docs/modules/leads.md](docs/modules/leads.md)
+4. [docs/diagrams/modules/campaign.mmd](docs/diagrams/modules/campaign.mmd)

@@ -1,26 +1,24 @@
 # Stores Module
 
-## Purpose
+## Summary
 
-This module manages store records used by the application.
-
-## Diagram
-
-See [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd).
-
-## Source Location
-
-- `app/Livewire/Stores/`
+- Area: Operations
+- Purpose: manage store records used by the application.
+- Source: `app/Livewire/Stores/`
+- Diagram: [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd)
 
 ## Components
 
 - `StoresIndex`: lists stores.
 - `StoreEdit`: updates store records.
 
-## Related Domain Objects
+## Related Types
 
 - `Store`
 
-## Notes
+## Navigation
 
-- Store records support organizational or operational grouping in the app.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/leads.md](docs/modules/leads.md)
+3. [docs/modules/auth.md](docs/modules/auth.md)
+4. [docs/diagrams/modules/stores.mmd](docs/diagrams/modules/stores.mmd)

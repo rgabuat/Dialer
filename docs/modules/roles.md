@@ -1,16 +1,11 @@
 # Roles Module
 
-## Purpose
+## Summary
 
-This module manages role definitions and role editing flows.
-
-## Diagram
-
-See [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd).
-
-## Source Location
-
-- `app/Livewire/Roles/`
+- Area: Access Control
+- Purpose: manage role definitions and role editing.
+- Source: `app/Livewire/Roles/`
+- Diagram: [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd)
 
 ## Components
 
@@ -18,11 +13,14 @@ See [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd).
 - `RolesCreate`: creates a role.
 - `RolesEdit`: updates role configuration.
 
-## Related Domain Concepts
+## Related Types
 
-- Roles
-- Permissions
+- `Roles`
+- `Permissions`
 
-## Notes
+## Navigation
 
-- This module works alongside the permissions module to define access boundaries.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/permissions.md](docs/modules/permissions.md)
+3. [docs/modules/settings.md](docs/modules/settings.md)
+4. [docs/diagrams/modules/roles.mmd](docs/diagrams/modules/roles.mmd)

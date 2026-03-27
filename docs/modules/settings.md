@@ -1,16 +1,11 @@
 # Settings Module
 
-## Purpose
+## Summary
 
-This module manages user profile, password, picture, layout, and preference settings.
-
-## Diagram
-
-See [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd).
-
-## Source Location
-
-- `app/Livewire/Settings/`
+- Area: Administration
+- Purpose: manage profile, password, picture, layout, and preferences.
+- Source: `app/Livewire/Settings/`
+- Diagram: [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd)
 
 ## Components
 
@@ -20,11 +15,14 @@ See [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd).
 - `Preferences`: user preference settings.
 - `Profile`: profile detail management.
 
-## Related Domain Objects
+## Related Types
 
 - `User`
 - `UsersMeta`
 
-## Notes
+## Navigation
 
-- This module is user-centric and focused on personal account configuration.
+1. [docs/modules/README.md](docs/modules/README.md)
+2. [docs/modules/roles.md](docs/modules/roles.md)
+3. [docs/modules/user-groups.md](docs/modules/user-groups.md)
+4. [docs/diagrams/modules/settings.mmd](docs/diagrams/modules/settings.mmd)
