@@ -33,13 +33,10 @@
 
         <x-date-picker wire-model="date" :value="$date" />
 
-        <select wire:model.live="filterStatus"
-            class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 text-white text-sm transition">
-            <option value="">All Statuses</option>
-            @foreach ($statusTypes as $type)
-                <option value="{{ $type->slug }}">{{ $type->name }}</option>
-            @endforeach
-        </select>
+        <x-select-dropdown wire-model="filterStatus" :value="$filterStatus" placeholder="All Statuses" :options="$statusTypes
+            ->map(fn($t) => ['value' => $t->slug, 'label' => $t->name, 'color' => $t->color])
+            ->values()
+            ->all()" />
 
         {{-- Legend --}}
         <div class="flex flex-wrap items-center gap-2 ml-2">
