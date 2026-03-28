@@ -86,12 +86,39 @@
             </div>
         @else
             {{-- Scrollable Gantt body (both x + y) --}}
-            <div class="flex-1 min-h-0 overflow-auto" style="scrollbar-gutter: stable" x-data x-init="const update = () => {
-                $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - 24) + 'px';
-            };
-            update();
-            window.addEventListener('resize', update);
-            $cleanup(() => window.removeEventListener('resize', update));">
+            <div class="flex-1 min-h-0 overflow-auto select-none no-scrollbar" style="cursor: grab;"
+                style="cursor: grab;" x-data="{
+                    dragging: false,
+                    startX: 0,
+                    startY: 0,
+                    scrollLeft: 0,
+                    scrollTop: 0,
+                    onDown(e) {
+                        if (e.button !== 0) return;
+                        this.dragging = true;
+                        this.startX = e.pageX;
+                        this.startY = e.pageY;
+                        this.scrollLeft = $el.scrollLeft;
+                        this.scrollTop = $el.scrollTop;
+                        $el.style.cursor = 'grabbing';
+                    },
+                    onMove(e) {
+                        if (!this.dragging) return;
+                        e.preventDefault();
+                        $el.scrollLeft = this.scrollLeft - (e.pageX - this.startX);
+                        $el.scrollTop = this.scrollTop - (e.pageY - this.startY);
+                    },
+                    onUp() {
+                        this.dragging = false;
+                        $el.style.cursor = 'grab';
+                    },
+                }" x-init="const update = () => {
+                    $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - 24) + 'px';
+                };
+                update();
+                window.addEventListener('resize', update);
+                $cleanup(() => window.removeEventListener('resize', update));" @mousedown="onDown($event)"
+                @mousemove="onMove($event)" @mouseup="onUp()" @mouseleave="onUp()">
 
                 {{-- Min-width wrapper so horizontal scroll works --}}
                 <div class="relative" style="min-width: {{ 260 + $timelineWidth }}px">
