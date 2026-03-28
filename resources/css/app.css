@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @layer base {
     @import "./variables.css";
 }
@@ -31,6 +32,7 @@
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -39,4 +41,35 @@
 
 .animate-modal-in {
     animation: modal-in 0.2s ease-out forwards;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    /* zinc-700 */
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+    /* zinc-600 */
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
 }

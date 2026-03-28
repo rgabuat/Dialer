@@ -7,7 +7,7 @@
     </div>
 
     {{-- LEADS TABLE --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl [overflow:clip]">
 
         {{-- Header --}}
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
@@ -20,9 +20,15 @@
         </div>
 
         {{-- Table --}}
-        <div class="overflow-x-auto">
+        <div class="overflow-auto" x-data x-init="const update = () => {
+            const pg = $el.nextElementSibling;
+            $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
+        };
+        update();
+        window.addEventListener('resize', update);
+        $cleanup(() => window.removeEventListener('resize', update));">
             <table class="min-w-full text-white text-sm stagger-rows">
-                <thead>
+                <thead class="top-0 z-10 sticky bg-zinc-900">
                     <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
                         <th class="px-5 py-3 text-left">Phone</th>
