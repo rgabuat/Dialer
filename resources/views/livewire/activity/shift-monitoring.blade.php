@@ -31,8 +31,7 @@
         <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search agents..."
             class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-48 text-white text-sm transition placeholder-zinc-600">
 
-        <input type="date" wire:model.live="date"
-            class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 text-white text-sm transition">
+        <x-date-picker wire-model="date" :value="$date" />
 
         <select wire:model.live="filterStatus"
             class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 text-white text-sm transition">
