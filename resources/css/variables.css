@@ -42,6 +42,10 @@
     /* zinc-500  — muted / placeholder text         */
     --hover-bg: rgba(39, 39, 42, 0.3);
     /* zinc-800/30 — row hover       */
+    --scrollbar-thumb: #3f3f46;
+    /* zinc-700 — scrollbar thumb dark */
+    --scrollbar-thumb-hover: #52525b;
+    /* zinc-600 — scrollbar thumb hover dark */
 }
 
 .light {
@@ -78,6 +82,10 @@
     /* zinc-500  — same as dark (neutral grey)      */
     --hover-bg: rgba(244, 244, 245, 0.8);
     /* zinc-100 — row hover        */
+    --scrollbar-thumb: #d4d4d8;
+    /* zinc-300 — scrollbar thumb light */
+    --scrollbar-thumb-hover: #a1a1aa;
+    /* zinc-400 — scrollbar thumb hover light */
 }
 
 /* ============================================================

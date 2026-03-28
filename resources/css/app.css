@@ -184,14 +184,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3f3f46;
-    /* zinc-700 */
+    background: var(--scrollbar-thumb);
     border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #52525b;
-    /* zinc-600 */
+    background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -201,5 +199,5 @@
 /* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: #3f3f46 transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
 }

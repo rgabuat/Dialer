@@ -77,7 +77,7 @@
                     <button type="button" wire:click="$set('viewMode','table')" title="Table view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
-                        === 'table' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'">
+                        === 'table' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg'">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor"
                             stroke-width="1.5" stroke-linecap="round">
                             <line x1="1" y1="3" x2="13" y2="3" />
@@ -88,7 +88,7 @@
                     <button type="button" wire:click="$set('viewMode','grouped')" title="Grouped view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
-                        === 'grouped' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'">
+                        === 'grouped' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg'">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor"
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="1" width="5" height="5" rx="1" />
@@ -126,8 +126,7 @@
                         @forelse ($statuses as $status)
                             @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
                             <tr wire:key="agent-row-{{ $status->user_id }}"
-                                class="hover:bg-hover border-surface border-b transition"
-                                x-data="{
+                                class="hover:bg-hover border-surface border-b transition" x-data="{
                                     userId: {{ $status->user_id }},
                                     statusName: @js($status->statusType?->name ?? '—'),
                                     statusColor: @js($status->statusType?->color ?? '#a1a1aa'),
@@ -152,7 +151,8 @@
                                         this.time = [Math.floor(d / 3600), Math.floor((d % 3600) / 60), d % 60]
                                             .map(n => String(n).padStart(2, '0')).join(':');
                                     },
-                                }" x-init="start()"
+                                }"
+                                x-init="start()"
                                 @agent-row-update.window="
                                 if ($event.detail.user_id === userId) {
                                     statusName  = $event.detail.status_name;
@@ -166,7 +166,7 @@
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
                                         <span
-                                            class="inline-flex justify-center items-center bg-zinc-700 rounded-full w-9 h-9 font-bold text-fg text-xs shrink-0">
+                                            class="inline-flex justify-center items-center bg-surface-2 rounded-full w-9 h-9 font-bold text-fg text-xs shrink-0">
                                             {{ $initials }}
                                         </span>
                                         <div>
@@ -243,11 +243,11 @@
                         @forelse ($grouped as $g)
                             {{-- Group divider row --}}
                             <tr class="top-[37px] z-10 sticky">
-                                <td colspan="4" class="bg-surface-3 px-5 py-1.5 border-y border-surface">
+                                <td colspan="4" class="bg-surface-3 px-5 py-1.5 border-surface border-y">
                                     <div class="flex items-center gap-2">
                                         <span
                                             class="font-semibold text-fg-muted text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
-                                        <span class="font-medium text-[10px] text-zinc-700">{{ $g['count'] }}</span>
+                                        <span class="font-medium text-[10px] text-fg-muted">{{ $g['count'] }}</span>
                                         @if ($g['count'] > 0)
                                             @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
                                             <span
@@ -270,12 +270,16 @@
                                         startedAt: @js($status->started_at?->toIso8601String()),
                                         time: '00:00:00',
                                         interval: null,
-                                        start() { this.tick();
-                                            this.interval = setInterval(() => this.tick(), 1000); },
-                                        reset(s) { clearInterval(this.interval);
+                                        start() {
+                                            this.tick();
+                                            this.interval = setInterval(() => this.tick(), 1000);
+                                        },
+                                        reset(s) {
+                                            clearInterval(this.interval);
                                             this.startedAt = s;
                                             this.time = '00:00:00';
-                                            this.start(); },
+                                            this.start();
+                                        },
                                         tick() {
                                             if (!this.startedAt) return;
                                             const d = Math.floor((Date.now() - new Date(this.startedAt).getTime()) / 1000);
@@ -312,7 +316,7 @@
                                     {{-- Available --}}
                                     <td class="px-5 py-2.5 text-sm">
                                         <span x-show="isAvailable" class="font-semibold text-green-400">Yes</span>
-                                        <span x-show="!isAvailable" class="text-zinc-600">—</span>
+                                        <span x-show="!isAvailable" class="text-fg-muted">—</span>
                                     </td>
                                     {{-- Timer --}}
                                     <td class="px-5 py-2.5 font-mono text-sm"
