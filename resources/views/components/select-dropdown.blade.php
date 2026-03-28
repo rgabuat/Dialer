@@ -100,19 +100,19 @@
     <button type="button" @click="open = !open"
         class="inline-flex items-center gap-2 bg-surface hover:bg-surface-2 px-3 py-1.5 border border-surface hover:border-surface-2 focus:border-zinc-600 rounded-lg focus:outline-none text-fg text-sm whitespace-nowrap transition select-none"
         :class="open ? 'border-zinc-600 bg-surface-2' : ''" {{ $attributes }}>
-        {{-- colour swatch (visible when single option with color is selected) --}}
-        <span x-show="!!color" class="rounded-sm w-2 h-2 shrink-0"
-            :style="color ? `background-color:${color}` : ''"></span>
 
-        {{-- label / count --}}
-        <span :class="isEmpty ? 'text-fg-muted' : 'text-fg'">
-            <span x-show="!multiple || selected.length <= 1" x-text="label ?? '{{ $placeholder }}'"></span>
-            <span x-show="multiple && selected.length > 1" class="inline-flex items-center gap-1.5">
-                <span>{{ $placeholder }}</span>
-                <span x-text="'(' + selected.length + ')'"
-                    class="inline-flex justify-center items-center bg-indigo-500/20 px-1 rounded font-bold tabular-nums text-indigo-400 text-xs"></span>
-            </span>
-        </span>
+        {{-- colour swatch — always in DOM to avoid width shift; invisible when no color --}}
+        <span class="rounded-sm w-2 h-2 transition-opacity duration-100 shrink-0"
+            :class="color ? 'opacity-100' : 'opacity-0'" :style="color ? `background-color:${color}` : ''"></span>
+
+        {{-- placeholder text is always the fixed anchor — never replaced —
+             so the button width never changes when selections change --}}
+        <span :class="isEmpty ? 'text-fg-muted' : 'text-fg'" class="whitespace-nowrap">{{ $placeholder }}</span>
+
+        {{-- count badge — always rendered (locks button width), opacity toggled --}}
+        <span
+            class="inline-flex justify-center items-center bg-indigo-500/20 px-1.5 py-0.5 rounded min-w-[20px] font-bold tabular-nums text-[11px] text-indigo-400 transition-opacity duration-100"
+            :class="isEmpty ? 'opacity-0' : 'opacity-100'" x-text="multiple ? selected.length : '1'"></span>
 
         {{-- chevron --}}
         <svg class="w-3 h-3 text-zinc-600 transition-transform duration-150 shrink-0" :class="{ 'rotate-180': open }"
