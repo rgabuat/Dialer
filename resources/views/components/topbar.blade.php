@@ -21,12 +21,6 @@
             <x-agent-control-bar />
         @endauth
 
-        <!-- Theme toggle -->
-        <button @click="$store.theme.toggle()" class="text-fg-muted hover:text-fg transition-colors" title="Toggle theme">
-            <x-heroicon-o-moon class="w-5 h-5" x-show="$store.theme.isDark" />
-            <x-heroicon-o-sun class="w-5 h-5" x-show="!$store.theme.isDark" />
-        </button>
-
         <!-- Notifications -->
         <button class="text-fg-muted hover:text-fg transition-colors">
             <x-heroicon-o-bell class="w-6 h-6" />
