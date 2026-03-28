@@ -11,7 +11,7 @@
                 <h1 class="font-bold text-fg text-xl">Shift Monitor</h1>
                 @if ($isToday)
                     <span
-                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold text-[11px] text-green-400">
+                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold text-[11px] text-accent-green">
                         <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse"></span>
                         LIVE
                     </span>
@@ -58,12 +58,12 @@
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse shrink-0"></span>
             <span class="text-zinc-500">Available Now</span>
-            <span class="font-semibold text-green-400">{{ $availableNow }}</span>
+            <span class="font-semibold text-accent-green">{{ $availableNow }}</span>
         </div>
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Avg Utilization</span>
             <span
-                class="font-semibold {{ $avgUtil >= 70 ? 'text-green-400' : ($avgUtil >= 40 ? 'text-yellow-400' : 'text-red-400') }}">{{ $avgUtil }}%</span>
+                class="font-semibold {{ $avgUtil >= 70 ? 'text-accent-green' : ($avgUtil >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">{{ $avgUtil }}%</span>
         </div>
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Available Time</span>
@@ -158,16 +158,16 @@
                         <div class="relative flex-none h-9" style="width: {{ $timelineWidth }}px">
                             @foreach ($hours as $hour)
                                 @if ($hour['isHalf'])
-                                    <div class="top-4 bottom-0 absolute flex items-end pb-1 border-surface-2/25 border-l border-dashed"
-                                        style="left: {{ $hour['left'] }}px">
+                                    <div class="top-4 bottom-0 absolute flex items-end pb-1 border-dashed"
+                                        style="left: {{ $hour['left'] }}px; border-color: var(--grid-line-faint)">
                                         <span
-                                            class="pl-1 text-[9px] text-zinc-700 whitespace-nowrap select-none">:30</span>
+                                            class="pl-1 text-[9px] text-fg-muted whitespace-nowrap select-none">:30</span>
                                     </div>
                                 @else
-                                    <div class="top-0 bottom-0 absolute flex items-center border-surface/60 border-l"
-                                        style="left: {{ $hour['left'] }}px">
+                                    <div class="top-0 bottom-0 absolute flex items-center border-l"
+                                        style="left: {{ $hour['left'] }}px; border-color: var(--grid-line)">
                                         <span
-                                            class="pl-1.5 font-medium text-[11px] text-zinc-500 whitespace-nowrap select-none">
+                                            class="pl-1.5 font-medium text-[11px] text-fg-muted whitespace-nowrap select-none">
                                             {{ $hour['label'] }}
                                         </span>
                                     </div>
@@ -186,7 +186,7 @@
                                 <span class="font-bold text-fg-muted text-xs uppercase tracking-widest">
                                     {{ optional($g['group'])->name ?? 'Unassigned' }}
                                 </span>
-                                <span class="font-medium text-[10px] text-zinc-600">{{ $g['count'] }}</span>
+                                <span class="font-medium text-[10px] text-fg-muted">{{ $g['count'] }}</span>
                             </div>
                             <div class="relative flex-none" style="width: {{ $timelineWidth }}px; height: 28px">
                                 @foreach ($hours as $hour)
@@ -232,14 +232,14 @@
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-1 mt-0.5">
-                                            <span class="text-[10px] text-zinc-600">{{ $agent->shiftStartLabel }} →
+                                            <span class="text-[10px] text-fg-muted">{{ $agent->shiftStartLabel }} →
                                                 {{ $agent->shiftEndLabel }}</span>
-                                            <span class="text-[10px] text-zinc-800">·</span>
+                                            <span class="text-[10px] text-fg-muted">·</span>
                                             <span
-                                                class="text-[10px] font-medium {{ $agent->utilPct >= 70 ? 'text-green-500' : ($agent->utilPct >= 40 ? 'text-yellow-500' : 'text-red-500') }}">{{ $agent->utilPct }}%</span>
-                                            <span class="text-[10px] text-zinc-800">·</span>
+                                                class="text-[10px] font-medium {{ $agent->utilPct >= 70 ? 'text-accent-green' : ($agent->utilPct >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">{{ $agent->utilPct }}%</span>
+                                            <span class="text-[10px] text-fg-muted">·</span>
                                             <span
-                                                class="text-[10px] text-zinc-600">{{ $agent->totalShiftLabel }}</span>
+                                                class="text-[10px] text-fg-muted">{{ $agent->totalShiftLabel }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -250,8 +250,9 @@
 
                                     {{-- Hour grid lines --}}
                                     @foreach ($hours as $hour)
-                                        <div class="absolute inset-y-0 {{ $hour['isHalf'] ? 'border-zinc-800/15 border-dashed' : 'border-zinc-800/25' }} border-l"
-                                            style="left: {{ $hour['left'] }}px"></div>
+                                        <div class="absolute inset-y-0 {{ $hour['isHalf'] ? 'border-dashed' : '' }} border-l"
+                                            style="left: {{ $hour['left'] }}px; border-color: {{ $hour['isHalf'] ? 'var(--grid-line-faint)' : 'var(--grid-line)' }}">
+                                        </div>
                                     @endforeach
 
                                     {{-- Status blocks --}}

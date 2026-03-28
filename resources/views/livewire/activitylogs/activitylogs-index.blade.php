@@ -84,9 +84,9 @@
                                 <span
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide
                                     {{ $log->severity === 'critical'
-                                        ? 'bg-red-500/10 text-red-400'
+                                        ? 'bg-red-500/10 text-accent-red'
                                         : ($log->severity === 'warning'
-                                            ? 'bg-yellow-500/10 text-yellow-400'
+                                            ? 'bg-yellow-500/10 text-accent-yellow'
                                             : 'bg-blue-500/10 text-blue-400') }}">
                                     {{ strtoupper($log->severity) }}
                                 </span>

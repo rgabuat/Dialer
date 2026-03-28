@@ -7,7 +7,7 @@
     </div>
 
     @if (session()->has('success'))
-        <div class="mb-4 text-green-400 text-sm">
+        <div class="mb-4 text-accent-green text-sm">
             {{ session('success') }}
         </div>
     @endif
@@ -21,7 +21,7 @@
             <input type="text" wire:model.live="first_name"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('first_name')
-                <span class="text-xs text-red-400">{{ $message }}</span>
+                <span class="text-xs text-accent-red">{{ $message }}</span>
             @enderror
         </div>
 
@@ -31,7 +31,7 @@
             <input type="text" wire:model.live="last_name"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('last_name')
-                <span class="text-xs text-red-400">{{ $message }}</span>
+                <span class="text-xs text-accent-red">{{ $message }}</span>
             @enderror
         </div>
 
@@ -60,7 +60,7 @@
                 @endforeach
             </select>
             @error('store_id')
-                <span class="text-xs text-red-400">{{ $message }}</span>
+                <span class="text-xs text-accent-red">{{ $message }}</span>
             @enderror
         </div>
 
@@ -71,7 +71,7 @@
             </a>
 
             <div class="flex gap-3">
-                <button wire:click="confirmDelete" class="text-sm text-red-400 hover:text-red-300">
+                <button wire:click="confirmDelete" class="text-sm text-accent-red hover:text-red-300">
                     Delete
                 </button>
 

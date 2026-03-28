@@ -16,7 +16,7 @@
             <input type="text" wire:model.defer="name" placeholder="e.g. Admin, Editor"
                 class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-fg text-sm transition placeholder-fg-muted">
             @error('name')
-                <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -122,7 +122,7 @@
                 </button>
             </div>
             @error('newPermission')
-                <p class="mt-2 text-red-400 text-xs">{{ $message }}</p>
+                <p class="mt-2 text-accent-red text-xs">{{ $message }}</p>
             @enderror
         </div>
     </div>

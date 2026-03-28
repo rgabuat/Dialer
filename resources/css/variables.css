@@ -46,6 +46,16 @@
     /* zinc-700 — scrollbar thumb dark */
     --scrollbar-thumb-hover: #52525b;
     /* zinc-600 — scrollbar thumb hover dark */
+    --accent-green: #4ade80;
+    /* green-400 — readable on dark surfaces */
+    --accent-yellow: #facc15;
+    /* yellow-400 */
+    --accent-red: #f87171;
+    /* red-400 */
+    --grid-line: rgba(63, 63, 70, 0.25);
+    /* zinc-700/25 — gantt grid lines */
+    --grid-line-faint: rgba(63, 63, 70, 0.12);
+    /* zinc-700/12 — half-hour dashed lines */
 }
 
 .light {
@@ -86,6 +96,16 @@
     /* zinc-300 — scrollbar thumb light */
     --scrollbar-thumb-hover: #a1a1aa;
     /* zinc-400 — scrollbar thumb hover light */
+    --accent-green: #16a34a;
+    /* green-600 — readable on light surfaces */
+    --accent-yellow: #b45309;
+    /* amber-700 — readable on light surfaces */
+    --accent-red: #dc2626;
+    /* red-600 — readable on light surfaces */
+    --grid-line: rgba(161, 161, 170, 0.4);
+    /* zinc-400/40 — gantt grid lines light */
+    --grid-line-faint: rgba(161, 161, 170, 0.2);
+    /* zinc-400/20 — half-hour dashed lines light */
 }
 
 /* ============================================================

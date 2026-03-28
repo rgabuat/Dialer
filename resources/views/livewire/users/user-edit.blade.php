@@ -64,7 +64,7 @@
                                 @endforeach
                             </select>
                             @error('selectedRole')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -79,7 +79,7 @@
                                 @endforeach
                             </select>
                             @error('selectedUserGroup')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -89,7 +89,7 @@
                                 class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
                                        px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
                             @error('password')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -105,7 +105,7 @@
 
                 {{-- DANGER ZONE --}}
                 <div class="mt-12 border-t border-surface pt-8">
-                    <h3 class="text-sm font-medium text-red-400">
+                    <h3 class="text-sm font-medium text-accent-red">
                         Danger zone
                     </h3>
 

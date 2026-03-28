@@ -53,7 +53,7 @@
                             <td class="px-5 py-4">
                                 @if ($group->is_active)
                                     <span
-                                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-green-400 text-xs uppercase tracking-wide">
+                                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-accent-green text-xs uppercase tracking-wide">
                                         <span class="bg-green-400 rounded-full w-1.5 h-1.5"></span>Active
                                     </span>
                                 @else

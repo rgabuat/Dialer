@@ -24,7 +24,7 @@
                             <input wire:model.defer="first_name" type="text"
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                             @error('first_name')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -33,7 +33,7 @@
                             <input wire:model.defer="last_name" type="text"
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                             @error('last_name')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -43,7 +43,7 @@
                         <input wire:model.defer="email" type="email"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                         @error('email')
-                            <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                         <input wire:model.defer="password" type="password"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                         @error('password')
-                            <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -77,7 +77,7 @@
                             @endforeach
                         </select>
                         @error('role')
-                            <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -98,7 +98,7 @@
                         @endforeach
                     </select>
                     @error('selectedUserGroup')
-                        <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
+                        <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
                     @enderror
                 </div>
             </div>

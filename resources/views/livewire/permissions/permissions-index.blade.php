@@ -24,7 +24,7 @@
                     </button>
                 </div>
                 @error('name')
-                    <p class="mt-2 text-red-400 text-xs">{{ $message }}</p>
+                    <p class="mt-2 text-accent-red text-xs">{{ $message }}</p>
                 @enderror
             </div>
         </div>

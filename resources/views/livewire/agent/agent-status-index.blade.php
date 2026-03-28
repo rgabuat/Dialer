@@ -24,19 +24,19 @@
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse shrink-0"></span>
             <span class="text-zinc-500">Available</span>
-            <span class="font-semibold text-green-400">{{ $availCount }}</span>
+            <span class="font-semibold text-accent-green">{{ $availCount }}</span>
         </div>
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-yellow-400 rounded-full w-1.5 h-1.5 shrink-0"></span>
             <span class="text-zinc-500">Unavailable</span>
-            <span class="font-semibold text-yellow-400">{{ $unavailCnt }}</span>
+            <span class="font-semibold text-accent-yellow">{{ $unavailCnt }}</span>
         </div>
         @if ($totalCount > 0)
             <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
                 <span class="text-zinc-500">Availability</span>
                 @php $availPct = round(($availCount / $totalCount) * 100); @endphp
                 <span
-                    class="font-semibold {{ $availPct >= 70 ? 'text-green-400' : ($availPct >= 40 ? 'text-yellow-400' : 'text-red-400') }}">{{ $availPct }}%</span>
+                    class="font-semibold {{ $availPct >= 70 ? 'text-accent-green' : ($availPct >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">{{ $availPct }}%</span>
             </div>
         @endif
         <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
@@ -52,7 +52,7 @@
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
             <div class="flex items-center gap-3">
                 <h2 class="font-bold text-fg text-base">Agent Fleet</h2>
-                <span class="flex items-center gap-1.5 font-medium text-green-400 text-xs">
+                <span class="flex items-center gap-1.5 font-medium text-accent-green text-xs">
                     <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse"></span>
                     Live Syncing
                 </span>
@@ -196,7 +196,7 @@
 
                                 {{-- Available --}}
                                 <td class="px-5 py-4">
-                                    <span x-show="isAvailable" class="font-bold text-green-400 text-sm">YES</span>
+                                    <span x-show="isAvailable" class="font-bold text-accent-green text-sm">YES</span>
                                     <span x-show="!isAvailable" class="text-zinc-500 text-sm">NO</span>
                                 </td>
 
@@ -251,7 +251,7 @@
                                         @if ($g['count'] > 0)
                                             @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
                                             <span
-                                                class="ml-auto font-medium text-[10px] {{ $grpPct >= 70 ? 'text-green-500' : ($grpPct >= 40 ? 'text-yellow-500' : 'text-red-500') }}">{{ $g['availCount'] }}/{{ $g['count'] }}
+                                                class="ml-auto font-medium text-[10px] {{ $grpPct >= 70 ? 'text-accent-green' : ($grpPct >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">{{ $g['availCount'] }}/{{ $g['count'] }}
                                                 available &middot; {{ $grpPct }}%</span>
                                         @endif
                                     </div>
@@ -315,12 +315,12 @@
                                     </td>
                                     {{-- Available --}}
                                     <td class="px-5 py-2.5 text-sm">
-                                        <span x-show="isAvailable" class="font-semibold text-green-400">Yes</span>
+                                        <span x-show="isAvailable" class="font-semibold text-accent-green">Yes</span>
                                         <span x-show="!isAvailable" class="text-fg-muted">—</span>
                                     </td>
                                     {{-- Timer --}}
                                     <td class="px-5 py-2.5 font-mono text-sm"
-                                        :class="isAvailable ? 'text-green-400' : 'text-fg-muted'" x-text="time"></td>
+                                        :class="isAvailable ? 'text-accent-green' : 'text-fg-muted'" x-text="time"></td>
                                 </tr>
                             @endforeach
                         @empty

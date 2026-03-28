@@ -113,6 +113,18 @@
     color: var(--avatar-fg);
 }
 
+@utility text-accent-green {
+    color: var(--accent-green);
+}
+
+@utility text-accent-yellow {
+    color: var(--accent-yellow);
+}
+
+@utility text-accent-red {
+    color: var(--accent-red);
+}
+
 @utility bg-surface {
     background-color: var(--surface);
 }

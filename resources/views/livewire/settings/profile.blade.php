@@ -21,7 +21,7 @@
                         <input wire:model.defer="first_name"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('first_name')
-                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                            <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
@@ -29,7 +29,7 @@
                         <input wire:model.defer="last_name"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('last_name')
-                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                            <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -61,7 +61,7 @@
                         <input wire:model.defer="email" type="email"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('email')
-                            <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                            <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
@@ -76,7 +76,7 @@
         {{-- Save bar --}}
         <div class="flex justify-end items-center gap-3 py-1">
             @if ($saved)
-                <span class="flex items-center gap-1.5 text-green-400 text-sm">
+                <span class="flex items-center gap-1.5 text-accent-green text-sm">
                     <x-heroicon-o-check-circle class="w-4 h-4" />
                     Saved
                 </span>

@@ -42,7 +42,7 @@
                     {{-- Donut --}}
                     <x-overview-donut value="83" color="#eab308" size="52" />
                     <div>
-                        <div class="font-black text-yellow-400 text-2xl">83.13%</div>
+                        <div class="font-black text-accent-yellow text-2xl">83.13%</div>
                         <div class="mt-1 text-zinc-500 text-xs">Answered In 60</div>
                     </div>
                 </div>

@@ -21,7 +21,7 @@
                     <input type="password" wire:model.defer="current_password" placeholder="Your current password"
                         class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     @error('current_password')
-                        <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                        <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -30,7 +30,7 @@
                     <input type="password" wire:model.defer="password" placeholder="Your new password"
                         class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     @error('password')
-                        <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                        <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
                     @enderror
                     <p class="mt-1.5 text-zinc-500 text-xs">Must be 8–20 characters, including numbers and mixed case
                         letters.</p>

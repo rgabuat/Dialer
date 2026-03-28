@@ -9,7 +9,7 @@
     {{-- Flash success --}}
     @if (session()->has('success'))
         <div
-            class="flex items-center gap-2.5 bg-green-500/10 px-4 py-3 border border-green-500/30 rounded-xl text-green-400 text-sm">
+            class="flex items-center gap-2.5 bg-green-500/10 px-4 py-3 border border-green-500/30 rounded-xl text-accent-green text-sm">
             <x-heroicon-o-check-circle class="w-4 h-4 shrink-0" />
             {{ session('success') }}
         </div>
@@ -25,7 +25,7 @@
             <input type="text" wire:model="name"
                 class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-fg text-sm transition placeholder-fg-muted">
             @error('name')
-                <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
+                <p class="mt-1.5 text-accent-red text-xs">{{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -76,7 +76,7 @@
                                             @can('permissions.delete')
                                                 <button wire:click="deletePermission({{ $perm->id }})"
                                                     wire:confirm="Delete '{{ $perm->name }}' from the system? This affects all roles."
-                                                    class="opacity-0 group-hover/cell:opacity-100 text-[10px] text-zinc-600 hover:text-red-400 leading-none transition"
+                                                    class="opacity-0 group-hover/cell:opacity-100 text-[10px] text-zinc-600 hover:text-accent-red leading-none transition"
                                                     title="Delete {{ $perm->name }}">
                                                     &times; delete
                                                 </button>
@@ -118,7 +118,7 @@
                 </button>
             </div>
             @error('newPermission')
-                <p class="mt-2 text-red-400 text-xs">{{ $message }}</p>
+                <p class="mt-2 text-accent-red text-xs">{{ $message }}</p>
             @enderror
         </div>
     </div>

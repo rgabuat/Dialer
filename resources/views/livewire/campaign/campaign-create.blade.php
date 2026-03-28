@@ -20,21 +20,21 @@
                         <label class="text-sm text-fg-muted">Name</label>
                         <input wire:model.defer="name" type="text"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
-                        @error('name') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                        @error('name') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="text-sm text-fg-muted">Phone Number</label>
                         <input wire:model.defer="phone_number" type="text" placeholder="+1234567890"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
-                        @error('phone_number') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                        @error('phone_number') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="text-sm text-fg-muted">Description</label>
                         <textarea wire:model.defer="description" rows="3"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600"></textarea>
-                        @error('description') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                        @error('description') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="flex items-center gap-3">
