@@ -1,13 +1,27 @@
-<div class="flex flex-col gap-4 p-6 h-full">
+<div class="flex flex-col gap-4 p-6 h-full" x-data="{ isToday: @js($isToday) }" x-init="if (isToday) {
+    const chan = window.Echo.private('agent-status');
+    chan.listen('.AgentStatusUpdated', () => $wire.$refresh());
+    $cleanup(() => chan.stopListening('.AgentStatusUpdated'));
+}">
 
     {{-- ── Page header ──────────────────────────────────────────── --}}
     <div class="flex flex-wrap justify-between items-start gap-3 shrink-0">
         <div>
-            <h1 class="font-bold text-zinc-100 text-xl">Shift Monitor</h1>
+            <div class="flex items-center gap-3">
+                <h1 class="font-bold text-zinc-100 text-xl">Shift Monitor</h1>
+                @if ($isToday)
+                    <span
+                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold text-[11px] text-green-400">
+                        <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse"></span>
+                        LIVE
+                    </span>
+                @endif
+            </div>
             <p class="mt-0.5 text-zinc-500 text-sm">Monitor scheduled slots and activity for day-to-day agents.</p>
         </div>
         <div class="text-right">
-            <div class="font-semibold text-zinc-100 text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}</div>
+            <div class="font-semibold text-zinc-100 text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
+            </div>
             <div class="mt-0.5 text-zinc-500 text-xs">{{ number_format($totalAgents) }} agents on shift</div>
         </div>
     </div>

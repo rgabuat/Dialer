@@ -179,9 +179,10 @@ class ShiftMonitoring extends Component
       $totalSeconds > 0 ? round(($availSeconds / $totalSeconds) * 100) : 0;
 
     $statusTypes = AgentStatusType::orderBy("name")->get();
+    $isToday = $this->date === now()->toDateString();
 
     return view(
-      "livewire.activity.shift-monitoring",
+      @"livewire.activity.shift-monitoring",
       compact(
         "grouped",
         "hours",
@@ -191,7 +192,8 @@ class ShiftMonitoring extends Component
         "availSeconds",
         "avgUtil",
         "statusTypes",
-        "date"
+        "date",
+        "isToday"
       )
     )->layout("components.layouts.app");
   }
