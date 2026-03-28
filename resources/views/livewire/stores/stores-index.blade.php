@@ -13,7 +13,7 @@
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
             <h2 class="font-bold text-white text-base">Stores</h2>
             <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search stores..."
-                class="bg-zinc-800 px-3 py-1.5 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 w-44 text-white text-sm placeholder-zinc-500">
+                class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-white text-sm transition placeholder-zinc-600">
         </div>
 
         {{-- Table --}}

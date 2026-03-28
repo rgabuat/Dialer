@@ -15,7 +15,7 @@
 
             <div class="flex items-center gap-2">
                 <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search accounts..."
-                    class="bg-zinc-800 px-3 py-1.5 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 w-44 text-white text-sm placeholder-zinc-500">
+                    class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-white text-sm transition placeholder-zinc-600">
                 <a href="{{ route('user.create') }}"
                     class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition">
                     <x-heroicon-o-plus class="w-4 h-4" />

@@ -14,43 +14,28 @@
             <h2 class="font-bold text-white text-base">Activity Logs</h2>
 
             <div class="flex flex-wrap items-center gap-2">
-                <div class="relative">
-                    <select wire:model.live="filters.type"
-                        class="bg-zinc-800 py-1.5 pr-8 pl-3 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 text-zinc-300 text-sm appearance-none cursor-pointer">
-                        <option value="">Type: All</option>
-                        <option value="activity">Activity</option>
-                        <option value="audit">Audit</option>
-                        <option value="security">Security</option>
-                        <option value="system">System</option>
-                    </select>
-                    <x-heroicon-o-chevron-down
-                        class="top-1/2 right-2 absolute w-3.5 h-3.5 text-zinc-500 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <x-select-dropdown wire-model="filters.type" :value="$filters['type'] ?? ''" placeholder="All Types"
+                    :options="[
+                        ['value' => 'activity', 'label' => 'Activity'],
+                        ['value' => 'audit', 'label' => 'Audit'],
+                        ['value' => 'security', 'label' => 'Security'],
+                        ['value' => 'system', 'label' => 'System'],
+                    ]" />
 
-                <div class="relative">
-                    <select wire:model.live="filters.severity"
-                        class="bg-zinc-800 py-1.5 pr-8 pl-3 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 text-zinc-300 text-sm appearance-none cursor-pointer">
-                        <option value="">Severity: All</option>
-                        <option value="info">Info</option>
-                        <option value="warning">Warning</option>
-                        <option value="critical">Critical</option>
-                    </select>
-                    <x-heroicon-o-chevron-down
-                        class="top-1/2 right-2 absolute w-3.5 h-3.5 text-zinc-500 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <x-select-dropdown wire-model="filters.severity" :value="$filters['severity'] ?? ''" placeholder="All Severities"
+                    :options="[
+                        ['value' => 'info', 'label' => 'Info'],
+                        ['value' => 'warning', 'label' => 'Warning'],
+                        ['value' => 'critical', 'label' => 'Critical'],
+                    ]" />
 
-                <div class="relative">
-                    <select wire:model.live="filters.source"
-                        class="bg-zinc-800 py-1.5 pr-8 pl-3 border border-zinc-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/40 text-zinc-300 text-sm appearance-none cursor-pointer">
-                        <option value="">Source: All</option>
-                        <option value="web">Web</option>
-                        <option value="api">API</option>
-                        <option value="job">Job</option>
-                        <option value="system">System</option>
-                    </select>
-                    <x-heroicon-o-chevron-down
-                        class="top-1/2 right-2 absolute w-3.5 h-3.5 text-zinc-500 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <x-select-dropdown wire-model="filters.source" :value="$filters['source'] ?? ''" placeholder="All Sources"
+                    :options="[
+                        ['value' => 'web', 'label' => 'Web'],
+                        ['value' => 'api', 'label' => 'API'],
+                        ['value' => 'job', 'label' => 'Job'],
+                        ['value' => 'system', 'label' => 'System'],
+                    ]" />
             </div>
         </div>
 
