@@ -21,7 +21,7 @@
             <h2 class="font-semibold text-fg text-sm">Role Details</h2>
         </div>
         <div class="px-5 py-5">
-            <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Role Name</label>
+            <label class="block mb-1.5 font-medium text-fg-muted text-xs">Role Name</label>
             <input type="text" wire:model="name"
                 class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-fg text-sm transition placeholder-fg-muted">
             @error('name')
@@ -130,7 +130,7 @@
             Save changes
         </button>
         <a href="{{ route('roles.index') }}" wire:navigate
-            class="text-zinc-400 hover:text-fg-2 text-sm transition">
+            class="text-fg-muted hover:text-fg-2 text-sm transition">
             Cancel
         </a>
     </div>

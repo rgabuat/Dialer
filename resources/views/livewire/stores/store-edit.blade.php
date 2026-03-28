@@ -2,7 +2,7 @@
 
     <div class="mb-6">
         <h1 class="text-2xl font-semibold">Edit Store</h1>
-        <p class="text-sm text-zinc-400">Update store details.</p>
+        <p class="text-sm text-fg-muted">Update store details.</p>
     </div>
 
     @if (session()->has('success'))
@@ -14,7 +14,7 @@
     <div class="space-y-4 bg-surface border border-surface rounded-lg p-6">
 
         <div>
-            <label class="text-sm text-zinc-400">Store Name</label>
+            <label class="text-sm text-fg-muted">Store Name</label>
             <input wire:model.live="name" type="text"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('name')
@@ -23,7 +23,7 @@
         </div>
 
         <div>
-            <label class="text-sm text-zinc-400">Address</label>
+            <label class="text-sm text-fg-muted">Address</label>
             <input wire:model.live="address" type="text"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('address')
@@ -32,7 +32,7 @@
         </div>
 
         <div>
-            <label class="text-sm text-zinc-400">Brand</label>
+            <label class="text-sm text-fg-muted">Brand</label>
             <input wire:model.live="brand" type="text"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('brand')
@@ -41,7 +41,7 @@
         </div>
 
         <div class="flex justify-between pt-4">
-            <a href="{{ route('stores.index') }}" class="text-sm text-zinc-400 hover:text-fg-2">
+            <a href="{{ route('stores.index') }}" class="text-sm text-fg-muted hover:text-fg-2">
                 ← Back
             </a>
 
@@ -63,7 +63,7 @@
                 <div class="bg-surface border border-surface rounded-lg w-full max-w-sm p-6">
 
                     <h2 class="text-lg font-semibold mb-2">Delete Store</h2>
-                    <p class="text-sm text-zinc-400 mb-4">
+                    <p class="text-sm text-fg-muted mb-4">
                         Are you sure? This action cannot be undone.
                     </p>
 

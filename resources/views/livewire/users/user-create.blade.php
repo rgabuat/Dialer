@@ -4,7 +4,7 @@
         {{-- Header --}}
         <div class="mb-8">
             <h1 class="text-2xl font-semibold tracking-tight">New User</h1>
-            <p class="text-sm text-zinc-400">
+            <p class="text-sm text-fg-muted">
                 Create and configure a new user account.
             </p>
         </div>
@@ -15,12 +15,12 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                 <div>
                     <h2 class="font-medium">Basics</h2>
-                    <p class="text-sm text-zinc-400">Core user information.</p>
+                    <p class="text-sm text-fg-muted">Core user information.</p>
                 </div>
                 <div class="md:col-span-3 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-sm text-zinc-400">First name</label>
+                            <label class="text-sm text-fg-muted">First name</label>
                             <input wire:model.defer="first_name" type="text"
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                             @error('first_name')
@@ -29,7 +29,7 @@
                         </div>
 
                         <div>
-                            <label class="text-sm text-zinc-400">Last name</label>
+                            <label class="text-sm text-fg-muted">Last name</label>
                             <input wire:model.defer="last_name" type="text"
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                             @error('last_name')
@@ -39,7 +39,7 @@
                     </div>
 
                     <div>
-                        <label class="text-sm text-zinc-400">Email</label>
+                        <label class="text-sm text-fg-muted">Email</label>
                         <input wire:model.defer="email" type="email"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                         @error('email')
@@ -53,12 +53,12 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                 <div>
                     <h2 class="font-medium">Access</h2>
-                    <p class="text-sm text-zinc-400">Credentials & role.</p>
+                    <p class="text-sm text-fg-muted">Credentials & role.</p>
                 </div>
 
                 <div class="md:col-span-3 space-y-6">
                     <div>
-                        <label class="text-sm text-zinc-400">Temporary password</label>
+                        <label class="text-sm text-fg-muted">Temporary password</label>
                         <input wire:model.defer="password" type="password"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                         @error('password')
@@ -67,7 +67,7 @@
                     </div>
 
                     <div>
-                        <label class="text-sm text-zinc-400">Role</label>
+                        <label class="text-sm text-fg-muted">Role</label>
                         <select wire:model.live="selectedRole"
                             class="mt-1 w-full rounded-md bg-surface border border-surface
                                 px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
@@ -87,7 +87,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                 <div>
                     <h2 class="font-medium">User Group</h2>
-                    <p class="text-sm text-zinc-400">Assign the user to a group (required). The group determines which campaigns the user can access.</p>
+                    <p class="text-sm text-fg-muted">Assign the user to a group (required). The group determines which campaigns the user can access.</p>
                 </div>
                 <div class="md:col-span-3 space-y-3">
                     <select wire:model.defer="selectedUserGroup"
@@ -107,18 +107,18 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
                     <h2 class="font-medium">Additional info</h2>
-                    <p class="text-sm text-zinc-400">Optional metadata.</p>
+                    <p class="text-sm text-fg-muted">Optional metadata.</p>
                 </div>
 
                 <div class="md:col-span-3 space-y-6">
                     <div>
-                        <label class="text-sm text-zinc-400">Job title</label>
+                        <label class="text-sm text-fg-muted">Job title</label>
                         <input wire:model.defer="job_title" type="text"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                     </div>
 
                     <div>
-                        <label class="text-sm text-zinc-400">Mobile</label>
+                        <label class="text-sm text-fg-muted">Mobile</label>
                         <input wire:model.defer="mobile" type="text"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
                     </div>

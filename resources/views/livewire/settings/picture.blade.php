@@ -32,7 +32,7 @@
                     <label for="photo-upload"
                         class="flex flex-col justify-center items-center bg-surface-2/50 hover:bg-surface-2/80 border-2 border-surface-2 hover:border-zinc-600 border-dashed rounded-xl w-full h-28 transition cursor-pointer">
                         <x-heroicon-o-arrow-up-tray class="mb-2 w-6 h-6 text-zinc-500" />
-                        <p class="text-zinc-400 text-sm">
+                        <p class="text-fg-muted text-sm">
                             <span class="font-medium text-zinc-300">Click to upload</span> or drag and drop
                         </p>
                         <p class="mt-1 text-zinc-600 text-xs">PNG, JPG, GIF up to 2 MB</p>

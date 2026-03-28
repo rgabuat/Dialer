@@ -17,7 +17,7 @@
             <div class="space-y-4 px-6 py-5">
 
                 <div>
-                    <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Current Password</label>
+                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Current Password</label>
                     <input type="password" wire:model.defer="current_password" placeholder="Your current password"
                         class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     @error('current_password')
@@ -26,7 +26,7 @@
                 </div>
 
                 <div>
-                    <label class="block mb-1.5 font-medium text-zinc-400 text-xs">New Password</label>
+                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">New Password</label>
                     <input type="password" wire:model.defer="password" placeholder="Your new password"
                         class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     @error('password')
@@ -37,7 +37,7 @@
                 </div>
 
                 <div>
-                    <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Confirm New Password</label>
+                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Confirm New Password</label>
                     <input type="password" wire:model.defer="password_confirmation"
                         placeholder="Your new password again"
                         class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">

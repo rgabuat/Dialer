@@ -5,8 +5,8 @@
 
             {{-- Header --}}
             <div class="mb-8">
-                <h1 class="text-2xl font-semibold text-white mb-1">Edit User</h1>
-                <p class="text-sm text-zinc-400">
+                <h1 class="text-2xl font-semibold text-white light:text-fg mb-1">Edit User</h1>
+                <p class="text-sm text-fg-muted">
                     Update user account details and preferences.
                 </p>
             </div>
@@ -16,20 +16,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                     <div>
                         <h2 class="font-medium text-white">Basics</h2>
-                        <p class="text-sm text-zinc-400">Core user information.</p>
+                        <p class="text-sm text-fg-muted">Core user information.</p>
                     </div>
 
                     <div class="md:col-span-3 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-sm text-zinc-400">First name</label>
+                                <label class="text-sm text-fg-muted">First name</label>
                                 <input wire:model.defer="first_name" type="text"
                                     class="w-full rounded-lg bg-neutral-950 border border-neutral-800
                                px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
                             </div>
 
                             <div>
-                                <label class="text-sm text-zinc-400">Last name</label>
+                                <label class="text-sm text-fg-muted">Last name</label>
                                 <input wire:model.defer="last_name" type="text"
                                     class="w-full rounded-lg bg-neutral-950 border border-neutral-800
                                px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
@@ -37,7 +37,7 @@
                         </div>
 
                         <div>
-                            <label class="text-sm text-zinc-400">Email</label>
+                            <label class="text-sm text-fg-muted">Email</label>
                             <input wire:model.defer="email" type="email"
                                 class="w-full rounded-lg bg-neutral-950 border border-neutral-800
                                px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
@@ -49,12 +49,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                     <div>
                         <h2 class="font-medium text-white">Access</h2>
-                        <p class="text-sm text-zinc-400">Role & password.</p>
+                        <p class="text-sm text-fg-muted">Role & password.</p>
                     </div>
 
                     <div class="md:col-span-3 space-y-6">
                         <div>
-                            <label class="text-sm text-zinc-400">Role</label>
+                            <label class="text-sm text-fg-muted">Role</label>
                             <select wire:model="selectedRole"
                                 class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
                                        px-3 py-2 text-white focus:border-indigo-500 focus:outline-none text-sm">
@@ -69,7 +69,7 @@
                         </div>
 
                         <div>
-                            <label class="text-sm text-zinc-400">User Group</label>
+                            <label class="text-sm text-fg-muted">User Group</label>
                             <select wire:model.defer="selectedUserGroup"
                                 class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
                                        px-3 py-2 text-white focus:border-indigo-500 focus:outline-none text-sm">
@@ -84,7 +84,7 @@
                         </div>
 
                         <div>
-                            <label class="text-sm text-zinc-400">New password <span class="text-zinc-600">(leave blank to keep current)</span></label>
+                            <label class="text-sm text-fg-muted">New password <span class="text-zinc-600">(leave blank to keep current)</span></label>
                             <input wire:model.defer="password" type="password"
                                 class="mt-1 w-full rounded-lg bg-neutral-950 border border-neutral-800
                                        px-3 py-2 text-white focus:border-indigo-500 focus:outline-none" />
@@ -109,7 +109,7 @@
                         Danger zone
                     </h3>
 
-                    <p class="mt-1 text-sm text-zinc-400">
+                    <p class="mt-1 text-sm text-fg-muted">
                         Deleting a user is permanent and cannot be undone.
                     </p>
 
@@ -137,7 +137,7 @@
                     Delete user
                 </h2>
 
-                <p class="mt-2 text-sm text-zinc-400">
+                <p class="mt-2 text-sm text-fg-muted">
                     Are you sure you want to delete
                     <span class="font-medium text-fg-2">
                         {{ $user->first_name }} {{ $user->last_name }}

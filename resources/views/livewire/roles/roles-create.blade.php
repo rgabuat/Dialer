@@ -12,7 +12,7 @@
             <h2 class="font-semibold text-fg text-sm">Role Details</h2>
         </div>
         <div class="px-5 py-5">
-            <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Role Name</label>
+            <label class="block mb-1.5 font-medium text-fg-muted text-xs">Role Name</label>
             <input type="text" wire:model.defer="name" placeholder="e.g. Admin, Editor"
                 class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-fg text-sm transition placeholder-fg-muted">
             @error('name')
@@ -38,7 +38,7 @@
                 <h2 class="font-semibold text-fg text-sm">Assign Permissions</h2>
                 <p class="mt-0.5 text-zinc-500 text-xs">Choose what this role can access.</p>
             </div>
-            <label class="flex items-center gap-2 text-zinc-400 text-xs cursor-pointer select-none">
+            <label class="flex items-center gap-2 text-fg-muted text-xs cursor-pointer select-none">
                 <span>Select all</span>
                 <div class="inline-flex relative items-center">
                     <input type="checkbox" wire:click="toggleAll({{ json_encode($allPermNames) }})"
@@ -133,7 +133,7 @@
             class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg font-medium text-white text-sm transition">
             Create Role
         </button>
-        <a href="{{ route('roles.index') }}" wire:navigate class="text-zinc-400 hover:text-fg-2 text-sm transition">
+        <a href="{{ route('roles.index') }}" wire:navigate class="text-fg-muted hover:text-fg-2 text-sm transition">
             Cancel
         </a>
     </div>

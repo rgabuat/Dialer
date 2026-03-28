@@ -17,7 +17,7 @@
             <div class="space-y-4 px-6 py-5">
                 <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">First Name</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">First Name</label>
                         <input wire:model.defer="first_name"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('first_name')
@@ -25,7 +25,7 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Last Name</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Last Name</label>
                         <input wire:model.defer="last_name"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('last_name')
@@ -35,12 +35,12 @@
                 </div>
                 <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Nickname</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Nickname</label>
                         <input wire:model.defer="nickname" placeholder="Optional"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Job Title</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Job Title</label>
                         <input wire:model.defer="job_title" placeholder="Optional"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>
@@ -57,7 +57,7 @@
             <div class="px-6 py-5">
                 <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Email</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Email</label>
                         <input wire:model.defer="email" type="email"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('email')
@@ -65,7 +65,7 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Mobile Number</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Mobile Number</label>
                         <input wire:model.defer="mobile" type="tel"
                             class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>

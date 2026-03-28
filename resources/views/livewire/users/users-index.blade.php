@@ -32,7 +32,7 @@
         update();
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
-            <table class="min-w-full text-white text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
@@ -63,13 +63,13 @@
                             </td>
 
                             {{-- ID --}}
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $user->id }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $user->id }}</td>
 
                             {{-- Store --}}
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $user->store_name ?? '—' }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $user->store_name ?? '—' }}</td>
 
                             {{-- Email --}}
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $user->email }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $user->email }}</td>
 
                         </tr>
                     @empty

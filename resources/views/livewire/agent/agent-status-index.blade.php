@@ -110,7 +110,7 @@
             update();
             window.addEventListener('resize', update);
             $cleanup(() => window.removeEventListener('resize', update));">
-                <table class="min-w-full text-white text-sm stagger-rows">
+                <table class="min-w-full text-fg text-sm stagger-rows">
                     <thead class="top-0 z-10 sticky bg-surface">
                         <tr
                             class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
@@ -179,7 +179,7 @@
                                 </td>
 
                                 {{-- Group --}}
-                                <td class="px-5 py-4 text-zinc-400 text-sm">
+                                <td class="px-5 py-4 text-fg-muted text-sm">
                                     {{ $status->user->userGroup?->name ?? '—' }}
                                 </td>
 
@@ -201,7 +201,7 @@
                                 </td>
 
                                 {{-- Since --}}
-                                <td class="px-5 py-4 text-zinc-400 text-sm" x-text="sinceLabel"></td>
+                                <td class="px-5 py-4 text-fg-muted text-sm" x-text="sinceLabel"></td>
 
                                 {{-- Elapsed --}}
                                 <td class="px-5 py-4 font-mono text-fg-3 text-sm" x-text="time"></td>
@@ -246,7 +246,7 @@
                                 <td colspan="4" class="bg-surface-3 px-5 py-1.5 border-y border-surface">
                                     <div class="flex items-center gap-2">
                                         <span
-                                            class="font-semibold text-zinc-400 text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
+                                            class="font-semibold text-fg-muted text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
                                         <span class="font-medium text-[10px] text-zinc-700">{{ $g['count'] }}</span>
                                         @if ($g['count'] > 0)
                                             @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
@@ -316,7 +316,7 @@
                                     </td>
                                     {{-- Timer --}}
                                     <td class="px-5 py-2.5 font-mono text-sm"
-                                        :class="isAvailable ? 'text-green-400' : 'text-zinc-400'" x-text="time"></td>
+                                        :class="isAvailable ? 'text-green-400' : 'text-fg-muted'" x-text="time"></td>
                                 </tr>
                             @endforeach
                         @empty

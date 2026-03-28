@@ -6,11 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- Prevent theme flash: apply class before paint --}}
+    {{-- Prevent theme flash: apply class before paint + watch for Livewire morph wiping it --}}
     <script>
         (function() {
-            var t = localStorage.getItem('theme');
-            document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
+            function applyTheme() {
+                var isDark = localStorage.getItem('theme') !== 'light';
+                document.documentElement.classList.toggle('dark', isDark);
+                document.documentElement.classList.toggle('light', !isDark);
+            }
+            applyTheme();
+
+            // MutationObserver keeps the theme class intact when Livewire morphs <html> during wire:navigate
+            var _themeObserver = new MutationObserver(function() {
+                var isDark = localStorage.getItem('theme') !== 'light';
+                var el = document.documentElement;
+                var hasDark = el.classList.contains('dark');
+                var hasLight = el.classList.contains('light');
+                if ((isDark && !hasDark) || (!isDark && !hasLight)) {
+                    _themeObserver.disconnect();
+                    applyTheme();
+                    _themeObserver.observe(el, {
+                        attributes: true,
+                        attributeFilter: ['class']
+                    });
+                }
+            });
+            _themeObserver.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
         })();
     </script>
 
@@ -29,13 +53,10 @@
             });
         });
 
-        {{-- Re-apply theme class after wire:navigate (Livewire morphs <html> and wipes classes) --}}
+        // Keep Alpine store in sync after wire:navigate
         document.addEventListener('livewire:navigated', function() {
-            var isDark = localStorage.getItem('theme') !== 'light';
-            document.documentElement.classList.toggle('dark', isDark);
-            document.documentElement.classList.toggle('light', !isDark);
             if (window.Alpine && Alpine.store('theme')) {
-                Alpine.store('theme').isDark = isDark;
+                Alpine.store('theme').isDark = localStorage.getItem('theme') !== 'light';
             }
         });
     </script>

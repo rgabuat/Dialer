@@ -13,7 +13,7 @@
 
         {{-- Volume --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Volume</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Volume</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>
                     <div class="font-black text-blue-400 text-3xl">661</div>
@@ -32,7 +32,7 @@
 
         {{-- Service --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Service</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Service</h3>
             <div class="gap-4 grid grid-cols-2">
                 <div>
                     <div class="font-black text-blue-400 text-3xl">25:25</div>
@@ -51,7 +51,7 @@
 
         {{-- Handled --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Handled</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Handled</h3>
             <div class="gap-4 grid grid-cols-4">
                 <div>
                     <div class="font-black text-blue-400 text-3xl">710</div>
@@ -74,7 +74,7 @@
 
         {{-- Sales --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Sales</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Sales</h3>
             <div class="gap-4 grid grid-cols-2">
                 <div class="flex items-center gap-3">
                     <x-overview-donut value="18" color="#ec4899" size="52" />
@@ -95,7 +95,7 @@
 
         {{-- Abandoned Calls --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Abandoned Calls</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Abandoned Calls</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>
                     <div class="font-black text-blue-400 text-3xl">1</div>
@@ -108,7 +108,7 @@
                 <div class="flex items-center gap-3">
                     <x-overview-donut value="1" color="#71717a" size="52" />
                     <div>
-                        <div class="font-black text-zinc-400 text-2xl">0.15%</div>
+                        <div class="font-black text-fg-muted text-2xl">0.15%</div>
                         <div class="mt-1 text-zinc-500 text-xs">Abandoned Call Rate</div>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
 
         {{-- Agents --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-zinc-400 text-sm uppercase tracking-wider">Agents</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Agents</h3>
             <div class="gap-4 grid grid-cols-3">
                 <div>
                     <div class="font-black text-blue-400 text-3xl">48</div>

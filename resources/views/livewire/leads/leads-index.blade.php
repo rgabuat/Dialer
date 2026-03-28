@@ -27,7 +27,7 @@
         update();
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
-            <table class="min-w-full text-white text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
@@ -42,13 +42,13 @@
                         <tr onclick="window.location='{{ route('lead.edit', $lead->id) }}'"
                             class="hover:bg-hover border-surface border-b transition cursor-pointer">
                             <td class="px-5 py-4">
-                                <div class="font-semibold text-white">{{ $lead->first_name }} {{ $lead->last_name }}
+                                <div class="font-semibold text-fg">{{ $lead->first_name }} {{ $lead->last_name }}
                                 </div>
                             </td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->phone ?? '—' }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->email ?? '—' }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->store->name }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $lead->creator->name }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $lead->phone ?? '—' }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $lead->email ?? '—' }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $lead->store->name }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $lead->creator->name }}</td>
                         </tr>
                     @empty
                         <tr>

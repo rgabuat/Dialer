@@ -65,7 +65,7 @@
             <div class="space-y-4 px-6 py-5">
 
                 <div>
-                    <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Timezone</label>
+                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Timezone</label>
                     <div class="relative">
                         <select wire:model.defer="timezone"
                             class="bg-surface-2/70 px-3 py-2.5 pr-9 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition appearance-none">
@@ -82,7 +82,7 @@
 
                 <div class="gap-4 grid grid-cols-1 md:grid-cols-2">
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Time Format</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Time Format</label>
                         <div class="relative">
                             <select wire:model.defer="time_format"
                                 class="bg-surface-2/70 px-3 py-2.5 pr-9 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition appearance-none">
@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Week Starts On</label>
+                        <label class="block mb-1.5 font-medium text-fg-muted text-xs">Week Starts On</label>
                         <div class="relative">
                             <select wire:model.defer="week_start"
                                 class="bg-surface-2/70 px-3 py-2.5 pr-9 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition appearance-none">

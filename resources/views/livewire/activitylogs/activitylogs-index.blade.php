@@ -47,7 +47,7 @@
         update();
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
-            <table class="min-w-full text-white text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Actor</th>
@@ -72,11 +72,11 @@
                                 <div class="text-zinc-500 text-xs">{{ $log->event }}</div>
                             </td>
 
-                            <td class="px-5 py-4 text-zinc-400 text-sm">
+                            <td class="px-5 py-4 text-fg-muted text-sm">
                                 {{ $log->subject ? class_basename($log->subject_type) . ' #' . $log->subject_id : '—' }}
                             </td>
 
-                            <td class="px-5 py-4 text-zinc-400 text-xs uppercase tracking-wide">
+                            <td class="px-5 py-4 text-fg-muted text-xs uppercase tracking-wide">
                                 {{ $log->type }}
                             </td>
 
@@ -92,7 +92,7 @@
                                 </span>
                             </td>
 
-                            <td class="px-5 py-4 text-zinc-400 text-xs">
+                            <td class="px-5 py-4 text-fg-muted text-xs">
                                 {{ $log->performed_at->format('M d, Y H:i') }}
                             </td>
                         </tr>

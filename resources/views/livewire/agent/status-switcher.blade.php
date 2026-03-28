@@ -40,7 +40,7 @@
 
         {{-- LIVE TIMER --}}
         <div wire:ignore x-data="statusTimer(@js($startedAt))" x-init="start()"
-            class="bg-surface px-3 py-1 rounded-md font-mono text-zinc-400 text-xs">
+            class="bg-surface px-3 py-1 rounded-md font-mono text-fg-muted text-xs">
             <span x-text="time"></span>
         </div>
 

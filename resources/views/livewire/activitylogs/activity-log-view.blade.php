@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            <button wire:click="closeDrawer" class="text-zinc-400 hover:text-fg-2">
+            <button wire:click="closeDrawer" class="text-fg-muted hover:text-fg-2">
                 ✕
             </button>
         </div>
@@ -52,7 +52,7 @@
                     <div
                         class="border-l border-surface-2 pl-4 py-2
                         {{ $item->id === $log->id ? 'bg-surface-2/60' : '' }}">
-                        <div class="text-zinc-400 text-xs">
+                        <div class="text-fg-muted text-xs">
                             {{ $item->performed_at->format('H:i:s') }}
                         </div>
                         <div class="text-fg-2 text-sm">
@@ -73,7 +73,7 @@
                 @foreach ($batchLogs as $item)
                     @if (!empty($item->properties))
                         <div class="mb-4 border border-surface rounded">
-                            <div class="bg-surface px-3 py-2 text-zinc-400 text-xs">
+                            <div class="bg-surface px-3 py-2 text-fg-muted text-xs">
                                 {{ $item->performed_at->format('H:i:s') }} — {{ $item->event }}
                             </div>
 

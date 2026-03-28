@@ -38,7 +38,7 @@
     @forelse($grouped as $module => $perms)
         <div class="bg-surface border border-surface rounded-xl overflow-hidden">
             <div class="flex justify-between items-center px-5 py-3 border-surface border-b">
-                <span class="font-semibold text-zinc-400 text-xs uppercase tracking-widest">{{ $module }}</span>
+                <span class="font-semibold text-fg-muted text-xs uppercase tracking-widest">{{ $module }}</span>
                 <span class="text-zinc-600 text-xs">{{ $perms->count() }}
                     {{ Str::plural('permission', $perms->count()) }}</span>
             </div>

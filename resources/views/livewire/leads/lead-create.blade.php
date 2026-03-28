@@ -3,7 +3,7 @@
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-2xl font-semibold">Create Lead</h1>
-        <p class="text-sm text-zinc-400">Add a new lead.</p>
+        <p class="text-sm text-fg-muted">Add a new lead.</p>
     </div>
 
     {{-- Form --}}
@@ -11,7 +11,7 @@
 
         {{-- First Name --}}
         <div>
-            <label class="text-sm text-zinc-400">First Name</label>
+            <label class="text-sm text-fg-muted">First Name</label>
             <input type="text" wire:model.live="first_name"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('first_name')
@@ -21,7 +21,7 @@
 
         {{-- Last Name --}}
         <div>
-            <label class="text-sm text-zinc-400">Last Name</label>
+            <label class="text-sm text-fg-muted">Last Name</label>
             <input type="text" wire:model.live="last_name"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('last_name')
@@ -31,21 +31,21 @@
 
         {{-- Phone --}}
         <div>
-            <label class="text-sm text-zinc-400">Phone</label>
+            <label class="text-sm text-fg-muted">Phone</label>
             <input type="text" wire:model.live="phone"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
         </div>
 
         {{-- Email --}}
         <div>
-            <label class="text-sm text-zinc-400">Email</label>
+            <label class="text-sm text-fg-muted">Email</label>
             <input type="email" wire:model.live="email"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
         </div>
 
         {{-- Store --}}
         <div>
-            <label class="text-sm text-zinc-400">Store</label>
+            <label class="text-sm text-fg-muted">Store</label>
             <select wire:model.live="store_id"
                 class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md">
                 <option value="">Select Store</option>
@@ -60,7 +60,7 @@
 
         {{-- Actions --}}
         <div class="flex justify-between pt-4">
-            <a href="{{ route('leads.index') }}" class="text-sm text-zinc-400 hover:text-fg-2">
+            <a href="{{ route('leads.index') }}" class="text-sm text-fg-muted hover:text-fg-2">
                 ← Back
             </a>
 

@@ -24,7 +24,7 @@
         update();
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
-            <table class="min-w-full text-white text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Store Name</th>
@@ -37,7 +37,7 @@
                         <tr class="hover:bg-hover border-surface border-b transition cursor-pointer"
                             onclick="window.location='{{ route('store.edit', $store->id) }}'">
                             <td class="px-5 py-4 font-semibold text-fg">{{ $store->name }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $store->address }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $store->address }}</td>
                             <td class="px-5 py-4">
                                 <span
                                     class="inline-flex items-center bg-surface-2 px-2.5 py-1 rounded-md font-medium text-fg-3 text-xs">

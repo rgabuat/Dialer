@@ -34,7 +34,7 @@
         update();
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
-            <table class="min-w-full text-white text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
@@ -48,8 +48,8 @@
                     @forelse ($groups as $group)
                         <tr class="hover:bg-hover border-surface border-b transition">
                             <td class="px-5 py-4 font-semibold text-fg">{{ $group->name }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $group->campaigns_count }}</td>
-                            <td class="px-5 py-4 text-zinc-400 text-sm">{{ $group->users_count }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $group->campaigns_count }}</td>
+                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $group->users_count }}</td>
                             <td class="px-5 py-4">
                                 @if ($group->is_active)
                                     <span
@@ -58,7 +58,7 @@
                                     </span>
                                 @else
                                     <span
-                                        class="inline-flex items-center gap-1.5 bg-zinc-700/50 px-2.5 py-1 rounded-md font-bold text-zinc-400 text-xs uppercase tracking-wide">
+                                        class="inline-flex items-center gap-1.5 bg-zinc-700/50 px-2.5 py-1 rounded-md font-bold text-fg-muted text-xs uppercase tracking-wide">
                                         <span class="bg-zinc-500 rounded-full w-1.5 h-1.5"></span>Inactive
                                     </span>
                                 @endif
@@ -66,7 +66,7 @@
                             <td class="px-5 py-4 text-right">
                                 @can('user_group.update')
                                     <a href="{{ route('user-group.edit', $group) }}" wire:navigate
-                                        class="text-zinc-400 hover:text-white text-xs transition">Edit</a>
+                                        class="text-fg-muted hover:text-fg text-xs transition">Edit</a>
                                 @endcan
                             </td>
                         </tr>

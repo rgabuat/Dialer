@@ -41,7 +41,7 @@
         {{-- Legend --}}
         <div class="flex flex-wrap items-center gap-2 ml-2">
             @foreach ($statusTypes as $type)
-                <span class="inline-flex items-center gap-1.5 text-zinc-400 text-xs">
+                <span class="inline-flex items-center gap-1.5 text-fg-muted text-xs">
                     <span class="rounded-sm w-2.5 h-2.5 shrink-0"
                         style="background-color: {{ $type->color ?? '#6366f1' }}"></span>
                     {{ $type->name }}
@@ -183,7 +183,7 @@
                             class="flex items-stretch bg-surface-3 border-surface/80 border-b">
                             <div
                                 class="left-0 z-10 sticky flex items-center gap-2 bg-surface-3 px-4 py-1.5 border-surface border-r w-[260px] shrink-0">
-                                <span class="font-bold text-zinc-400 text-xs uppercase tracking-widest">
+                                <span class="font-bold text-fg-muted text-xs uppercase tracking-widest">
                                     {{ optional($g['group'])->name ?? 'Unassigned' }}
                                 </span>
                                 <span class="font-medium text-[10px] text-zinc-600">{{ $g['count'] }}</span>

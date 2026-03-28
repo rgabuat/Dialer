@@ -26,7 +26,7 @@
                                     class="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-all
                                       {{ $isActive
                                           ? 'bg-surface-2 text-fg font-medium'
-                                          : 'text-zinc-400 hover:bg-surface-2/80 hover:text-fg-2' }}">
+                                          : 'text-fg-muted hover:bg-surface-2/80 hover:text-fg-2' }}">
                                     @if (!empty($item['icon']))
                                         <x-dynamic-component :component="$item['icon']" class="w-4 h-4 shrink-0" />
                                     @endif
