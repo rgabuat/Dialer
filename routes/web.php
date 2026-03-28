@@ -19,6 +19,7 @@ use App\Livewire\Settings\Preferences;
 use App\Http\Controllers\TwilioController;
 use App\Livewire\Permissions\PermissionsIndex;
 use App\Livewire\Activity\OverviewIndex;
+use App\Livewire\Activity\ShiftMonitoring;
 use App\Livewire\Activitylogs\ActivitylogsIndex;
 use App\Livewire\Agent\AgentStatusIndex;
 use App\Livewire\Campaign\CampaignSelect;
@@ -89,6 +90,11 @@ Route::middleware(["auth"])->group(function () {
     //activity
     Route::get("/activity-overview", OverviewIndex::class)->name(
       "activity.overview"
+    );
+
+    //shift monitoring
+    Route::get("/shift-monitoring", ShiftMonitoring::class)->name(
+      "shift.monitoring"
     );
 
     //activity logs

@@ -1,0 +1,205 @@
+<?php
+
+namespace App\Livewire\Activity;
+
+use App\Models\AgentStatusLog;
+use App\Models\AgentStatusType;
+use App\Models\User;
+use Carbon\Carbon;
+use Livewire\Component;
+
+class ShiftMonitoring extends Component
+{
+  public string $search = "";
+  public string $filterStatus = "";
+  public string $date = "";
+
+  const PX_PER_HOUR = 80;
+
+  public function mount(): void
+  {
+    $this->date = now()->toDateString();
+  }
+
+  public function render()
+  {
+    $pxPerHour = self::PX_PER_HOUR;
+    $pxPerMin = $pxPerHour / 60;
+
+    $date = Carbon::parse($this->date);
+    $start = $date->copy()->startOfDay();
+    $end = $date->copy()->endOfDay();
+
+    // ── All logs for the day ───────────────────────────────────────────
+    $allLogs = AgentStatusLog::query()
+      ->whereBetween("started_at", [$start, $end])
+      ->with("statusType")
+      ->get();
+
+    // ── Visible time range from actual data ────────────────────────────
+    $minLog = $allLogs
+      ->filter(fn($l) => $l->started_at)
+      ->sortBy("started_at")
+      ->first();
+    $maxLog = $allLogs
+      ->filter(fn($l) => $l->ended_at)
+      ->sortByDesc("ended_at")
+      ->first();
+
+    $visibleStart = $minLog
+      ? $minLog->started_at->copy()->startOfHour()
+      : $date->copy()->setHour(6)->setMinute(0)->setSecond(0);
+
+    $visibleEnd = $maxLog
+      ? $maxLog->ended_at->copy()->addHour()->startOfHour()
+      : $date->copy()->setHour(22)->setMinute(0)->setSecond(0);
+
+    // ── Hours array for the timeline header ────────────────────────────
+    $hours = [];
+    $cursor = $visibleStart->copy();
+    while ($cursor->lte($visibleEnd)) {
+      $hours[] = [
+        "label" => $cursor->format("H:00"),
+        "left" => (int) round(
+          $cursor->diffInMinutes($visibleStart) * $pxPerMin
+        ),
+      ];
+      $cursor->addHour();
+    }
+
+    $timelineWidth = (int) round(
+      $visibleEnd->diffInMinutes($visibleStart) * $pxPerMin
+    );
+
+    // ── Agents with eager loads ────────────────────────────────────────
+    $agents = User::query()
+      ->with(["userGroup", "agentStatus.statusType"])
+      ->when(
+        $this->search,
+        fn($q) => $q->where(function ($q) {
+          $q->where("first_name", "like", "%{$this->search}%")
+            ->orWhere("last_name", "like", "%{$this->search}%")
+            ->orWhere("email", "like", "%{$this->search}%");
+        })
+      )
+      ->when(
+        $this->filterStatus,
+        fn($q) => $q->whereHas(
+          "statusLogs",
+          fn($sq) => $sq
+            ->whereBetween("started_at", [$start, $end])
+            ->whereHas(
+              "statusType",
+              fn($t) => $t->where("slug", $this->filterStatus)
+            )
+        )
+      )
+      ->whereHas(
+        "statusLogs",
+        fn($q) => $q->whereBetween("started_at", [$start, $end])
+      )
+      ->orderBy("first_name")
+      ->get();
+
+    // Attach timeline blocks to each agent
+    $logsByUser = $allLogs->groupBy("user_id");
+
+    $agents->each(function ($user) use (
+      $logsByUser,
+      $visibleStart,
+      $visibleEnd,
+      $pxPerMin
+    ) {
+      $logs = $logsByUser
+        ->get($user->id, collect())
+        ->filter(fn($l) => $l->started_at)
+        ->sortBy("started_at");
+
+      $user->timelineBlocks = $logs
+        ->map(function ($log) use ($visibleStart, $visibleEnd, $pxPerMin) {
+          $bStart =
+            $log->started_at instanceof Carbon
+              ? $log->started_at
+              : Carbon::parse($log->started_at);
+          $bEnd = $log->ended_at
+            ? ($log->ended_at instanceof Carbon
+              ? $log->ended_at
+              : Carbon::parse($log->ended_at))
+            : now();
+
+          $cStart = $bStart->max($visibleStart);
+          $cEnd = $bEnd->min($visibleEnd);
+
+          if ($cEnd->lte($cStart)) {
+            return null;
+          }
+
+          $offsetMins = max(0, (int) $cStart->diffInMinutes($visibleStart));
+          $durationMins = max(1, (int) $cEnd->diffInMinutes($cStart));
+
+          return [
+            "left" => (int) round($offsetMins * $pxPerMin),
+            "width" => max(2, (int) round($durationMins * $pxPerMin)),
+            "label" => $bStart->format("g:ia"),
+            "durationLabel" =>
+              $durationMins >= 60
+                ? intdiv($durationMins, 60) .
+                  "h " .
+                  str_pad($durationMins % 60, 2, "0", STR_PAD_LEFT) .
+                  "m"
+                : $durationMins . "m",
+            "status" => $log->statusType?->name ?? "Unknown",
+            "color" => $log->statusType?->color ?? "#6366f1",
+          ];
+        })
+        ->filter()
+        ->values();
+    });
+
+    // ── Group agents by user_group ─────────────────────────────────────
+    $grouped = $agents
+      ->groupBy("user_group_id")
+      ->map(
+        fn($users) => [
+          "group" => $users->first()->userGroup,
+          "agents" => $users,
+          "count" => $users->count(),
+        ]
+      )
+      ->sortBy(fn($g) => optional($g["group"])->name ?? "zzzzz")
+      ->values();
+
+    // ── Summary stats ──────────────────────────────────────────────────
+    $totalAgents = $agents->count();
+    $totalSeconds = $allLogs->sum("duration_seconds");
+    $availSeconds = $allLogs
+      ->filter(fn($l) => optional($l->statusType)->is_available)
+      ->sum("duration_seconds");
+    $avgUtil =
+      $totalSeconds > 0 ? round(($availSeconds / $totalSeconds) * 100) : 0;
+
+    $statusTypes = AgentStatusType::orderBy("name")->get();
+
+    return view(
+      "livewire.activity.shift-monitoring",
+      compact(
+        "grouped",
+        "hours",
+        "timelineWidth",
+        "totalAgents",
+        "totalSeconds",
+        "availSeconds",
+        "avgUtil",
+        "statusTypes",
+        "date"
+      )
+    )->layout("components.layouts.app");
+  }
+
+  public static function formatSeconds(int $seconds): string
+  {
+    $h = intdiv($seconds, 3600);
+    $m = intdiv($seconds % 3600, 60);
+    return $h > 0 ? sprintf("%dh %02dm", $h, $m) : sprintf("%dm", $m);
+  }
+}
