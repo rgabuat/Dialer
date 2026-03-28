@@ -229,92 +229,104 @@
             update();
             window.addEventListener('resize', update);
             $cleanup(() => window.removeEventListener('resize', update));">
-                @forelse ($grouped as $g)
-                    {{-- Group header --}}
-                    <div
-                        class="top-0 z-10 sticky flex justify-between items-center bg-[#0d0f13] px-4 py-2 border-zinc-800/80 border-b">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="font-bold text-zinc-400 text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
-                            <span class="font-medium text-[10px] text-zinc-600">{{ $g['count'] }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="bg-green-500/10 px-2 py-0.5 rounded font-semibold text-[10px] text-green-400">{{ $g['availCount'] }}
-                                available</span>
-                            @if ($g['count'] > 0)
-                                @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
-                                <span
-                                    class="font-medium text-[10px] {{ $grpPct >= 70 ? 'text-green-500' : ($grpPct >= 40 ? 'text-yellow-500' : 'text-red-500') }}">{{ $grpPct }}%</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Agent rows --}}
-                    @foreach ($g['agents'] as $status)
-                        @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
-                        <div wire:key="grouped-agent-{{ $status->user_id }}"
-                            class="group flex items-center gap-3 hover:bg-white/[0.02] px-4 py-3 border-zinc-800/40 border-b transition gantt-row-animate"
-                            x-data="{
-                                userId: {{ $status->user_id }},
-                                statusName: @js($status->statusType?->name ?? '—'),
-                                statusColor: @js($status->statusType?->color ?? '#a1a1aa'),
-                                isAvailable: @js((bool) $status->statusType?->is_available),
-                                startedAt: @js($status->started_at?->toIso8601String()),
-                                sinceLabel: @js($status->started_at?->format('g:ia') ?? '—'),
-                                time: '00:00:00',
-                                start() { this.tick();
-                                    this.interval = setInterval(() => this.tick(), 1000); },
-                                tick() {
-                                    if (!this.startedAt) return;
-                                    const d = Math.floor((Date.now() - new Date(this.startedAt).getTime()) / 1000);
-                                    this.time = [Math.floor(d / 3600), Math.floor((d % 3600) / 60), d % 60].map(n => String(n).padStart(2, '0')).join(':');
-                                },
-                            }" x-init="start()"
-                            @agent-row-update.window="
-                            if ($event.detail.user_id === userId) {
-                                statusName  = $event.detail.status_name;
-                                statusColor = $event.detail.status_color;
-                                isAvailable = $event.detail.is_available;
-                                sinceLabel  = new Date($event.detail.started_at).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
-                            }
-                        ">
-                            {{-- Colored avatar --}}
-                            <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[11px] uppercase transition-all select-none shrink-0"
-                                :style="`background-color:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}44`">
-                                {{ $initials }}
-                            </div>
-                            {{-- Name + status --}}
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <span
-                                        class="font-medium text-zinc-200 text-sm truncate">{{ $status->user->first_name }}
-                                        {{ $status->user->last_name }}</span>
-                                    <span
-                                        class="px-1.5 py-0.5 rounded font-semibold text-[10px] transition-all shrink-0"
-                                        :style="`background-color:${statusColor}22; color:${statusColor}`"
-                                        x-text="statusName"></span>
-                                    <span x-show="isAvailable"
-                                        class="bg-green-500/10 px-1.5 py-0.5 rounded font-semibold text-[10px] text-green-400 shrink-0">
-                                        Available
-                                    </span>
-                                </div>
-                                <div class="mt-0.5 text-[11px] text-zinc-600 truncate">{{ $status->user->email }}
-                                </div>
-                            </div>
-                            {{-- Timer + Since --}}
-                            <div class="text-right shrink-0">
-                                <div class="font-mono text-xs transition-colors"
-                                    :class="isAvailable ? 'text-green-400' : 'text-zinc-500'" x-text="time"></div>
-                                <div class="mt-0.5 text-[10px] text-zinc-600" x-text="sinceLabel"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                @empty
-                    <div class="flex justify-center items-center py-16 text-zinc-500 text-sm italic">
-                        No agents found.
-                    </div>
-                @endforelse
+                <table class="min-w-full text-sm">
+                    <thead class="top-0 z-20 sticky bg-zinc-900">
+                        <tr
+                            class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                            <th class="px-5 py-3 w-full text-left">Agent</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Available</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Time in Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($grouped as $g)
+                            {{-- Group divider row --}}
+                            <tr class="top-[37px] z-10 sticky">
+                                <td colspan="4" class="bg-[#0c0e12] px-5 py-1.5 border-y border-zinc-800">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="font-semibold text-zinc-400 text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
+                                        <span class="font-medium text-[10px] text-zinc-700">{{ $g['count'] }}</span>
+                                        @if ($g['count'] > 0)
+                                            @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
+                                            <span
+                                                class="ml-auto font-medium text-[10px] {{ $grpPct >= 70 ? 'text-green-500' : ($grpPct >= 40 ? 'text-yellow-500' : 'text-red-500') }}">{{ $g['availCount'] }}/{{ $g['count'] }}
+                                                available &middot; {{ $grpPct }}%</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            {{-- Agent rows --}}
+                            @foreach ($g['agents'] as $status)
+                                @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
+                                <tr wire:key="grouped-agent-{{ $status->user_id }}"
+                                    class="hover:bg-zinc-800/30 border-zinc-800/50 border-b transition"
+                                    x-data="{
+                                        userId: {{ $status->user_id }},
+                                        statusName: @js($status->statusType?->name ?? '—'),
+                                        statusColor: @js($status->statusType?->color ?? '#a1a1aa'),
+                                        isAvailable: @js((bool) $status->statusType?->is_available),
+                                        startedAt: @js($status->started_at?->toIso8601String()),
+                                        time: '00:00:00',
+                                        interval: null,
+                                        start() { this.tick();
+                                            this.interval = setInterval(() => this.tick(), 1000); },
+                                        reset(s) { clearInterval(this.interval);
+                                            this.startedAt = s;
+                                            this.time = '00:00:00';
+                                            this.start(); },
+                                        tick() {
+                                            if (!this.startedAt) return;
+                                            const d = Math.floor((Date.now() - new Date(this.startedAt).getTime()) / 1000);
+                                            this.time = [Math.floor(d / 3600), Math.floor((d % 3600) / 60), d % 60].map(n => String(n).padStart(2, '0')).join(':');
+                                        },
+                                    }" x-init="start()"
+                                    @agent-row-update.window="
+                                        if ($event.detail.user_id === userId) {
+                                            statusName  = $event.detail.status_name;
+                                            statusColor = $event.detail.status_color;
+                                            isAvailable = $event.detail.is_available;
+                                            reset($event.detail.started_at);
+                                        }
+                                    ">
+                                    {{-- Agent --}}
+                                    <td class="px-5 py-2.5">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex justify-center items-center rounded-full w-7 h-7 font-bold text-[10px] uppercase select-none shrink-0"
+                                                :style="`background-color:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}44`">
+                                                {{ $initials }}
+                                            </div>
+                                            <span
+                                                class="max-w-xs font-medium text-zinc-200 text-sm truncate">{{ $status->user->first_name }}
+                                                {{ $status->user->last_name }}</span>
+                                        </div>
+                                    </td>
+                                    {{-- Status badge --}}
+                                    <td class="px-5 py-2.5">
+                                        <span
+                                            class="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-md min-w-[90px] font-bold text-xs uppercase tracking-wide"
+                                            :style="`background-color:${statusColor}25; color:${statusColor}`"
+                                            x-text="statusName"></span>
+                                    </td>
+                                    {{-- Available --}}
+                                    <td class="px-5 py-2.5 text-sm">
+                                        <span x-show="isAvailable" class="font-semibold text-green-400">Yes</span>
+                                        <span x-show="!isAvailable" class="text-zinc-600">—</span>
+                                    </td>
+                                    {{-- Timer --}}
+                                    <td class="px-5 py-2.5 font-mono text-sm"
+                                        :class="isAvailable ? 'text-green-400' : 'text-zinc-400'" x-text="time"></td>
+                                </tr>
+                            @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="4" class="py-16 text-zinc-500 text-sm text-center italic">No agents
+                                    found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         @endif
 
