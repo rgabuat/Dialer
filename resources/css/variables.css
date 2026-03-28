@@ -56,6 +56,14 @@
     /* zinc-700/25 — gantt grid lines */
     --grid-line-faint: rgba(63, 63, 70, 0.12);
     /* zinc-700/12 — half-hour dashed lines */
+    --card-shadow: rgba(0, 0, 0, 0.30);
+    /* card hover shadow — dark */
+    --accent-blue: #60a5fa;
+    /* blue-400 */
+    --accent-pink: #f472b6;
+    /* pink-400 */
+    --accent-teal: #2dd4bf;
+    /* teal-400 */
 }
 
 .light {
@@ -106,6 +114,14 @@
     /* zinc-400/40 — gantt grid lines light */
     --grid-line-faint: rgba(161, 161, 170, 0.2);
     /* zinc-400/20 — half-hour dashed lines light */
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    /* card hover shadow — light */
+    --accent-blue: #2563eb;
+    /* blue-600 — readable on light */
+    --accent-pink: #db2777;
+    /* pink-600 — readable on light */
+    --accent-teal: #0f766e;
+    /* teal-700 — readable on light */
 }
 
 /* ============================================================
@@ -296,7 +312,7 @@ select:-webkit-autofill {
 
 .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px var(--card-shadow);
 }
 
 /* Button press */

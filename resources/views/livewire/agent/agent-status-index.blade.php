@@ -52,7 +52,7 @@
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
             <div class="flex items-center gap-3">
                 <h2 class="font-bold text-fg text-base">Agent Fleet</h2>
-                <span class="flex items-center gap-1.5 font-medium text-accent-green text-xs">
+                <span class="flex items-center gap-1.5 font-medium text-xs text-accent-green">
                     <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse"></span>
                     Live Syncing
                 </span>
@@ -73,11 +73,11 @@
                     :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
 
                 {{-- View switcher --}}
-                <div class="flex items-center gap-0.5 bg-surface-2 p-1 rounded-lg shrink-0">
+                <div class="flex items-center gap-0.5 bg-surface-2 p-1 border border-surface rounded-lg shrink-0">
                     <button type="button" wire:click="$set('viewMode','table')" title="Table view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
-                        === 'table' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg'">
+                        === 'table' ? 'bg-surface shadow text-fg' : 'text-fg-muted hover:text-fg'">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor"
                             stroke-width="1.5" stroke-linecap="round">
                             <line x1="1" y1="3" x2="13" y2="3" />
@@ -88,7 +88,7 @@
                     <button type="button" wire:click="$set('viewMode','grouped')" title="Grouped view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
-                        === 'grouped' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg'">
+                        === 'grouped' ? 'bg-surface shadow text-fg' : 'text-fg-muted hover:text-fg'">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor"
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="1" width="5" height="5" rx="1" />
@@ -196,7 +196,7 @@
 
                                 {{-- Available --}}
                                 <td class="px-5 py-4">
-                                    <span x-show="isAvailable" class="font-bold text-accent-green text-sm">YES</span>
+                                    <span x-show="isAvailable" class="font-bold text-sm text-accent-green">YES</span>
                                     <span x-show="!isAvailable" class="text-zinc-500 text-sm">NO</span>
                                 </td>
 
@@ -320,7 +320,8 @@
                                     </td>
                                     {{-- Timer --}}
                                     <td class="px-5 py-2.5 font-mono text-sm"
-                                        :class="isAvailable ? 'text-accent-green' : 'text-fg-muted'" x-text="time"></td>
+                                        :class="isAvailable ? 'text-accent-green' : 'text-fg-muted'" x-text="time">
+                                    </td>
                                 </tr>
                             @endforeach
                         @empty
