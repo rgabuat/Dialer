@@ -167,7 +167,9 @@
 }
 
 @utility divide-surface {
-    border-color: var(--border);
+    &>*+* {
+        border-color: var(--border);
+    }
 }
 
 /* Text */

@@ -260,11 +260,11 @@
                         </div>
 
                         {{-- Agent rows --}}
-                        <div class="divide-y divide-surface stagger-children">
+                        <div class="stagger-children">
                             @foreach ($g['agents'] as $status)
                                 @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
                                 <div wire:key="grouped-agent-{{ $status->user_id }}"
-                                    class="flex items-center gap-3 hover:bg-hover px-4 py-2.5 transition"
+                                    class="flex items-center gap-3 bg-surface hover:bg-hover px-4 py-2.5 border-surface border-b last:border-b-0 transition"
                                     x-data="{
                                         userId: {{ $status->user_id }},
                                         statusName: @js($status->statusType?->name ?? '—'),
