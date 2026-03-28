@@ -14,7 +14,7 @@ class ShiftMonitoring extends Component
   public string $filterStatus = "";
   public string $date = "";
 
-  const PX_PER_HOUR = 80;
+  const PX_PER_HOUR = 160;
 
   public function mount(): void
   {
@@ -54,17 +54,19 @@ class ShiftMonitoring extends Component
       ? $maxLog->ended_at->copy()->addHour()->startOfHour()
       : $date->copy()->setHour(22)->setMinute(0)->setSecond(0);
 
-    // ── Hours array for the timeline header ────────────────────────────
+    // ── Hours array for the timeline header (every 30 min) ──────────
     $hours = [];
     $cursor = $visibleStart->copy();
     while ($cursor->lte($visibleEnd)) {
+      $isHalf = $cursor->minute === 30;
       $hours[] = [
-        "label" => $cursor->format("H:00"),
+        "label" => $cursor->format("G:i"),
         "left" => (int) round(
           $cursor->diffInMinutes($visibleStart) * $pxPerMin
         ),
+        "isHalf" => $isHalf,
       ];
-      $cursor->addHour();
+      $cursor->addMinutes(30);
     }
 
     $timelineWidth = (int) round(
@@ -141,6 +143,7 @@ class ShiftMonitoring extends Component
             "left" => (int) round($offsetMins * $pxPerMin),
             "width" => max(2, (int) round($durationMins * $pxPerMin)),
             "label" => $bStart->format("g:ia"),
+            "endLabel" => $bEnd->format("g:ia"),
             "durationLabel" =>
               $durationMins >= 60
                 ? intdiv($durationMins, 60) .
@@ -150,10 +153,28 @@ class ShiftMonitoring extends Component
                 : $durationMins . "m",
             "status" => $log->statusType?->name ?? "Unknown",
             "color" => $log->statusType?->color ?? "#6366f1",
+            "isOngoing" => !$log->ended_at,
           ];
         })
         ->filter()
         ->values();
+
+      // Per-agent shift stats
+      $userTotalSec = $logs->sum("duration_seconds");
+      $userAvailSec = $logs
+        ->filter(fn($l) => optional($l->statusType)->is_available)
+        ->sum("duration_seconds");
+      $firstLog = $logs->first();
+      $lastLog = $logs->sortByDesc("ended_at")->first();
+
+      $user->shiftStartLabel = $firstLog?->started_at?->format("g:ia") ?? "—";
+      $user->shiftEndLabel = $lastLog?->ended_at
+        ? $lastLog->ended_at->format("g:ia")
+        : "ongoing";
+      $user->utilPct =
+        $userTotalSec > 0 ? round(($userAvailSec / $userTotalSec) * 100) : 0;
+      $user->totalShiftLabel =
+        $userTotalSec > 0 ? self::formatSeconds((int) $userTotalSec) : "—";
     });
 
     // ── Group agents by user_group ─────────────────────────────────────
@@ -181,8 +202,14 @@ class ShiftMonitoring extends Component
     $statusTypes = AgentStatusType::orderBy("name")->get();
     $isToday = $this->date === now()->toDateString();
 
+    $availableNow = $agents
+      ->filter(
+        fn($u) => optional(optional($u->agentStatus)->statusType)->is_available
+      )
+      ->count();
+
     return view(
-      @"livewire.activity.shift-monitoring",
+      "livewire.activity.shift-monitoring",
       compact(
         "grouped",
         "hours",
@@ -193,7 +220,8 @@ class ShiftMonitoring extends Component
         "avgUtil",
         "statusTypes",
         "date",
-        "isToday"
+        "isToday",
+        "availableNow"
       )
     )->layout("components.layouts.app");
   }

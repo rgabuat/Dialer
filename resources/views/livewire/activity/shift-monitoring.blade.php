@@ -53,7 +53,33 @@
             @endforeach
         </div>
     </div>
-
+    {{-- ── Stats strip ────────────────────────────────────── --}}
+    <div class="flex flex-wrap items-center gap-2 text-xs shrink-0">
+        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <span class="text-zinc-500">On Shift</span>
+            <span class="font-semibold text-zinc-200">{{ $totalAgents }}</span>
+        </div>
+        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <span class="bg-green-400 rounded-full w-1.5 h-1.5 shrink-0"></span>
+            <span class="text-zinc-500">Available Now</span>
+            <span class="font-semibold text-green-400">{{ $availableNow }}</span>
+        </div>
+        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <span class="text-zinc-500">Avg Utilization</span>
+            <span
+                class="font-semibold {{ $avgUtil >= 70 ? 'text-green-400' : ($avgUtil >= 40 ? 'text-yellow-400' : 'text-red-400') }}">{{ $avgUtil }}%</span>
+        </div>
+        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <span class="text-zinc-500">Available Time</span>
+            <span
+                class="font-semibold text-zinc-200">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $availSeconds) }}</span>
+        </div>
+        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <span class="text-zinc-500">Total Logged</span>
+            <span
+                class="font-semibold text-zinc-200">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $totalSeconds) }}</span>
+        </div>
+    </div>
     {{-- ── Gantt Card ───────────────────────────────────────────── --}}
     <div class="flex flex-col flex-1 bg-zinc-900 border border-zinc-800 rounded-xl min-h-0 [overflow:clip]">
 
@@ -83,13 +109,21 @@
                         {{-- Hour ticks --}}
                         <div class="relative flex-none h-9" style="width: {{ $timelineWidth }}px">
                             @foreach ($hours as $hour)
-                                <div class="top-0 bottom-0 absolute flex items-center border-zinc-800/60 border-l"
-                                    style="left: {{ $hour['left'] }}px">
-                                    <span
-                                        class="pl-1.5 font-medium text-[11px] text-zinc-500 whitespace-nowrap select-none">
-                                        {{ $hour['label'] }}
-                                    </span>
-                                </div>
+                                @if ($hour['isHalf'])
+                                    <div class="top-4 bottom-0 absolute flex items-end pb-1 border-zinc-700/25 border-l border-dashed"
+                                        style="left: {{ $hour['left'] }}px">
+                                        <span
+                                            class="pl-1 text-[9px] text-zinc-700 whitespace-nowrap select-none">:30</span>
+                                    </div>
+                                @else
+                                    <div class="top-0 bottom-0 absolute flex items-center border-zinc-800/60 border-l"
+                                        style="left: {{ $hour['left'] }}px">
+                                        <span
+                                            class="pl-1.5 font-medium text-[11px] text-zinc-500 whitespace-nowrap select-none">
+                                            {{ $hour['label'] }}
+                                        </span>
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -107,7 +141,7 @@
                             </div>
                             <div class="relative flex-none" style="width: {{ $timelineWidth }}px; height: 28px">
                                 @foreach ($hours as $hour)
-                                    <div class="absolute inset-y-0 border-zinc-800/20 border-l"
+                                    <div class="absolute inset-y-0 {{ $hour['isHalf'] ? 'border-zinc-800/10 border-dashed' : 'border-zinc-800/20' }} border-l"
                                         style="left: {{ $hour['left'] }}px"></div>
                                 @endforeach
                             </div>
@@ -125,48 +159,79 @@
                                 <div
                                     class="left-0 z-10 sticky flex items-center gap-2.5 bg-zinc-900 group-hover:bg-[#1a1d24] px-3 py-2 border-zinc-800 border-r w-[260px] transition-colors shrink-0">
                                     {{-- Avatar --}}
-                                    <div class="flex justify-center items-center rounded-full w-7 h-7 font-bold text-[11px] uppercase select-none shrink-0"
+                                    <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[11px] uppercase select-none shrink-0"
                                         style="background-color: {{ $currentStatus?->color ? $currentStatus->color . '22' : '#6366f120' }}; color: {{ $currentStatus?->color ?? '#818cf8' }}; border: 1px solid {{ $currentStatus?->color ? $currentStatus->color . '44' : '#6366f140' }}">
                                         {{ substr($agent->first_name, 0, 1) }}{{ substr($agent->last_name, 0, 1) }}
                                     </div>
-                                    {{-- Name --}}
-                                    <span class="flex-1 min-w-0 font-medium text-zinc-200 text-sm truncate">
-                                        {{ $agent->first_name }} {{ $agent->last_name }}
-                                    </span>
-                                    {{-- Status badge --}}
-                                    @if ($currentStatus)
-                                        <span class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
-                                            style="background-color: {{ $currentStatus->color }}22; color: {{ $currentStatus->color }}">
-                                            {{ $currentStatus->name }}
-                                        </span>
-                                    @else
-                                        <span
-                                            class="bg-zinc-800 px-1.5 py-0.5 rounded font-semibold text-[10px] text-zinc-500 shrink-0">
-                                            Offline
-                                        </span>
-                                    @endif
+                                    {{-- Name + shift summary --}}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <span class="flex-1 min-w-0 font-medium text-zinc-200 text-sm truncate">
+                                                {{ $agent->first_name }} {{ $agent->last_name }}
+                                            </span>
+                                            @if ($currentStatus)
+                                                <span class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
+                                                    style="background-color: {{ $currentStatus->color }}22; color: {{ $currentStatus->color }}">
+                                                    {{ $currentStatus->name }}
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="bg-zinc-800 px-1.5 py-0.5 rounded font-semibold text-[10px] text-zinc-500 shrink-0">
+                                                    Offline
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-1 mt-0.5">
+                                            <span class="text-[10px] text-zinc-600">{{ $agent->shiftStartLabel }} →
+                                                {{ $agent->shiftEndLabel }}</span>
+                                            <span class="text-[10px] text-zinc-800">·</span>
+                                            <span
+                                                class="text-[10px] font-medium {{ $agent->utilPct >= 70 ? 'text-green-500' : ($agent->utilPct >= 40 ? 'text-yellow-500' : 'text-red-500') }}">{{ $agent->utilPct }}%</span>
+                                            <span class="text-[10px] text-zinc-800">·</span>
+                                            <span
+                                                class="text-[10px] text-zinc-600">{{ $agent->totalShiftLabel }}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {{-- Timeline --}}
                                 <div class="relative flex-none bg-zinc-900 group-hover:bg-[#1a1d24] transition-colors"
-                                    style="width: {{ $timelineWidth }}px; height: 44px">
+                                    style="width: {{ $timelineWidth }}px; height: 60px">
 
                                     {{-- Hour grid lines --}}
                                     @foreach ($hours as $hour)
-                                        <div class="absolute inset-y-0 border-zinc-800/25 border-l"
+                                        <div class="absolute inset-y-0 {{ $hour['isHalf'] ? 'border-zinc-800/15 border-dashed' : 'border-zinc-800/25' }} border-l"
                                             style="left: {{ $hour['left'] }}px"></div>
                                     @endforeach
 
                                     {{-- Status blocks --}}
                                     @foreach ($agent->timelineBlocks as $block)
-                                        <div class="top-2.5 bottom-2.5 absolute flex items-center hover:brightness-110 px-1.5 rounded overflow-hidden transition-[filter] cursor-default"
+                                        <div class="top-2 bottom-2 absolute flex flex-col justify-center hover:brightness-110 px-1.5 rounded overflow-hidden transition-[filter] cursor-default"
                                             style="left: {{ $block['left'] }}px; width: {{ $block['width'] }}px; background-color: {{ $block['color'] }}"
-                                            title="{{ $block['status'] }}: {{ $block['label'] }} ({{ $block['durationLabel'] }})">
-                                            @if ($block['width'] > 28)
-                                                <span
+                                            title="{{ $block['status'] }}: {{ $block['label'] }} → {{ $block['endLabel'] }} ({{ $block['durationLabel'] }})">
+                                            @if ($block['width'] > 90)
+                                                <div
+                                                    class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-semibold text-[10px] text-white leading-none whitespace-nowrap">
+                                                    {{ $block['label'] }} → {{ $block['endLabel'] }}
+                                                </div>
+                                                <div
+                                                    class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)] mt-0.5 text-[9px] text-white/80 leading-none whitespace-nowrap">
+                                                    {{ $block['status'] }} · {{ $block['durationLabel'] }}
+                                                </div>
+                                            @elseif ($block['width'] > 50)
+                                                <div
                                                     class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-semibold text-[10px] text-white leading-none whitespace-nowrap">
                                                     {{ $block['label'] }}
-                                                </span>
+                                                </div>
+                                                <div
+                                                    class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)] mt-0.5 text-[9px] text-white/80 leading-none whitespace-nowrap">
+                                                    {{ $block['durationLabel'] }}
+                                                </div>
+                                            @elseif ($block['width'] > 22)
+                                                <div
+                                                    class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-semibold text-[9px] text-white leading-none whitespace-nowrap">
+                                                    {{ $block['label'] }}
+                                                </div>
                                             @endif
                                         </div>
                                     @endforeach
