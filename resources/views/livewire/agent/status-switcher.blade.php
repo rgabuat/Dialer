@@ -12,13 +12,14 @@
             statusColor = $event.detail.statusColor;
         ">
             <button type="button" @click="open = !open"
-                class="flex items-center gap-2 bg-surface-2 hover:bg-zinc-700 px-3 py-2 rounded-lg text-fg-2 text-sm">
+                class="flex items-center gap-2 bg-surface-2 hover:bg-hover px-3 py-1.5 rounded-lg text-fg text-sm transition">
 
-                <span class="rounded-full w-2 h-2" :style="`background: ${statusColor}`"></span>
+                <span class="rounded-full w-2 h-2 shrink-0" :style="`background: ${statusColor}`"></span>
 
                 <span x-text="statusName"></span>
 
-                <svg class="opacity-60 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="opacity-60 w-3.5 h-3.5 text-fg-muted shrink-0" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
