@@ -38,6 +38,16 @@
         $wire.set('{{ $wireModel }}', val);
         @endif
     },
+    init() {
+        @if($wireModel)
+        // Keep Alpine in sync when Livewire updates the property from the server
+        $wire.$watch('{{ $wireModel }}', val => {
+            if (val !== undefined && val !== this.selected) {
+                this.selected = val;
+            }
+        });
+        @endif
+    },
 }" @keydown.escape.window="open = false" class="inline-block relative" @if ($id)
     id="{{ $id }}"
     @endif
@@ -67,7 +77,7 @@
         x-transition:leave="transition ease-in duration-100"
         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
         x-transition:leave-end="opacity-0 scale-95 -translate-y-1" @click.outside="open = false"
-        class="absolute top-full mt-1.5 z-50 min-w-[160px] bg-surface-4 border border-surface rounded-xl shadow-2xl shadow-black/60 py-1 origin-top-{{ $align }}"
+        class="absolute top-full mt-1.5 z-50 min-w-[160px] bg-surface-4 border border-surface rounded-xl shadow-2xl shadow-black/60 py-1 overflow-hidden origin-top-{{ $align }}"
         :class="'{{ $align }}'
         === 'right' ? 'right-0' : 'left-0'" style="display:none">
         {{-- "All" / clear option --}}
@@ -81,26 +91,23 @@
 
         <div class="my-1 border-surface/60 border-t"></div>
 
-        {{-- Option rows --}}
-        @foreach ($options as $opt)
-            <button type="button" @click="pick('{{ $opt['value'] }}')"
+        {{-- Option rows — rendered via x-for so active state stays in sync with Alpine's reactive `selected` --}}
+        <template x-for="opt in options" :key="opt.value">
+            <button type="button" @click="pick(opt.value)"
                 class="flex items-center gap-2.5 px-3 py-2 w-full text-sm transition"
-                :class="selected === '{{ $opt['value'] }}' ? 'text-fg bg-surface-2' :
-                    'text-fg-muted hover:text-fg hover:bg-surface-2'">
-                @if (!empty($opt['color']))
-                    {{-- colour swatch --}}
-                    <span class="rounded-sm w-2 h-2 shrink-0" style="background-color: {{ $opt['color'] }}"></span>
-                @else
-                    {{-- alignment spacer --}}
-                    <span class="w-2 h-2 shrink-0"></span>
-                @endif
-                <span>{{ $opt['label'] }}</span>
+                :class="selected === opt.value ? 'text-fg bg-surface-2' : 'text-fg-muted hover:text-fg hover:bg-surface-2'">
+                {{-- colour swatch (shown when option has color) --}}
+                <span x-show="!!opt.color" class="rounded-sm w-2 h-2 shrink-0"
+                    :style="opt.color ? `background-color:${opt.color}` : ''"></span>
+                {{-- alignment spacer (shown when no color) --}}
+                <span x-show="!opt.color" class="w-2 h-2 shrink-0"></span>
+                <span x-text="opt.label"></span>
                 {{-- tick for active --}}
-                <svg x-show="selected === '{{ $opt['value'] }}'" class="ml-auto w-3 h-3 text-indigo-400 shrink-0"
+                <svg x-show="selected === opt.value" class="ml-auto w-3 h-3 text-indigo-400 shrink-0"
                     viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M2 6l3 3 5-5" />
                 </svg>
             </button>
-        @endforeach
+        </template>
     </div>
 </div>

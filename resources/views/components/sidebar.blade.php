@@ -122,6 +122,15 @@
 
     <!-- Bottom: Settings etc. -->
     <div class="space-y-0.5 py-2 border-zinc-800/60 border-t shrink-0">
+
+        {{-- Light Mode / Dark Mode toggle --}}
+        <button @click="$store.theme.toggle()"
+            class="group relative flex items-center gap-3 hover:bg-white/5 py-2 pr-3 pl-5 rounded-lg w-full font-medium text-zinc-400 hover:text-white text-sm transition-colors cursor-pointer">
+            <x-heroicon-o-sun class="w-4 h-4 shrink-0" x-show="$store.theme.isDark" />
+            <x-heroicon-o-moon class="w-4 h-4 shrink-0" x-show="!$store.theme.isDark" x-cloak />
+            <span x-text="$store.theme.isDark ? 'Light Mode' : 'Dark Mode'">Light Mode</span>
+        </button>
+
         @foreach ($bottomItems as $item)
             @php
                 if (!$canViewItem($item)) {
@@ -150,5 +159,34 @@
                 <span>{{ $item['label'] }}</span>
             </a>
         @endforeach
+
+        {{-- Docs --}}
+        <a href="#"
+            class="group relative flex items-center gap-3 hover:bg-white/5 py-2 pr-3 pl-5 rounded-lg font-medium text-zinc-400 hover:text-white text-sm transition-colors cursor-pointer">
+            <x-heroicon-o-question-mark-circle class="w-4 h-4 shrink-0" />
+            <span>Docs</span>
+        </a>
+
     </div>
+
+    <!-- User profile strip -->
+    @auth
+        <div class="flex items-center gap-3 px-4 py-3 border-zinc-800/60 border-t shrink-0">
+            <span
+                class="inline-flex justify-center items-center bg-zinc-700 rounded-full w-8 h-8 font-medium text-white text-sm shrink-0">
+                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+            </span>
+            <div class="flex-1 min-w-0">
+                <p class="font-medium text-white text-sm truncate">{{ auth()->user()->name ?? 'User' }}</p>
+                <p class="text-zinc-500 text-xs truncate">{{ auth()->user()->nickname ?? (auth()->user()->email ?? '') }}</p>
+            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="text-zinc-500 hover:text-white transition-colors" title="Sign out">
+                    <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5" />
+                </button>
+            </form>
+        </div>
+    @endauth
+
 </aside>

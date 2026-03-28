@@ -47,7 +47,7 @@
     </div>
 
     {{-- AGENT FLEET TABLE --}}
-    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
+    <div class="bg-surface border border-surface rounded-xl">
 
         {{-- Table header --}}
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
