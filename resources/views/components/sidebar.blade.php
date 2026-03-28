@@ -87,6 +87,31 @@
         <x-brand-logo size="h-8" />
     </div>
 
+    <!-- Sidebar animations -->
+    <style>
+        @keyframes nav-icon-tap {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            35% {
+                transform: scale(1.4) rotate(-16deg);
+            }
+
+            65% {
+                transform: scale(0.88) rotate(8deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .icon-tapped {
+            animation: nav-icon-tap 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+    </style>
+
     <!-- Main Navigation -->
     <nav class="flex-1 space-y-0.5 py-2 overflow-y-auto">
         @foreach ($mainItems as $item)
@@ -99,9 +124,10 @@
                 $icon = $item['icon'] ?? null;
             @endphp
 
-            <a href="{{ $url }}" wire:navigate
-                class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
-                      transition-colors cursor-pointer
+            <a href="{{ $url }}" wire:navigate x-data="{ tapped: false }"
+                @click="tapped = true; setTimeout(() => tapped = false, 420)"
+                class="group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
+                      transition active:scale-[0.97] cursor-pointer
                       {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                 {{-- Active left accent bar --}}
@@ -110,9 +136,13 @@
                 @endif
 
                 @if ($icon)
-                    <x-dynamic-component :component="$icon" class="w-4 h-4 shrink-0" />
+                    <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        <x-dynamic-component :component="$icon" class="w-[18px] h-[18px]" />
+                    </span>
                 @else
-                    <x-heroicon-o-squares-2x2 class="w-4 h-4 text-zinc-500 shrink-0" />
+                    <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        <x-heroicon-o-squares-2x2 class="w-[18px] h-[18px] text-zinc-500" />
+                    </span>
                 @endif
 
                 <span>{{ $item['label'] }}</span>
@@ -124,10 +154,12 @@
     <div class="space-y-0.5 py-2 border-zinc-800/60 border-t shrink-0">
 
         {{-- Light Mode / Dark Mode toggle --}}
-        <button @click="$store.theme.toggle()"
-            class="group relative flex items-center gap-3 hover:bg-white/5 py-2 pr-3 pl-5 rounded-lg w-full font-medium text-zinc-400 hover:text-white text-sm transition-colors cursor-pointer">
-            <x-heroicon-o-sun class="w-4 h-4 shrink-0" x-show="$store.theme.isDark" />
-            <x-heroicon-o-moon class="w-4 h-4 shrink-0" x-show="!$store.theme.isDark" x-cloak />
+        <button
+            @click="$store.theme.toggle(); $refs.themeIcon.classList.remove('icon-tapped'); void $refs.themeIcon.offsetWidth; $refs.themeIcon.classList.add('icon-tapped')"
+            class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg w-full font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer">
+            <x-heroicon-o-sun class="w-[18px] h-[18px] shrink-0" x-ref="themeIcon" x-show="$store.theme.isDark" />
+            <x-heroicon-o-moon class="w-[18px] h-[18px] shrink-0" x-ref="themeIcon" x-show="!$store.theme.isDark"
+                x-cloak />
             <span x-text="$store.theme.isDark ? 'Light Mode' : 'Dark Mode'">Light Mode</span>
         </button>
 
@@ -141,9 +173,10 @@
                 $icon = $item['icon'] ?? null;
             @endphp
 
-            <a href="{{ $url }}" wire:navigate
-                class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
-                      transition-colors cursor-pointer
+            <a href="{{ $url }}" wire:navigate x-data="{ tapped: false }"
+                @click="tapped = true; setTimeout(() => tapped = false, 420)"
+                class="group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
+                      transition active:scale-[0.97] cursor-pointer
                       {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                 @if ($isActive)
@@ -151,9 +184,13 @@
                 @endif
 
                 @if ($icon)
-                    <x-dynamic-component :component="$icon" class="w-4 h-4 shrink-0" />
+                    <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        <x-dynamic-component :component="$icon" class="w-[18px] h-[18px]" />
+                    </span>
                 @else
-                    <x-heroicon-o-squares-2x2 class="w-4 h-4 text-zinc-500 shrink-0" />
+                    <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        <x-heroicon-o-squares-2x2 class="w-[18px] h-[18px] text-zinc-500" />
+                    </span>
                 @endif
 
                 <span>{{ $item['label'] }}</span>
@@ -161,9 +198,11 @@
         @endforeach
 
         {{-- Docs --}}
-        <a href="#"
-            class="group relative flex items-center gap-3 hover:bg-white/5 py-2 pr-3 pl-5 rounded-lg font-medium text-zinc-400 hover:text-white text-sm transition-colors cursor-pointer">
-            <x-heroicon-o-question-mark-circle class="w-4 h-4 shrink-0" />
+        <a href="#" x-data="{ tapped: false }" @click="tapped = true; setTimeout(() => tapped = false, 420)"
+            class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer">
+            <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                <x-heroicon-o-question-mark-circle class="w-[18px] h-[18px]" />
+            </span>
             <span>Docs</span>
         </a>
 
@@ -178,7 +217,8 @@
             </span>
             <div class="flex-1 min-w-0">
                 <p class="font-medium text-white text-sm truncate">{{ auth()->user()->name ?? 'User' }}</p>
-                <p class="text-zinc-500 text-xs truncate">{{ auth()->user()->nickname ?? (auth()->user()->email ?? '') }}</p>
+                <p class="text-zinc-500 text-xs truncate">{{ auth()->user()->nickname ?? (auth()->user()->email ?? '') }}
+                </p>
             </div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
