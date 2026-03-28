@@ -13,8 +13,8 @@ class AgentStatusIndex extends Component
   use WithPagination;
 
   public string $search = "";
-  public string $filterStatus = "";
-  public string $filterGroup = "";
+  public array $filterStatus = [];
+  public array $filterGroup = [];
   public int $perPage = 25;
   public string $viewMode = "table";
 
@@ -30,8 +30,8 @@ class AgentStatusIndex extends Component
 
   protected $queryString = [
     "search" => ["except" => ""],
-    "filterStatus" => ["except" => ""],
-    "filterGroup" => ["except" => ""],
+    "filterStatus" => ["except" => []],
+    "filterGroup" => ["except" => []],
   ];
 
   public function updatingSearch(): void
@@ -66,17 +66,17 @@ class AgentStatusIndex extends Component
         )
       )
       ->when(
-        $this->filterStatus,
+        count($this->filterStatus),
         fn($q) => $q->whereHas(
           "statusType",
-          fn($s) => $s->where("name", $this->filterStatus)
+          fn($s) => $s->whereIn("name", $this->filterStatus)
         )
       )
       ->when(
-        $this->filterGroup,
+        count($this->filterGroup),
         fn($q) => $q->whereHas(
           "user.userGroup",
-          fn($g) => $g->where("name", $this->filterGroup)
+          fn($g) => $g->whereIn("name", $this->filterGroup)
         )
       );
 
@@ -115,17 +115,17 @@ class AgentStatusIndex extends Component
           )
         )
         ->when(
-          $this->filterStatus,
+          count($this->filterStatus),
           fn($q) => $q->whereHas(
             "statusType",
-            fn($s) => $s->where("name", $this->filterStatus)
+            fn($s) => $s->whereIn("name", $this->filterStatus)
           )
         )
         ->when(
-          $this->filterGroup,
+          count($this->filterGroup),
           fn($q) => $q->whereHas(
             "user.userGroup",
-            fn($g) => $g->where("name", $this->filterGroup)
+            fn($g) => $g->whereIn("name", $this->filterGroup)
           )
         )
         ->get()

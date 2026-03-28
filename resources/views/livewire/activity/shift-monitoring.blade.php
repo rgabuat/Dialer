@@ -33,12 +33,14 @@
 
         <x-date-picker wire-model="date" :value="$date" />
 
-        <x-select-dropdown wire-model="filterStatus" :value="$filterStatus" placeholder="All Statuses" :options="$statusTypes
-            ->map(fn($t) => ['value' => $t->slug, 'label' => $t->name, 'color' => $t->color])
-            ->values()
-            ->all()" />
+        <x-select-dropdown wire-model="filterStatus" :value="$filterStatus" placeholder="All Statuses" :multiple="true"
+            :options="$statusTypes
+                ->map(fn($t) => ['value' => $t->slug, 'label' => $t->name, 'color' => $t->color])
+                ->values()
+                ->all()" />
 
-        <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="All Groups" :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
+        <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="All Groups" :multiple="true"
+            :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
 
         {{-- Legend --}}
         <div class="flex flex-wrap items-center gap-1.5 ml-1">

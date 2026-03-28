@@ -2,7 +2,7 @@
     knownUserIds: @js($viewMode === 'grouped' ? $grouped->flatMap(fn($g) => $g['agents']->pluck('user_id'))->values() : $statuses->pluck('user_id')->values())
 }" x-init="window.Echo.private('agent-status')
     .listen('.AgentStatusUpdated', (e) => {
-        const filtersActive = ($wire.filterStatus ?? '') !== '' || ($wire.filterGroup ?? '') !== '';
+        const filtersActive = ($wire.filterStatus ?? []).length > 0 || ($wire.filterGroup ?? []).length > 0;
         const isNewUser = !knownUserIds.includes(e.user_id);
         if (isNewUser || filtersActive) {
             if (isNewUser) knownUserIds.push(e.user_id);
@@ -65,12 +65,12 @@
                     class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-fg text-sm transition placeholder-fg-muted">
 
                 <x-select-dropdown wire-model="filterStatus" :value="$filterStatus" placeholder="All Statuses"
-                    :options="$statusTypes
+                    :multiple="true" :options="$statusTypes
                         ->map(fn($t) => ['value' => $t->name, 'label' => $t->name, 'color' => $t->color])
                         ->values()
                         ->all()" />
 
-                <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="All Groups"
+                <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="All Groups" :multiple="true"
                     :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
 
                 {{-- View switcher --}}

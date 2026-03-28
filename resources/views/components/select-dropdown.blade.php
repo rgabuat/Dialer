@@ -3,11 +3,12 @@
 
     Props:
       - wireModel   : Livewire property name to call $wire.set() on (string)
-      - value       : currently selected value (string)
+      - value       : currently selected value — string for single, array for multiple
       - placeholder : label shown when nothing selected (default "Select…")
       - options     : array of ['value'=>'', 'label'=>'', 'color'=>'#hex'] items
       - align       : dropdown alignment — "left" | "right" (default "left")
       - id          : wrapper id (optional)
+      - multiple    : allow picking multiple values; backing Livewire property must be array (default false)
 --}}
 
 @props([
@@ -17,33 +18,76 @@
     'options' => [],
     'align' => 'left',
     'id' => null,
+    'multiple' => false,
 ])
 
 <div x-data="{
     open: false,
-    selected: @js($value),
+    multiple: @js($multiple),
+    selected: @js($multiple ? (is_array($value) ? $value : ($value ? [$value] : [])) : $value),
     options: @js($options),
+    get isEmpty() {
+        return this.multiple ? this.selected.length === 0 : this.selected === '';
+    },
     get label() {
+        if (this.multiple) {
+            if (this.selected.length === 0) return null;
+            if (this.selected.length === 1) {
+                const opt = this.options.find(o => o.value === this.selected[0]);
+                return opt ? opt.label : null;
+            }
+            return this.selected.length + ' selected';
+        }
         const opt = this.options.find(o => o.value === this.selected);
         return opt ? opt.label : null;
     },
     get color() {
+        if (this.multiple) {
+            if (this.selected.length !== 1) return null;
+            const opt = this.options.find(o => o.value === this.selected[0]);
+            return opt ? (opt.color ?? null) : null;
+        }
         const opt = this.options.find(o => o.value === this.selected);
         return opt ? (opt.color ?? null) : null;
     },
+    isActive(val) {
+        return this.multiple ? this.selected.includes(val) : this.selected === val;
+    },
     pick(val) {
-        this.selected = val;
+        if (this.multiple) {
+            if (this.selected.includes(val)) {
+                this.selected = this.selected.filter(v => v !== val);
+            } else {
+                this.selected = [...this.selected, val];
+            }
+            @if($wireModel)
+            $wire.set('{{ $wireModel }}', this.selected);
+            @endif
+        } else {
+            this.selected = val;
+            this.open = false;
+            @if($wireModel)
+            $wire.set('{{ $wireModel }}', val);
+            @endif
+        }
+    },
+    clear() {
+        this.selected = this.multiple ? [] : '';
         this.open = false;
         @if($wireModel)
-        $wire.set('{{ $wireModel }}', val);
+        $wire.set('{{ $wireModel }}', this.selected);
         @endif
     },
     init() {
         @if($wireModel)
-        // Keep Alpine in sync when Livewire updates the property from the server
         $wire.$watch('{{ $wireModel }}', val => {
-            if (val !== undefined && val !== this.selected) {
-                this.selected = val;
+            if (val === undefined) return;
+            if (this.multiple) {
+                if (Array.isArray(val) && JSON.stringify(val) !== JSON.stringify(this.selected)) {
+                    this.selected = val;
+                }
+            } else {
+                if (val !== this.selected) this.selected = val;
             }
         });
         @endif
@@ -56,12 +100,19 @@
     <button type="button" @click="open = !open"
         class="inline-flex items-center gap-2 bg-surface hover:bg-surface-2 px-3 py-1.5 border border-surface hover:border-surface-2 focus:border-zinc-600 rounded-lg focus:outline-none text-fg text-sm whitespace-nowrap transition select-none"
         :class="open ? 'border-zinc-600 bg-surface-2' : ''" {{ $attributes }}>
-        {{-- colour swatch (visible when option has color) --}}
+        {{-- colour swatch (visible when single option with color is selected) --}}
         <span x-show="!!color" class="rounded-sm w-2 h-2 shrink-0"
             :style="color ? `background-color:${color}` : ''"></span>
 
-        {{-- label --}}
-        <span :class="selected ? 'text-fg' : 'text-fg-muted'" x-text="label ?? '{{ $placeholder }}'"></span>
+        {{-- label / count --}}
+        <span :class="isEmpty ? 'text-fg-muted' : 'text-fg'">
+            <span x-show="!multiple || selected.length <= 1" x-text="label ?? '{{ $placeholder }}'"></span>
+            <span x-show="multiple && selected.length > 1" class="inline-flex items-center gap-1.5">
+                <span>{{ $placeholder }}</span>
+                <span x-text="'(' + selected.length + ')'"
+                    class="inline-flex justify-center items-center bg-indigo-500/20 px-1 rounded font-bold tabular-nums text-indigo-400 text-xs"></span>
+            </span>
+        </span>
 
         {{-- chevron --}}
         <svg class="w-3 h-3 text-zinc-600 transition-transform duration-150 shrink-0" :class="{ 'rotate-180': open }"
@@ -81,10 +132,10 @@
         :class="'{{ $align }}'
         === 'right' ? 'right-0' : 'left-0'" style="display:none">
         {{-- "All" / clear option --}}
-        <button type="button" @click="pick('')" class="flex items-center gap-2.5 px-3 py-2 w-full text-sm transition"
-            :class="selected === '' ? 'text-fg bg-surface-2' : 'text-fg-muted hover:text-fg hover:bg-surface-2'">
+        <button type="button" @click="clear()" class="flex items-center gap-2.5 px-3 py-2 w-full text-sm transition"
+            :class="isEmpty ? 'text-fg bg-surface-2' : 'text-fg-muted hover:text-fg hover:bg-surface-2'">
             <span class="flex justify-center items-center w-2 h-2 shrink-0">
-                <span x-show="selected === ''" class="bg-indigo-500 rounded-full w-1.5 h-1.5"></span>
+                <span x-show="isEmpty" class="bg-indigo-500 rounded-full w-1.5 h-1.5"></span>
             </span>
             <span>{{ $placeholder }}</span>
         </button>
@@ -95,7 +146,7 @@
         <template x-for="opt in options" :key="opt.value">
             <button type="button" @click="pick(opt.value)"
                 class="flex items-center gap-2.5 px-3 py-2 w-full text-sm transition"
-                :class="selected === opt.value ? 'text-fg bg-surface-2' : 'text-fg-muted hover:text-fg hover:bg-surface-2'">
+                :class="isActive(opt.value) ? 'text-fg bg-surface-2' : 'text-fg-muted hover:text-fg hover:bg-surface-2'">
                 {{-- colour swatch (shown when option has color) --}}
                 <span x-show="!!opt.color" class="rounded-sm w-2 h-2 shrink-0"
                     :style="opt.color ? `background-color:${opt.color}` : ''"></span>
@@ -103,8 +154,8 @@
                 <span x-show="!opt.color" class="w-2 h-2 shrink-0"></span>
                 <span x-text="opt.label"></span>
                 {{-- tick for active --}}
-                <svg x-show="selected === opt.value" class="ml-auto w-3 h-3 text-indigo-400 shrink-0"
-                    viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                <svg x-show="isActive(opt.value)" class="ml-auto w-3 h-3 text-indigo-400 shrink-0" viewBox="0 0 12 12"
+                    fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M2 6l3 3 5-5" />
                 </svg>
             </button>

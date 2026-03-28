@@ -12,14 +12,14 @@ use Livewire\Component;
 class ShiftMonitoring extends Component
 {
   public string $search = "";
-  public string $filterStatus = "";
-  public string $filterGroup = "";
+  public array $filterStatus = [];
+  public array $filterGroup = [];
   public string $date = "";
 
   protected $queryString = [
     "search" => ["except" => ""],
-    "filterStatus" => ["except" => ""],
-    "filterGroup" => ["except" => ""],
+    "filterStatus" => ["except" => []],
+    "filterGroup" => ["except" => []],
   ];
 
   const PX_PER_HOUR = 160;
@@ -93,22 +93,22 @@ class ShiftMonitoring extends Component
         })
       )
       ->when(
-        $this->filterStatus,
+        count($this->filterStatus),
         fn($q) => $q->whereHas(
           "statusLogs",
           fn($sq) => $sq
             ->whereBetween("started_at", [$start, $end])
             ->whereHas(
               "statusType",
-              fn($t) => $t->where("slug", $this->filterStatus)
+              fn($t) => $t->whereIn("slug", $this->filterStatus)
             )
         )
       )
       ->when(
-        $this->filterGroup,
+        count($this->filterGroup),
         fn($q) => $q->whereHas(
           "userGroup",
-          fn($g) => $g->where("name", $this->filterGroup)
+          fn($g) => $g->whereIn("name", $this->filterGroup)
         )
       )
       ->whereHas(
