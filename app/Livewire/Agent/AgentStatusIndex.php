@@ -18,6 +18,16 @@ class AgentStatusIndex extends Component
   public int $perPage = 25;
   public string $viewMode = "table";
 
+  public function mount(): void
+  {
+    $this->viewMode = session("agentStatusViewMode", "table");
+  }
+
+  public function updatedViewMode(): void
+  {
+    session(["agentStatusViewMode" => $this->viewMode]);
+  }
+
   protected $queryString = [
     "search" => ["except" => ""],
     "filterStatus" => ["except" => ""],

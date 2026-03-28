@@ -16,7 +16,7 @@
 }">
     <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
-            <span class="text-zinc-500 text-xs">Per page</span>
+            <span class="text-fg-muted text-xs">Per page</span>
             <select wire:model.live="perPage" x-on:change="savePerPage($event.target.value)"
                 class="bg-surface-2 px-2 py-1 border border-surface rounded-md focus:outline-none text-fg-muted text-xs cursor-pointer">
                 @foreach ($perPageOptions as $option)

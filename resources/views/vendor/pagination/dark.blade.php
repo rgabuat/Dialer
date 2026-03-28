@@ -4,14 +4,14 @@
         {{-- Previous --}}
         @if ($paginator->onFirstPage())
             <span
-                class="inline-flex justify-center items-center rounded-md w-8 h-8 text-zinc-600 cursor-not-allowed select-none">
+                class="inline-flex justify-center items-center rounded-md w-8 h-8 text-fg-muted cursor-not-allowed select-none">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
             </span>
         @else
             <button wire:click="previousPage" wire:loading.attr="disabled"
-                class="inline-flex justify-center items-center hover:bg-zinc-800 rounded-md w-8 h-8 text-zinc-400 hover:text-white transition">
+                class="inline-flex justify-center items-center hover:bg-surface-2 rounded-md w-8 h-8 text-fg-muted hover:text-fg transition">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -21,7 +21,7 @@
         {{-- Pages --}}
         @foreach ($elements as $element)
             @if (is_string($element))
-                <span class="inline-flex justify-center items-center w-8 h-8 text-zinc-600 text-sm select-none">…</span>
+                <span class="inline-flex justify-center items-center w-8 h-8 text-fg-muted text-sm select-none">…</span>
             @endif
 
             @if (is_array($element))
@@ -33,7 +33,7 @@
                         </span>
                     @else
                         <button wire:click="gotoPage({{ $page }})"
-                            class="inline-flex justify-center items-center hover:bg-zinc-800 rounded-md w-8 h-8 text-zinc-400 hover:text-white text-sm transition">
+                            class="inline-flex justify-center items-center hover:bg-surface-2 rounded-md w-8 h-8 text-fg-muted hover:text-fg text-sm transition">
                             {{ $page }}
                         </button>
                     @endif
@@ -44,14 +44,14 @@
         {{-- Next --}}
         @if ($paginator->hasMorePages())
             <button wire:click="nextPage" wire:loading.attr="disabled"
-                class="inline-flex justify-center items-center hover:bg-zinc-800 rounded-md w-8 h-8 text-zinc-400 hover:text-white transition">
+                class="inline-flex justify-center items-center hover:bg-surface-2 rounded-md w-8 h-8 text-fg-muted hover:text-fg transition">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
         @else
             <span
-                class="inline-flex justify-center items-center rounded-md w-8 h-8 text-zinc-600 cursor-not-allowed select-none">
+                class="inline-flex justify-center items-center rounded-md w-8 h-8 text-fg-muted cursor-not-allowed select-none">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>

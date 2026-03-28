@@ -1,6 +1,7 @@
-<div class="space-y-6 p-6" x-data="{ knownUserIds: @js($statuses->pluck('user_id')->values()) }" x-init="window.Echo.private('agent-status')
+<div class="space-y-6 p-6" x-data="{
+    knownUserIds: @js($viewMode === 'grouped' ? $grouped->flatMap(fn($g) => $g['agents']->pluck('user_id'))->values() : $statuses->pluck('user_id')->values())
+}" x-init="window.Echo.private('agent-status')
     .listen('.AgentStatusUpdated', (e) => {
-        if ($wire.viewMode === 'grouped') { $wire.$refresh(); return; }
         const filtersActive = ($wire.filterStatus ?? '') !== '' || ($wire.filterGroup ?? '') !== '';
         const isNewUser = !knownUserIds.includes(e.user_id);
         if (isNewUser || filtersActive) {
@@ -74,7 +75,8 @@
 
                 {{-- View switcher --}}
                 <div class="flex items-center gap-0.5 bg-surface-2 p-1 border border-surface rounded-lg shrink-0">
-                    <button type="button" wire:click="$set('viewMode','table')" title="Table view"
+                    <button type="button" wire:click="$set('viewMode','table')"
+                        @click="localStorage.setItem('agentStatusViewMode','table')" title="Table view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
                         === 'table' ? 'bg-surface shadow text-fg' : 'text-fg-muted hover:text-fg'">
@@ -85,7 +87,8 @@
                             <line x1="1" y1="11" x2="13" y2="11" />
                         </svg>
                     </button>
-                    <button type="button" wire:click="$set('viewMode','grouped')" title="Grouped view"
+                    <button type="button" wire:click="$set('viewMode','grouped')"
+                        @click="localStorage.setItem('agentStatusViewMode','grouped')" title="Grouped view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
                         === 'grouped' ? 'bg-surface shadow text-fg' : 'text-fg-muted hover:text-fg'">
@@ -222,46 +225,46 @@
         @endif
 
         @if ($viewMode === 'grouped')
-            {{-- Grouped View --}}
-            <div class="overflow-auto" x-data x-init="const update = () => {
-                $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - 8) + 'px';
-            };
-            update();
-            window.addEventListener('resize', update);
-            $cleanup(() => window.removeEventListener('resize', update));">
-                <table class="min-w-full text-sm">
-                    <thead class="top-0 z-20 sticky bg-surface">
-                        <tr
-                            class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
-                            <th class="px-5 py-3 w-full text-left">Agent</th>
-                            <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
-                            <th class="px-5 py-3 text-left whitespace-nowrap">Available</th>
-                            <th class="px-5 py-3 text-left whitespace-nowrap">Time in Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($grouped as $g)
-                            {{-- Group divider row --}}
-                            <tr class="top-[37px] z-10 sticky">
-                                <td colspan="4" class="bg-surface-3 px-5 py-1.5 border-surface border-y">
-                                    <div class="flex items-center gap-2">
-                                        <span
-                                            class="font-semibold text-fg-muted text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
-                                        <span class="font-medium text-[10px] text-fg-muted">{{ $g['count'] }}</span>
-                                        @if ($g['count'] > 0)
-                                            @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
-                                            <span
-                                                class="ml-auto font-medium text-[10px] {{ $grpPct >= 70 ? 'text-accent-green' : ($grpPct >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">{{ $g['availCount'] }}/{{ $g['count'] }}
-                                                available &middot; {{ $grpPct }}%</span>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            {{-- Agent rows --}}
+            {{-- Grouped Card View --}}
+            <div class="space-y-4 p-4 stagger-children">
+
+                @forelse ($grouped as $g)
+                    {{-- Group card --}}
+                    <div wire:key="group-card-{{ $g['name'] }}"
+                        class="bg-surface-2 border border-surface rounded-xl overflow-hidden">
+
+                        {{-- Card header --}}
+                        <div class="flex items-center gap-2 bg-surface-3 px-4 py-2.5 border-surface border-b">
+                            <span
+                                class="font-semibold text-fg text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
+                            <span
+                                class="inline-flex justify-center items-center bg-surface-2 rounded-full w-5 h-5 font-bold text-[10px] text-fg-muted">{{ $g['count'] }}</span>
+                            @if ($g['count'] > 0)
+                                @php $grpPct = round(($g['availCount'] / $g['count']) * 100); @endphp
+                                <span
+                                    class="ml-auto text-[11px] font-medium {{ $grpPct >= 70 ? 'text-accent-green' : ($grpPct >= 40 ? 'text-accent-yellow' : 'text-accent-red') }}">
+                                    {{ $g['availCount'] }}/{{ $g['count'] }} available &middot;
+                                    {{ $grpPct }}%
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- Column headers --}}
+                        <div class="flex items-center gap-3 bg-surface px-4 py-2 border-surface border-b">
+                            <span
+                                class="flex-1 min-w-0 font-semibold text-[10px] text-fg-muted uppercase tracking-wider">Agent</span>
+                            <span
+                                class="w-[106px] font-semibold text-[10px] text-fg-muted uppercase tracking-wider shrink-0">Status</span>
+                            <span
+                                class="w-28 font-semibold text-[10px] text-fg-muted uppercase tracking-wider shrink-0">Elapsed</span>
+                        </div>
+
+                        {{-- Agent rows --}}
+                        <div class="divide-y divide-surface stagger-children">
                             @foreach ($g['agents'] as $status)
                                 @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
-                                <tr wire:key="grouped-agent-{{ $status->user_id }}"
-                                    class="hover:bg-surface-2/50 border-surface/50 border-b transition"
+                                <div wire:key="grouped-agent-{{ $status->user_id }}"
+                                    class="flex items-center gap-3 hover:bg-hover px-4 py-2.5 transition"
                                     x-data="{
                                         userId: {{ $status->user_id }},
                                         statusName: @js($status->statusType?->name ?? '—'),
@@ -294,44 +297,42 @@
                                             reset($event.detail.started_at);
                                         }
                                     ">
-                                    {{-- Agent --}}
-                                    <td class="px-5 py-2.5">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="flex justify-center items-center rounded-full w-7 h-7 font-bold text-[10px] uppercase select-none shrink-0"
-                                                :style="`background-color:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}44`">
-                                                {{ $initials }}
-                                            </div>
-                                            <span
-                                                class="max-w-xs font-medium text-fg-2 text-sm truncate">{{ $status->user->first_name }}
-                                                {{ $status->user->last_name }}</span>
-                                        </div>
-                                    </td>
+
+                                    {{-- Avatar --}}
+                                    <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[10px] uppercase select-none shrink-0"
+                                        :style="`background-color:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}44`">
+                                        {{ $initials }}
+                                    </div>
+
+                                    {{-- Name --}}
+                                    <span class="flex-1 min-w-0 font-medium text-fg-2 text-sm truncate">
+                                        {{ $status->user->first_name }} {{ $status->user->last_name }}
+                                    </span>
+
                                     {{-- Status badge --}}
-                                    <td class="px-5 py-2.5">
-                                        <span
-                                            class="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-md min-w-[90px] font-bold text-xs uppercase tracking-wide"
-                                            :style="`background-color:${statusColor}25; color:${statusColor}`"
-                                            x-text="statusName"></span>
-                                    </td>
-                                    {{-- Available --}}
-                                    <td class="px-5 py-2.5 text-sm">
-                                        <span x-show="isAvailable" class="font-semibold text-accent-green">Yes</span>
-                                        <span x-show="!isAvailable" class="text-fg-muted">—</span>
-                                    </td>
-                                    {{-- Timer --}}
-                                    <td class="px-5 py-2.5 font-mono text-sm"
-                                        :class="isAvailable ? 'text-accent-green' : 'text-fg-muted'" x-text="time">
-                                    </td>
-                                </tr>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-bold text-xs uppercase tracking-wide shrink-0"
+                                        :style="`background-color:${statusColor}25; color:${statusColor}`"
+                                        x-text="statusName"></span>
+
+                                    {{-- Available dot + timer --}}
+                                    <div class="flex items-center gap-2 w-28 shrink-0">
+                                        <span x-show="isAvailable"
+                                            class="rounded-full w-1.5 h-1.5 bg-accent-green shrink-0"></span>
+                                        <span x-show="!isAvailable"
+                                            class="bg-surface-3 rounded-full w-1.5 h-1.5 shrink-0"></span>
+                                        <span class="font-mono text-xs"
+                                            :class="isAvailable ? 'text-accent-green' : 'text-fg-muted'"
+                                            x-text="time"></span>
+                                    </div>
+
+                                </div>
                             @endforeach
-                        @empty
-                            <tr>
-                                <td colspan="4" class="py-16 text-zinc-500 text-sm text-center italic">No agents
-                                    found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-16 text-fg-muted text-sm text-center italic">No agents found.</div>
+                @endforelse
             </div>
         @endif
 
