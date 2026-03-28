@@ -38,6 +38,8 @@
             ->values()
             ->all()" />
 
+        <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="All Groups" :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
+
         {{-- Legend --}}
         <div class="flex flex-wrap items-center gap-1.5 ml-1">
             @foreach ($statusTypes as $type)
@@ -262,6 +264,9 @@
 
                                     {{-- Status blocks --}}
                                     @foreach ($agent->timelineBlocks as $block)
+                                        @php $statusName = strtolower($block['status'] ?? ''); @endphp
+                                        @continue($statusName === 'offline')
+
                                         <div wire:key="block-{{ $agent->id }}-{{ $loop->index }}"
                                             class="gantt-block-animate top-2 bottom-2 absolute flex flex-col justify-center hover:brightness-110 px-1.5 rounded overflow-hidden transition-[filter] cursor-default"
                                             style="left: {{ $block['left'] }}px; width: {{ $block['width'] }}px; background-color: {{ $block['color'] }}; animation-delay: {{ $loop->index * 0.05 + 0.1 }}s"

@@ -5,6 +5,7 @@ namespace App\Livewire\Activity;
 use App\Models\AgentStatusLog;
 use App\Models\AgentStatusType;
 use App\Models\User;
+use App\Models\UserGroup;
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -12,7 +13,14 @@ class ShiftMonitoring extends Component
 {
   public string $search = "";
   public string $filterStatus = "";
+  public string $filterGroup = "";
   public string $date = "";
+
+  protected $queryString = [
+    "search" => ["except" => ""],
+    "filterStatus" => ["except" => ""],
+    "filterGroup" => ["except" => ""],
+  ];
 
   const PX_PER_HOUR = 160;
 
@@ -94,6 +102,13 @@ class ShiftMonitoring extends Component
               "statusType",
               fn($t) => $t->where("slug", $this->filterStatus)
             )
+        )
+      )
+      ->when(
+        $this->filterGroup,
+        fn($q) => $q->whereHas(
+          "userGroup",
+          fn($g) => $g->where("name", $this->filterGroup)
         )
       )
       ->whereHas(
@@ -210,6 +225,8 @@ class ShiftMonitoring extends Component
 
     $visibleStartTs = $visibleStart->timestamp;
 
+    $userGroups = UserGroup::orderBy("name")->get();
+
     return view(
       "livewire.activity.shift-monitoring",
       compact(
@@ -225,7 +242,8 @@ class ShiftMonitoring extends Component
         "isToday",
         "availableNow",
         "pxPerMin",
-        "visibleStartTs"
+        "visibleStartTs",
+        "userGroups"
       )
     )->layout("components.layouts.app");
   }
