@@ -60,7 +60,7 @@
             <span class="font-semibold text-zinc-200">{{ $totalAgents }}</span>
         </div>
         <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
-            <span class="bg-green-400 rounded-full w-1.5 h-1.5 shrink-0"></span>
+            <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse shrink-0"></span>
             <span class="text-zinc-500">Available Now</span>
             <span class="font-semibold text-green-400">{{ $availableNow }}</span>
         </div>
@@ -81,7 +81,8 @@
         </div>
     </div>
     {{-- ── Gantt Card ───────────────────────────────────────────── --}}
-    <div class="flex flex-col flex-1 bg-zinc-900 border border-zinc-800 rounded-xl min-h-0 [overflow:clip]">
+    <div class="flex flex-col flex-1 bg-zinc-900 border border-zinc-800 rounded-xl min-h-0 transition-opacity duration-200 [overflow:clip]"
+        wire:loading.class.delay="opacity-50">
 
         @if ($grouped->isEmpty())
             <div class="flex flex-1 justify-center items-center py-20 text-zinc-500 text-sm italic">
@@ -97,7 +98,31 @@
             $cleanup(() => window.removeEventListener('resize', update));">
 
                 {{-- Min-width wrapper so horizontal scroll works --}}
-                <div style="min-width: {{ 260 + $timelineWidth }}px">
+                <div class="relative" style="min-width: {{ 260 + $timelineWidth }}px">
+
+                    {{-- "Now" time indicator --}}
+                    @if ($isToday)
+                        <div x-data="{
+                            left: -1,
+                            update() {
+                                const elapsed = (Date.now() / 1000 - {{ $visibleStartTs }}) / 60;
+                                const px = Math.round(elapsed * {{ $pxPerMin }});
+                                this.left = (px >= 0 && px <= {{ $timelineWidth }}) ? (260 + px) : -1;
+                            }
+                        }" x-init="update();
+                        const t = setInterval(() => update(), 30000);
+                        $cleanup(() => clearInterval(t));"
+                            class="top-0 bottom-0 z-[15] absolute w-0 pointer-events-none"
+                            :class="{ 'hidden': left < 0 }" :style="\
+                            `left: \${left}px\`">
+                            <div class="opacity-70 w-px h-full"
+                                style="background: linear-gradient(to bottom, #ef4444 0%, rgba(239,68,68,0.15) 100%)">
+                            </div>
+                            <div
+                                class="top-9 absolute bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] rounded-full w-2 h-2 -translate-x-1 animate-pulse">
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- ── Sticky header row ──────────────────────────── --}}
                     <div class="top-0 z-20 sticky flex items-stretch bg-zinc-900 border-zinc-800 border-b">
@@ -131,7 +156,8 @@
                     {{-- ── Groups + Agents ─────────────────────────────── --}}
                     @foreach ($grouped as $g)
                         {{-- Group separator --}}
-                        <div class="flex items-stretch bg-[#0d0f13] border-zinc-800/80 border-b">
+                        <div wire:key="group-row-{{ optional($g['group'])->id ?? 'ungrouped' }}"
+                            class="flex items-stretch bg-[#0d0f13] border-zinc-800/80 border-b">
                             <div
                                 class="left-0 z-10 sticky flex items-center gap-2 bg-[#0d0f13] px-4 py-1.5 border-zinc-800 border-r w-[260px] shrink-0">
                                 <span class="font-bold text-zinc-400 text-xs uppercase tracking-widest">
@@ -152,8 +178,9 @@
                             @php
                                 $currentStatus = $agent->agentStatus?->statusType;
                             @endphp
-                            <div
-                                class="group flex items-stretch hover:bg-white/[0.02] border-zinc-800/40 border-b transition-colors">
+                            <div wire:key="agent-row-{{ $agent->id }}"
+                                class="group flex items-stretch hover:bg-white/[0.02] border-zinc-800/40 border-b transition-colors gantt-row-animate"
+                                style="animation-delay: {{ $loop->parent->index * 0.1 + $loop->index * 0.04 }}s">
 
                                 {{-- Sticky left: agent info --}}
                                 <div
@@ -206,8 +233,9 @@
 
                                     {{-- Status blocks --}}
                                     @foreach ($agent->timelineBlocks as $block)
-                                        <div class="top-2 bottom-2 absolute flex flex-col justify-center hover:brightness-110 px-1.5 rounded overflow-hidden transition-[filter] cursor-default"
-                                            style="left: {{ $block['left'] }}px; width: {{ $block['width'] }}px; background-color: {{ $block['color'] }}"
+                                        <div wire:key="block-{{ $agent->id }}-{{ $loop->index }}"
+                                            class="gantt-block-animate top-2 bottom-2 absolute flex flex-col justify-center hover:brightness-110 px-1.5 rounded overflow-hidden transition-[filter] cursor-default"
+                                            style="left: {{ $block['left'] }}px; width: {{ $block['width'] }}px; background-color: {{ $block['color'] }}; animation-delay: {{ $loop->index * 0.05 + 0.1 }}s"
                                             title="{{ $block['status'] }}: {{ $block['label'] }} → {{ $block['endLabel'] }} ({{ $block['durationLabel'] }})">
                                             @if ($block['width'] > 90)
                                                 <div
@@ -231,6 +259,11 @@
                                                 <div
                                                     class="drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-semibold text-[9px] text-white leading-none whitespace-nowrap">
                                                     {{ $block['label'] }}
+                                                </div>
+                                            @endif
+                                            @if ($block['isOngoing'])
+                                                <div class="right-0 absolute inset-y-0 rounded-r w-8 animate-pulse pointer-events-none"
+                                                    style="background: linear-gradient(to right, transparent, rgba(255,255,255,0.2))">
                                                 </div>
                                             @endif
                                         </div>

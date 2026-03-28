@@ -208,6 +208,8 @@ class ShiftMonitoring extends Component
       )
       ->count();
 
+    $visibleStartTs = $visibleStart->timestamp;
+
     return view(
       "livewire.activity.shift-monitoring",
       compact(
@@ -221,7 +223,9 @@ class ShiftMonitoring extends Component
         "statusTypes",
         "date",
         "isToday",
-        "availableNow"
+        "availableNow",
+        "pxPerMin",
+        "visibleStartTs"
       )
     )->layout("components.layouts.app");
   }
