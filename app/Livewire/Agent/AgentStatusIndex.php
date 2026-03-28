@@ -16,6 +16,7 @@ class AgentStatusIndex extends Component
   public string $filterStatus = "";
   public string $filterGroup = "";
   public int $perPage = 25;
+  public string $viewMode = "table";
 
   protected $queryString = [
     "search" => ["except" => ""],
@@ -90,6 +91,49 @@ class AgentStatusIndex extends Component
         ? floor($avgMinutes / 60) . "h " . $avgMinutes % 60 . "m"
         : $avgMinutes . "m";
 
+    $grouped = collect();
+    if ($this->viewMode === "grouped") {
+      $grouped = AgentStatus::with(["user.userGroup", "statusType"])
+        ->when(
+          $this->search,
+          fn($q) => $q->whereHas(
+            "user",
+            fn($u) => $u
+              ->where("first_name", "like", "%{$this->search}%")
+              ->orWhere("last_name", "like", "%{$this->search}%")
+              ->orWhere("email", "like", "%{$this->search}%")
+          )
+        )
+        ->when(
+          $this->filterStatus,
+          fn($q) => $q->whereHas(
+            "statusType",
+            fn($s) => $s->where("name", $this->filterStatus)
+          )
+        )
+        ->when(
+          $this->filterGroup,
+          fn($q) => $q->whereHas(
+            "user.userGroup",
+            fn($g) => $g->where("name", $this->filterGroup)
+          )
+        )
+        ->get()
+        ->groupBy(fn($s) => $s->user?->userGroup?->id ?? "ungrouped")
+        ->map(
+          fn($grp) => [
+            "name" => $grp->first()?->user?->userGroup?->name ?? "Unassigned",
+            "agents" => $grp,
+            "count" => $grp->count(),
+            "availCount" => $grp
+              ->filter(fn($s) => (bool) $s->statusType?->is_available)
+              ->count(),
+          ]
+        )
+        ->sortBy("name")
+        ->values();
+    }
+
     return view("livewire.agent.agent-status-index", [
       "statuses" => $statuses,
       "statusTypes" => AgentStatusType::orderBy("name")->get(),
@@ -98,6 +142,8 @@ class AgentStatusIndex extends Component
       "availCount" => $availCount,
       "unavailCnt" => $unavailCnt,
       "avgLabel" => $avgLabel,
+      "viewMode" => $this->viewMode,
+      "grouped" => $grouped,
     ])->layout("components.layouts.app");
   }
 }
