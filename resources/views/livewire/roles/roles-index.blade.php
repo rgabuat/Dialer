@@ -55,6 +55,9 @@
             </table>
         </div>
 
+        {{-- Pagination --}}
+        <x-table-pagination :paginator="$roles" label="roles" />
+
     </div>
 
 </div>

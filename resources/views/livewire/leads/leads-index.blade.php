@@ -54,9 +54,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="px-5 py-3 border-zinc-800 border-t">
-            {{ $leads->links('pagination::simple-tailwind') }}
-        </div>
+        <x-table-pagination :paginator="$leads" label="leads" />
 
     </div>
 

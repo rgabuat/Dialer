@@ -15,6 +15,7 @@ class AgentStatusIndex extends Component
   public string $search = "";
   public string $filterStatus = "";
   public string $filterGroup = "";
+  public int $perPage = 25;
 
   protected $queryString = [
     "search" => ["except" => ""],
@@ -31,6 +32,11 @@ class AgentStatusIndex extends Component
     $this->resetPage();
   }
   public function updatingFilterGroup(): void
+  {
+    $this->resetPage();
+  }
+
+  public function updatedPerPage(): void
   {
     $this->resetPage();
   }
@@ -63,7 +69,7 @@ class AgentStatusIndex extends Component
         )
       );
 
-    $statuses = $baseQuery->paginate(25);
+    $statuses = $baseQuery->paginate($this->perPage);
     $totalCount = AgentStatus::count();
     $availCount = AgentStatus::whereHas(
       "statusType",

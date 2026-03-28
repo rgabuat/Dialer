@@ -116,18 +116,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($logs->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $logs->firstItem() }} – {{ $logs->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($logs->total()) }}</span>
-                    entries
-                </span>
-                {{ $logs->links() }}
-            </div>
-        @endif
+        <x-table-pagination :paginator="$logs" label="entries" />
 
     </div>
 

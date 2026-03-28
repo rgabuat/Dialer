@@ -75,24 +75,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($groups->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $groups->firstItem() }} – {{ $groups->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($groups->total()) }}</span>
-                    groups
-                </span>
-                {{ $groups->links() }}
-            </div>
-        @else
-            <div class="px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing <span class="font-medium text-white">{{ $groups->total() }}</span> groups
-                </span>
-            </div>
-        @endif
+        <x-table-pagination :paginator="$groups" label="groups" />
 
     </div>
 

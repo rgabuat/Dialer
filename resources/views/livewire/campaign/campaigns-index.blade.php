@@ -75,25 +75,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($campaigns->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $campaigns->firstItem() }} –
-                        {{ $campaigns->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($campaigns->total()) }}</span>
-                    campaigns
-                </span>
-                {{ $campaigns->links() }}
-            </div>
-        @else
-            <div class="px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing <span class="font-medium text-white">{{ $campaigns->total() }}</span> campaigns
-                </span>
-            </div>
-        @endif
+        <x-table-pagination :paginator="$campaigns" label="campaigns" />
 
     </div>
 

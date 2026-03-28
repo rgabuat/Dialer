@@ -9,16 +9,23 @@ use Livewire\WithPagination;
 
 class LeadsIndex extends Component
 {
-    use WithPagination;
+  use WithPagination;
 
-    protected $paginationTheme = 'tailwind';
+  protected $paginationTheme = "tailwind";
 
-    public function render()
-    {
-        return view('livewire.leads.leads-index', [
-            'leads' => Lead::with(['store', 'creator'])
-                ->latest()
-                ->paginate(10),
-        ])->layout('components.layouts.app');
-    }
+  public int $perPage = 10;
+
+  public function updatedPerPage(): void
+  {
+    $this->resetPage();
+  }
+
+  public function render()
+  {
+    return view("livewire.leads.leads-index", [
+      "leads" => Lead::with(["store", "creator"])
+        ->latest()
+        ->paginate($this->perPage),
+    ])->layout("components.layouts.app");
+  }
 }

@@ -8,25 +8,35 @@ use App\Models\Campaign;
 
 class CampaignsIndex extends Component
 {
-    use WithPagination;
+  use WithPagination;
 
-    public string $search = '';
+  public string $search = "";
+  public int $perPage = 20;
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-    }
+  public function updatingSearch(): void
+  {
+    $this->resetPage();
+  }
 
-    public function render()
-    {
-        $campaigns = Campaign::when($this->search, fn ($q) =>
-                $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('phone_number', 'like', "%{$this->search}%")
-            )
-            ->latest()
-            ->paginate(20);
+  public function updatedPerPage(): void
+  {
+    $this->resetPage();
+  }
 
-        return view('livewire.campaign.campaigns-index', compact('campaigns'))
-            ->layout('components.layouts.app');
-    }
+  public function render()
+  {
+    $campaigns = Campaign::when(
+      $this->search,
+      fn($q) => $q
+        ->where("name", "like", "%{$this->search}%")
+        ->orWhere("phone_number", "like", "%{$this->search}%")
+    )
+      ->latest()
+      ->paginate($this->perPage);
+
+    return view(
+      "livewire.campaign.campaigns-index",
+      compact("campaigns")
+    )->layout("components.layouts.app");
+  }
 }

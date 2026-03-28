@@ -49,18 +49,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($stores->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $stores->firstItem() }} – {{ $stores->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($stores->total()) }}</span>
-                    stores
-                </span>
-                {{ $stores->links('pagination::simple-tailwind') }}
-            </div>
-        @endif
+        <x-table-pagination :paginator="$stores" label="stores" />
 
     </div>
 

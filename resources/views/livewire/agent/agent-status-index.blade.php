@@ -224,26 +224,8 @@
             </table>
         </div>
 
-        {{-- Pagination footer --}}
-        @if ($statuses->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $statuses->firstItem() }} -
-                        {{ $statuses->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($statuses->total()) }}</span>
-                    agents
-                </span>
-                {{ $statuses->links() }}
-            </div>
-        @else
-            <div class="px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing <span class="font-medium text-white">{{ $statuses->total() }}</span> agents
-                </span>
-            </div>
-        @endif
+        {{-- Pagination --}}
+        <x-table-pagination :paginator="$statuses" label="agents" />
 
     </div>
 

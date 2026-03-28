@@ -77,24 +77,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($users->hasPages())
-            <div class="flex justify-between items-center px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing
-                    <span class="font-medium text-white">{{ $users->firstItem() }} – {{ $users->lastItem() }}</span>
-                    of
-                    <span class="font-medium text-white">{{ number_format($users->total()) }}</span>
-                    accounts
-                </span>
-                {{ $users->links('pagination::simple-tailwind') }}
-            </div>
-        @else
-            <div class="px-5 py-3 border-zinc-800 border-t">
-                <span class="text-zinc-500 text-xs">
-                    Showing <span class="font-medium text-white">{{ $users->total() }}</span> accounts
-                </span>
-            </div>
-        @endif
+        <x-table-pagination :paginator="$users" label="accounts" />
 
     </div>
 
