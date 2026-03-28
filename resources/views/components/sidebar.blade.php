@@ -77,27 +77,12 @@
     @click="sidebarOpen = false">
 </div>
 
-<!-- Sidebar wrapper: animates width on desktop to push main content -->
+<!-- Sidebar wrapper -->
 <div id="sidebar-wrapper" x-bind:class="$root && $root.sidebarOpen ? 'w-64 lg:w-64' : 'w-0 lg:w-64'"
-    class="lg:overflow-hidden transition-all duration-300 ease-in-out lg:shrink-0 lg:[animation:sidebar-push-enter_0.38s_cubic-bezier(0.25,1,0.5,1)_both]">
+    class="lg:w-64 lg:overflow-hidden transition-all duration-300 ease-in-out lg:shrink-0">
 
     <!-- Sidebar -->
-    <aside x-data x-init="if (window._sidebarAnimated) {
-        const wrapper = document.getElementById('sidebar-wrapper');
-        wrapper.style.animation = 'none';
-        $el.querySelectorAll('.nav-link-enter').forEach(el => {
-            el.style.animation = 'none';
-            el.style.opacity = '1';
-            el.style.transform = 'none';
-            el.style.pointerEvents = 'auto';
-        });
-    } else {
-        // First full load: let the wrapper play, then sequentially start link animations
-        window._sidebarAnimated = true;
-        const wrapper = document.getElementById('sidebar-wrapper');
-        const wrapperDuration = 420; /* ms - matches sidebar push duration */
-        setTimeout(() => wrapper.classList.add('play-links'), wrapperDuration);
-    }"
+    <aside
         class="lg:top-0 left-0 z-50 lg:z-auto lg:static fixed lg:sticky inset-y-0 flex flex-col bg-[#0c0e12] border-zinc-800/60 border-r w-64 lg:h-screen transition-transform -translate-x-full lg:translate-x-0 duration-300 transform [transition:transform_0.3s]"
         :class="sidebarOpen ? 'translate-x-0' : ''">
 
@@ -105,64 +90,6 @@
         <div class="flex items-center px-4 border-zinc-800/60 border-b h-16 shrink-0">
             <x-brand-logo size="h-8" />
         </div>
-
-        <!-- Sidebar animations -->
-        <style>
-            @keyframes sidebar-push-enter {
-                from {
-                    width: 0;
-                }
-
-                to {
-                    width: 16rem;
-                }
-            }
-
-            @keyframes nav-link-enter {
-                from {
-                    opacity: 0;
-                    transform: translateX(-10px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-
-            @keyframes nav-icon-tap {
-                0% {
-                    transform: scale(1) rotate(0deg);
-                }
-
-                35% {
-                    transform: scale(1.4) rotate(-16deg);
-                }
-
-                65% {
-                    transform: scale(0.88) rotate(8deg);
-                }
-
-                100% {
-                    transform: scale(1) rotate(0deg);
-                }
-            }
-
-            .nav-link-enter {
-                opacity: 0;
-                transform: translateX(-10px);
-                pointer-events: none;
-            }
-
-            #sidebar-wrapper.play-links .nav-link-enter {
-                animation: nav-link-enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-                pointer-events: auto;
-            }
-
-            .icon-tapped {
-                animation: nav-icon-tap 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-            }
-        </style>
 
         <!-- Main Navigation -->
         <nav class="flex-1 space-y-0.5 py-2 overflow-y-auto">
@@ -177,12 +104,10 @@
                     $delay = 0.05 + $loop->index * 0.04;
                 @endphp
 
-                <a href="{{ $url }}" wire:navigate x-data="{ tapped: false }"
-                    @click="tapped = true; setTimeout(() => tapped = false, 420)"
-                    class="nav-link-enter group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
+                <a href="{{ $url }}" wire:navigate
+                    class="group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
                       transition active:scale-[0.97] cursor-pointer
-                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}"
-                    style="animation-delay: {{ $delay }}s">
+                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                     {{-- Active right accent bar --}}
                     @if ($isActive)
@@ -190,15 +115,13 @@
                             class="top-1/2 right-0 absolute bg-blue-500 rounded-l-sm w-0.5 h-5 -translate-y-1/2"></span>
                     @endif
 
-                    @if ($icon)
-                        <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                    <span class="shrink-0">
+                        @if ($icon)
                             <x-dynamic-component :component="$icon" class="w-[18px] h-[18px]" />
-                        </span>
-                    @else
-                        <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        @else
                             <x-heroicon-o-squares-2x2 class="w-[18px] h-[18px] text-zinc-500" />
-                        </span>
-                    @endif
+                        @endif
+                    </span>
 
                     <span>{{ $item['label'] }}</span>
                 </a>
@@ -209,13 +132,10 @@
         <div class="space-y-0.5 py-2 border-zinc-800/60 border-t shrink-0">
 
             {{-- Light Mode / Dark Mode toggle --}}
-            <button
-                @click="$store.theme.toggle(); $refs.themeIcon.classList.remove('icon-tapped'); void $refs.themeIcon.offsetWidth; $refs.themeIcon.classList.add('icon-tapped')"
-                class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg w-full font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer nav-link-enter"
-                style="animation-delay: 0.05s">
-                <x-heroicon-o-sun class="w-[18px] h-[18px] shrink-0" x-ref="themeIcon" x-show="$store.theme.isDark" />
-                <x-heroicon-o-moon class="w-[18px] h-[18px] shrink-0" x-ref="themeIcon" x-show="!$store.theme.isDark"
-                    x-cloak />
+            <button @click="$store.theme.toggle()"
+                class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg w-full font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer">
+                <x-heroicon-o-sun class="w-[18px] h-[18px] shrink-0" x-show="$store.theme.isDark" />
+                <x-heroicon-o-moon class="w-[18px] h-[18px] shrink-0" x-show="!$store.theme.isDark" x-cloak />
                 <span x-text="$store.theme.isDark ? 'Light Mode' : 'Dark Mode'">Light Mode</span>
             </button>
 
@@ -229,37 +149,32 @@
                     $icon = $item['icon'] ?? null;
                 @endphp
 
-                <a href="{{ $url }}" wire:navigate x-data="{ tapped: false }"
-                    @click="tapped = true; setTimeout(() => tapped = false, 420)"
-                    class="nav-link-enter group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
+                <a href="{{ $url }}" wire:navigate
+                    class="group relative flex items-center gap-3 pl-5 pr-3 py-2.5 rounded-lg text-[13.5px] font-medium
                       transition active:scale-[0.97] cursor-pointer
-                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}"
-                    style="animation-delay: 0.09s">
+                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                     @if ($isActive)
                         <span
                             class="top-1/2 right-0 absolute bg-blue-500 rounded-l-sm w-0.5 h-5 -translate-y-1/2"></span>
                     @endif
 
-                    @if ($icon)
-                        <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                    <span class="shrink-0">
+                        @if ($icon)
                             <x-dynamic-component :component="$icon" class="w-[18px] h-[18px]" />
-                        </span>
-                    @else
-                        <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+                        @else
                             <x-heroicon-o-squares-2x2 class="w-[18px] h-[18px] text-zinc-500" />
-                        </span>
-                    @endif
+                        @endif
+                    </span>
 
                     <span>{{ $item['label'] }}</span>
                 </a>
             @endforeach
 
             {{-- Docs --}}
-            <a href="#" x-data="{ tapped: false }" @click="tapped = true; setTimeout(() => tapped = false, 420)"
-                class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer nav-link-enter"
-                style="animation-delay: 0.13s">
-                <span :class="{ 'icon-tapped': tapped }" class="shrink-0">
+            <a href="#"
+                class="group relative flex items-center gap-3 hover:bg-white/5 py-2.5 pr-3 pl-5 rounded-lg font-medium text-[13.5px] text-zinc-400 hover:text-white active:scale-[0.97] transition cursor-pointer">
+                <span class="shrink-0">
                     <x-heroicon-o-question-mark-circle class="w-[18px] h-[18px]" />
                 </span>
                 <span>Docs</span>
