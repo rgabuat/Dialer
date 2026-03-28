@@ -28,6 +28,16 @@
                 }
             });
         });
+
+        {{-- Re-apply theme class after wire:navigate (Livewire morphs <html> and wipes classes) --}}
+        document.addEventListener('livewire:navigated', function() {
+            var isDark = localStorage.getItem('theme') !== 'light';
+            document.documentElement.classList.toggle('dark', isDark);
+            document.documentElement.classList.toggle('light', !isDark);
+            if (window.Alpine && Alpine.store('theme')) {
+                Alpine.store('theme').isDark = isDark;
+            }
+        });
     </script>
 
     <title>{{ $title ?? 'Client Area - csrpro' }}</title>
