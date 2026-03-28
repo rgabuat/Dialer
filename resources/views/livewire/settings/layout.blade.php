@@ -3,7 +3,7 @@
 
         {{-- LEFT SETTINGS NAV --}}
         <aside class="w-52 shrink-0">
-            <div class="top-0 sticky bg-zinc-900 p-3 border border-zinc-800 rounded-xl">
+            <div class="top-0 sticky bg-surface p-3 border border-surface rounded-xl">
                 @php
                     $groups = config('settingsubitems', []);
                     $currentRoute = request()->route()?->getName();
@@ -25,8 +25,8 @@
                                 <a href="{{ route($routeName) }}" wire:navigate
                                     class="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-all
                                       {{ $isActive
-                                          ? 'bg-zinc-800 text-zinc-100 font-medium'
-                                          : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200' }}">
+                                          ? 'bg-surface-2 text-fg font-medium'
+                                          : 'text-zinc-400 hover:bg-surface-2/80 hover:text-fg-2' }}">
                                     @if (!empty($item['icon']))
                                         <x-dynamic-component :component="$item['icon']" class="w-4 h-4 shrink-0" />
                                     @endif

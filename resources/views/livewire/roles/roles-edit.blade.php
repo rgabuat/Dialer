@@ -2,7 +2,7 @@
 
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Edit Role</h1>
+        <h1 class="font-bold text-fg text-xl">Edit Role</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">Update the role name and manage its assigned permissions.</p>
     </div>
 
@@ -16,14 +16,14 @@
     @endif
 
     {{-- Role Name --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-zinc-800 border-b">
-            <h2 class="font-semibold text-zinc-100 text-sm">Role Details</h2>
+    <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-surface border-b">
+            <h2 class="font-semibold text-fg text-sm">Role Details</h2>
         </div>
         <div class="px-5 py-5">
             <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Role Name</label>
             <input type="text" wire:model="name"
-                class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-zinc-100 text-sm transition placeholder-zinc-600">
+                class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full max-w-sm text-fg text-sm transition placeholder-fg-muted">
             @error('name')
                 <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
             @enderror
@@ -40,16 +40,16 @@
             ->values();
     @endphp
 
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-zinc-800 border-b">
-            <h2 class="font-semibold text-zinc-100 text-sm">Permissions</h2>
+    <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-surface border-b">
+            <h2 class="font-semibold text-fg text-sm">Permissions</h2>
             <p class="mt-0.5 text-zinc-500 text-xs">Toggle permissions to grant or revoke access. Click × on a cell to
                 remove that permission from the system entirely.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead>
-                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                    <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Module</th>
                         @foreach ($actions as $action)
                             <th class="px-5 py-3 text-center">{{ $action }}</th>
@@ -58,7 +58,7 @@
                 </thead>
                 <tbody>
                     @forelse($groupedPermissions as $module => $perms)
-                        <tr class="hover:bg-zinc-800/20 border-zinc-800/60 last:border-0 border-b transition">
+                        <tr class="hover:bg-surface-2/30 border-surface/60 last:border-0 border-b transition">
                             <td class="px-5 py-3 font-medium text-zinc-300 capitalize">{{ $module }}</td>
                             @foreach ($actions as $action)
                                 @php $perm = $perms->firstWhere('name', $module.'.'.$action); @endphp
@@ -101,17 +101,17 @@
     </div>
 
     {{-- Add New Permission --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-zinc-800 border-b">
-            <h2 class="font-semibold text-zinc-100 text-sm">Add New Permission</h2>
+    <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-surface border-b">
+            <h2 class="font-semibold text-fg text-sm">Add New Permission</h2>
             <p class="mt-0.5 text-zinc-500 text-xs">Use dot notation — e.g. <code
-                    class="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300 text-xs">users.create</code></p>
+                    class="bg-surface-2 px-1 py-0.5 rounded text-fg-3 text-xs">users.create</code></p>
         </div>
         <div class="px-5 py-4">
             <div class="flex gap-2 max-w-md">
                 <input type="text" wire:model.defer="newPermission" wire:keydown.enter="addPermission"
                     placeholder="module.action"
-                    class="flex-1 bg-zinc-800/50 px-3 py-2 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none text-zinc-100 text-sm transition placeholder-zinc-600">
+                    class="flex-1 bg-surface-2/70 px-3 py-2 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none text-fg text-sm transition placeholder-fg-muted">
                 <button wire:click="addPermission"
                     class="bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded-lg font-medium text-white text-sm transition">
                     Add
@@ -130,7 +130,7 @@
             Save changes
         </button>
         <a href="{{ route('roles.index') }}" wire:navigate
-            class="text-zinc-400 hover:text-zinc-200 text-sm transition">
+            class="text-zinc-400 hover:text-fg-2 text-sm transition">
             Cancel
         </a>
     </div>

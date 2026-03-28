@@ -8,7 +8,7 @@
     <div class="flex flex-wrap justify-between items-start gap-3 shrink-0">
         <div>
             <div class="flex items-center gap-3">
-                <h1 class="font-bold text-zinc-100 text-xl">Shift Monitor</h1>
+                <h1 class="font-bold text-fg text-xl">Shift Monitor</h1>
                 @if ($isToday)
                     <span
                         class="inline-flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold text-[11px] text-green-400">
@@ -20,7 +20,7 @@
             <p class="mt-0.5 text-zinc-500 text-sm">Monitor scheduled slots and activity for day-to-day agents.</p>
         </div>
         <div class="text-right">
-            <div class="font-semibold text-zinc-100 text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
+            <div class="font-semibold text-fg text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
             </div>
             <div class="mt-0.5 text-zinc-500 text-xs">{{ number_format($totalAgents) }} agents on shift</div>
         </div>
@@ -29,7 +29,7 @@
     {{-- ── Controls ─────────────────────────────────────────────── --}}
     <div class="flex flex-wrap items-center gap-2 shrink-0">
         <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search agents..."
-            class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-48 text-white text-sm transition placeholder-zinc-600">
+            class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-48 text-fg text-sm transition placeholder-fg-muted">
 
         <x-date-picker wire-model="date" :value="$date" />
 
@@ -51,33 +51,33 @@
     </div>
     {{-- ── Stats strip ────────────────────────────────────── --}}
     <div class="flex flex-wrap items-center gap-2 text-xs shrink-0">
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">On Shift</span>
-            <span class="font-semibold text-zinc-200">{{ $totalAgents }}</span>
+            <span class="font-semibold text-fg-2">{{ $totalAgents }}</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse shrink-0"></span>
             <span class="text-zinc-500">Available Now</span>
             <span class="font-semibold text-green-400">{{ $availableNow }}</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Avg Utilization</span>
             <span
                 class="font-semibold {{ $avgUtil >= 70 ? 'text-green-400' : ($avgUtil >= 40 ? 'text-yellow-400' : 'text-red-400') }}">{{ $avgUtil }}%</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Available Time</span>
             <span
-                class="font-semibold text-zinc-200">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $availSeconds) }}</span>
+                class="font-semibold text-fg-2">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $availSeconds) }}</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Total Logged</span>
             <span
-                class="font-semibold text-zinc-200">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $totalSeconds) }}</span>
+                class="font-semibold text-fg-2">{{ \App\Livewire\Activity\ShiftMonitoring::formatSeconds((int) $totalSeconds) }}</span>
         </div>
     </div>
     {{-- ── Gantt Card ───────────────────────────────────────────── --}}
-    <div class="flex flex-col flex-1 bg-zinc-900 border border-zinc-800 rounded-xl min-h-0 transition-opacity duration-200 [overflow:clip]"
+    <div class="flex flex-col flex-1 bg-surface border border-surface rounded-xl min-h-0 transition-opacity duration-200 [overflow:clip]"
         wire:loading.class.delay="opacity-50">
 
         @if ($grouped->isEmpty())
@@ -148,23 +148,23 @@
                     @endif
 
                     {{-- ── Sticky header row ──────────────────────────── --}}
-                    <div class="top-0 z-20 sticky flex items-stretch bg-zinc-900 border-zinc-800 border-b">
+                    <div class="top-0 z-20 sticky flex items-stretch bg-surface border-surface border-b">
                         {{-- Corner cell (sticky left + top) --}}
                         <div
-                            class="left-0 z-30 sticky flex items-center bg-zinc-900 px-4 py-2.5 border-zinc-800 border-r w-[260px] shrink-0">
+                            class="left-0 z-30 sticky flex items-center bg-surface px-4 py-2.5 border-surface border-r w-[260px] shrink-0">
                             <span class="font-semibold text-zinc-500 text-xs uppercase tracking-widest">Agent</span>
                         </div>
                         {{-- Hour ticks --}}
                         <div class="relative flex-none h-9" style="width: {{ $timelineWidth }}px">
                             @foreach ($hours as $hour)
                                 @if ($hour['isHalf'])
-                                    <div class="top-4 bottom-0 absolute flex items-end pb-1 border-zinc-700/25 border-l border-dashed"
+                                    <div class="top-4 bottom-0 absolute flex items-end pb-1 border-surface-2/25 border-l border-dashed"
                                         style="left: {{ $hour['left'] }}px">
                                         <span
                                             class="pl-1 text-[9px] text-zinc-700 whitespace-nowrap select-none">:30</span>
                                     </div>
                                 @else
-                                    <div class="top-0 bottom-0 absolute flex items-center border-zinc-800/60 border-l"
+                                    <div class="top-0 bottom-0 absolute flex items-center border-surface/60 border-l"
                                         style="left: {{ $hour['left'] }}px">
                                         <span
                                             class="pl-1.5 font-medium text-[11px] text-zinc-500 whitespace-nowrap select-none">
@@ -180,9 +180,9 @@
                     @foreach ($grouped as $g)
                         {{-- Group separator --}}
                         <div wire:key="group-row-{{ optional($g['group'])->id ?? 'ungrouped' }}"
-                            class="flex items-stretch bg-[#0d0f13] border-zinc-800/80 border-b">
+                            class="flex items-stretch bg-surface-3 border-surface/80 border-b">
                             <div
-                                class="left-0 z-10 sticky flex items-center gap-2 bg-[#0d0f13] px-4 py-1.5 border-zinc-800 border-r w-[260px] shrink-0">
+                                class="left-0 z-10 sticky flex items-center gap-2 bg-surface-3 px-4 py-1.5 border-surface border-r w-[260px] shrink-0">
                                 <span class="font-bold text-zinc-400 text-xs uppercase tracking-widest">
                                     {{ optional($g['group'])->name ?? 'Unassigned' }}
                                 </span>
@@ -202,12 +202,12 @@
                                 $currentStatus = $agent->agentStatus?->statusType;
                             @endphp
                             <div wire:key="agent-row-{{ $agent->id }}"
-                                class="group flex items-stretch hover:bg-white/[0.02] border-zinc-800/40 border-b transition-colors gantt-row-animate"
+                                class="group flex items-stretch hover:bg-white/[0.02] border-surface/40 border-b transition-colors gantt-row-animate"
                                 style="animation-delay: {{ $loop->parent->index * 0.1 + $loop->index * 0.04 }}s">
 
                                 {{-- Sticky left: agent info --}}
                                 <div
-                                    class="left-0 z-10 sticky flex items-center gap-2.5 bg-zinc-900 group-hover:bg-[#1a1d24] px-3 py-2 border-zinc-800 border-r w-[260px] transition-colors shrink-0">
+                                    class="left-0 z-10 sticky flex items-center gap-2.5 bg-surface group-hover:bg-row-hover px-3 py-2 border-surface border-r w-[260px] transition-colors shrink-0">
                                     {{-- Avatar --}}
                                     <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[11px] uppercase select-none shrink-0"
                                         style="background-color: {{ $currentStatus?->color ? $currentStatus->color . '22' : '#6366f120' }}; color: {{ $currentStatus?->color ?? '#818cf8' }}; border: 1px solid {{ $currentStatus?->color ? $currentStatus->color . '44' : '#6366f140' }}">
@@ -216,7 +216,7 @@
                                     {{-- Name + shift summary --}}
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-1.5 min-w-0">
-                                            <span class="flex-1 min-w-0 font-medium text-zinc-200 text-sm truncate">
+                                            <span class="flex-1 min-w-0 font-medium text-fg-2 text-sm truncate">
                                                 {{ $agent->first_name }} {{ $agent->last_name }}
                                             </span>
                                             @if ($currentStatus)
@@ -226,7 +226,7 @@
                                                 </span>
                                             @else
                                                 <span
-                                                    class="bg-zinc-800 px-1.5 py-0.5 rounded font-semibold text-[10px] text-zinc-500 shrink-0">
+                                                    class="bg-surface-2 px-1.5 py-0.5 rounded font-semibold text-[10px] text-zinc-500 shrink-0">
                                                     Offline
                                                 </span>
                                             @endif
@@ -245,7 +245,7 @@
                                 </div>
 
                                 {{-- Timeline --}}
-                                <div class="relative flex-none bg-zinc-900 group-hover:bg-[#1a1d24] transition-colors"
+                                <div class="relative flex-none bg-surface group-hover:bg-row-hover transition-colors"
                                     style="width: {{ $timelineWidth }}px; height: 60px">
 
                                     {{-- Hour grid lines --}}

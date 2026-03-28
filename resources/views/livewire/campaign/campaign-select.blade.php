@@ -18,7 +18,7 @@
                             <label class="text-zinc-400 text-sm">Campaign</label>
                             <select
                                 wire:model="campaignId"
-                                class="w-full rounded bg-zinc-900 border border-zinc-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring focus:ring-blue-500/20"
+                                class="w-full rounded bg-surface border border-surface px-3 py-2 text-sm text-white focus:outline-none focus:ring focus:ring-blue-500/20"
                             >
                                 <option value="">— select a campaign —</option>
                                 @foreach ($campaigns as $campaign)
@@ -30,7 +30,7 @@
                         @if ($campaignId)
                             @php $selected = $campaigns->find($campaignId) @endphp
                             @if ($selected)
-                                <div class="rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm text-zinc-300 space-y-1">
+                                <div class="rounded-lg bg-surface border border-surface px-4 py-3 text-sm text-zinc-300 space-y-1">
                                     <div class="font-medium text-white">{{ $selected->name }}</div>
                                     @if ($selected->description)
                                         <div class="text-zinc-400 text-xs">{{ $selected->description }}</div>

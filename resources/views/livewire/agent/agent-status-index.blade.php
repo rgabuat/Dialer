@@ -12,46 +12,46 @@
     });">
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Agent Status</h1>
+        <h1 class="font-bold text-fg text-xl">Agent Status</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">Real-time status and availability of all agents.</p>
     </div>
     {{-- STAT STRIP --}}
     <div class="flex flex-wrap items-center gap-2 text-xs shrink-0">
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Total Agents</span>
-            <span class="font-semibold text-zinc-200">{{ $totalCount }}</span>
+            <span class="font-semibold text-fg-2">{{ $totalCount }}</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse shrink-0"></span>
             <span class="text-zinc-500">Available</span>
             <span class="font-semibold text-green-400">{{ $availCount }}</span>
         </div>
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="bg-yellow-400 rounded-full w-1.5 h-1.5 shrink-0"></span>
             <span class="text-zinc-500">Unavailable</span>
             <span class="font-semibold text-yellow-400">{{ $unavailCnt }}</span>
         </div>
         @if ($totalCount > 0)
-            <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+            <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
                 <span class="text-zinc-500">Availability</span>
                 @php $availPct = round(($availCount / $totalCount) * 100); @endphp
                 <span
                     class="font-semibold {{ $availPct >= 70 ? 'text-green-400' : ($availPct >= 40 ? 'text-yellow-400' : 'text-red-400') }}">{{ $availPct }}%</span>
             </div>
         @endif
-        <div class="flex items-center gap-2 bg-zinc-900 px-3 py-2 border border-zinc-800 rounded-lg">
+        <div class="flex items-center gap-2 bg-surface px-3 py-2 border border-surface rounded-lg">
             <span class="text-zinc-500">Avg. Offline</span>
-            <span class="font-semibold text-zinc-200">{{ $avgLabel ?: '—' }}</span>
+            <span class="font-semibold text-fg-2">{{ $avgLabel ?: '—' }}</span>
         </div>
     </div>
 
     {{-- AGENT FLEET TABLE --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl [overflow:clip]">
+    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
 
         {{-- Table header --}}
-        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
             <div class="flex items-center gap-3">
-                <h2 class="font-bold text-white text-base">Agent Fleet</h2>
+                <h2 class="font-bold text-fg text-base">Agent Fleet</h2>
                 <span class="flex items-center gap-1.5 font-medium text-green-400 text-xs">
                     <span class="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse"></span>
                     Live Syncing
@@ -61,7 +61,7 @@
             {{-- Filters + View switcher --}}
             <div class="flex items-center gap-2">
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search agent..."
-                    class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-white text-sm transition placeholder-zinc-600">
+                    class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-fg text-sm transition placeholder-fg-muted">
 
                 <x-select-dropdown wire-model="filterStatus" :value="$filterStatus" placeholder="All Statuses"
                     :options="$statusTypes
@@ -73,7 +73,7 @@
                     :options="$userGroups->map(fn($g) => ['value' => $g->name, 'label' => $g->name])->values()->all()" />
 
                 {{-- View switcher --}}
-                <div class="flex items-center gap-0.5 bg-zinc-800 p-1 rounded-lg shrink-0">
+                <div class="flex items-center gap-0.5 bg-surface-2 p-1 rounded-lg shrink-0">
                     <button type="button" wire:click="$set('viewMode','table')" title="Table view"
                         class="flex justify-center items-center rounded-md w-7 h-7 transition"
                         :class="'{{ $viewMode }}'
@@ -111,9 +111,9 @@
             window.addEventListener('resize', update);
             $cleanup(() => window.removeEventListener('resize', update));">
                 <table class="min-w-full text-white text-sm stagger-rows">
-                    <thead class="top-0 z-10 sticky bg-zinc-900">
+                    <thead class="top-0 z-10 sticky bg-surface">
                         <tr
-                            class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                            class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                             <th class="px-5 py-3 text-left">Agent</th>
                             <th class="px-5 py-3 text-left">Group</th>
                             <th class="px-5 py-3 text-left">Status</th>
@@ -126,7 +126,7 @@
                         @forelse ($statuses as $status)
                             @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
                             <tr wire:key="agent-row-{{ $status->user_id }}"
-                                class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition"
+                                class="hover:bg-hover border-surface border-b transition"
                                 x-data="{
                                     userId: {{ $status->user_id }},
                                     statusName: @js($status->statusType?->name ?? '—'),
@@ -166,11 +166,11 @@
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-3">
                                         <span
-                                            class="inline-flex justify-center items-center bg-zinc-700 rounded-full w-9 h-9 font-bold text-white text-xs shrink-0">
+                                            class="inline-flex justify-center items-center bg-zinc-700 rounded-full w-9 h-9 font-bold text-fg text-xs shrink-0">
                                             {{ $initials }}
                                         </span>
                                         <div>
-                                            <div class="font-semibold text-white text-sm">
+                                            <div class="font-semibold text-fg text-sm">
                                                 {{ $status->user->first_name }}
                                                 {{ $status->user->last_name }}</div>
                                             <div class="text-zinc-500 text-xs">{{ $status->user->email }}</div>
@@ -204,7 +204,7 @@
                                 <td class="px-5 py-4 text-zinc-400 text-sm" x-text="sinceLabel"></td>
 
                                 {{-- Elapsed --}}
-                                <td class="px-5 py-4 font-mono text-zinc-300 text-sm" x-text="time"></td>
+                                <td class="px-5 py-4 font-mono text-fg-3 text-sm" x-text="time"></td>
                             </tr>
                         @empty
                             <tr>
@@ -230,9 +230,9 @@
             window.addEventListener('resize', update);
             $cleanup(() => window.removeEventListener('resize', update));">
                 <table class="min-w-full text-sm">
-                    <thead class="top-0 z-20 sticky bg-zinc-900">
+                    <thead class="top-0 z-20 sticky bg-surface">
                         <tr
-                            class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                            class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                             <th class="px-5 py-3 w-full text-left">Agent</th>
                             <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
                             <th class="px-5 py-3 text-left whitespace-nowrap">Available</th>
@@ -243,7 +243,7 @@
                         @forelse ($grouped as $g)
                             {{-- Group divider row --}}
                             <tr class="top-[37px] z-10 sticky">
-                                <td colspan="4" class="bg-[#0c0e12] px-5 py-1.5 border-y border-zinc-800">
+                                <td colspan="4" class="bg-surface-3 px-5 py-1.5 border-y border-surface">
                                     <div class="flex items-center gap-2">
                                         <span
                                             class="font-semibold text-zinc-400 text-xs uppercase tracking-widest">{{ $g['name'] }}</span>
@@ -261,7 +261,7 @@
                             @foreach ($g['agents'] as $status)
                                 @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
                                 <tr wire:key="grouped-agent-{{ $status->user_id }}"
-                                    class="hover:bg-zinc-800/30 border-zinc-800/50 border-b transition"
+                                    class="hover:bg-surface-2/50 border-surface/50 border-b transition"
                                     x-data="{
                                         userId: {{ $status->user_id }},
                                         statusName: @js($status->statusType?->name ?? '—'),
@@ -298,7 +298,7 @@
                                                 {{ $initials }}
                                             </div>
                                             <span
-                                                class="max-w-xs font-medium text-zinc-200 text-sm truncate">{{ $status->user->first_name }}
+                                                class="max-w-xs font-medium text-fg-2 text-sm truncate">{{ $status->user->first_name }}
                                                 {{ $status->user->last_name }}</span>
                                         </div>
                                     </td>

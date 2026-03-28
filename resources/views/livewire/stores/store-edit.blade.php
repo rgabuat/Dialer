@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto text-zinc-100">
+<div class="max-w-2xl mx-auto text-fg">
 
     <div class="mb-6">
         <h1 class="text-2xl font-semibold">Edit Store</h1>
@@ -11,12 +11,12 @@
         </div>
     @endif
 
-    <div class="space-y-4 bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+    <div class="space-y-4 bg-surface border border-surface rounded-lg p-6">
 
         <div>
             <label class="text-sm text-zinc-400">Store Name</label>
             <input wire:model.live="name" type="text"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('name')
                 <span class="text-xs text-red-400">{{ $message }}</span>
             @enderror
@@ -25,7 +25,7 @@
         <div>
             <label class="text-sm text-zinc-400">Address</label>
             <input wire:model.live="address" type="text"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('address')
                 <span class="text-xs text-red-400">{{ $message }}</span>
             @enderror
@@ -34,14 +34,14 @@
         <div>
             <label class="text-sm text-zinc-400">Brand</label>
             <input wire:model.live="brand" type="text"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('brand')
                 <span class="text-xs text-red-400">{{ $message }}</span>
             @enderror
         </div>
 
         <div class="flex justify-between pt-4">
-            <a href="{{ route('stores.index') }}" class="text-sm text-zinc-400 hover:text-zinc-200">
+            <a href="{{ route('stores.index') }}" class="text-sm text-zinc-400 hover:text-fg-2">
                 ← Back
             </a>
 
@@ -60,7 +60,7 @@
         {{-- Delete Modal --}}
         @if ($confirmingDelete)
             <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-sm p-6">
+                <div class="bg-surface border border-surface rounded-lg w-full max-w-sm p-6">
 
                     <h2 class="text-lg font-semibold mb-2">Delete Store</h2>
                     <p class="text-sm text-zinc-400 mb-4">
@@ -69,7 +69,7 @@
 
                     <div class="flex justify-end gap-2">
                         <button wire:click="$set('confirmingDelete', false)"
-                            class="px-3 py-1.5 text-sm bg-zinc-800 rounded-md">
+                            class="px-3 py-1.5 text-sm bg-surface-2 rounded-md">
                             Cancel
                         </button>
 

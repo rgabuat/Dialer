@@ -100,7 +100,7 @@
     </script>
 </head>
 
-<body class="bg-zinc-100 dark:bg-[#0f1115] m-0 h-screen min-h-screen overflow-hidden transition-colors duration-300">
+<body class="bg-base m-0 h-screen min-h-screen overflow-hidden transition-colors duration-300">
 
     {{-- Navigate progress bar element --}}
     <div id="nprogress-bar"></div>
@@ -182,8 +182,7 @@ x-init="
             <x-subnav />
 
             <!-- Page content -->
-            <main
-                class="flex-1 bg-zinc-100 dark:bg-[#0f1115] p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300"
+            <main class="flex-1 bg-base p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300"
                 style="scrollbar-gutter: stable" x-data
                 x-on:livewire:navigated.document="$el.classList.remove('animate-fade-up'); void $el.offsetWidth; $el.classList.add('animate-fade-up')">
                 <div class="animate-fade-up">

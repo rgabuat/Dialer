@@ -2,14 +2,14 @@
 
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Picture</h1>
+        <h1 class="font-bold text-fg text-xl">Picture</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">Upload a profile picture to personalise your account.</p>
     </div>
 
     {{-- Profile Photo Card --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div class="px-6 py-4 border-zinc-800 border-b">
-            <h2 class="font-semibold text-zinc-100 text-sm">Profile Photo</h2>
+    <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-surface border-b">
+            <h2 class="font-semibold text-fg text-sm">Profile Photo</h2>
             <p class="mt-0.5 text-zinc-500 text-xs">A photo helps people recognise you. JPG, PNG or GIF — max 2 MB.</p>
         </div>
         <div class="px-6 py-6">
@@ -30,7 +30,7 @@
                 {{-- Upload area --}}
                 <div class="flex-1">
                     <label for="photo-upload"
-                        class="flex flex-col justify-center items-center bg-zinc-800/30 hover:bg-zinc-800/60 border-2 border-zinc-700 hover:border-zinc-600 border-dashed rounded-xl w-full h-28 transition cursor-pointer">
+                        class="flex flex-col justify-center items-center bg-surface-2/50 hover:bg-surface-2/80 border-2 border-surface-2 hover:border-zinc-600 border-dashed rounded-xl w-full h-28 transition cursor-pointer">
                         <x-heroicon-o-arrow-up-tray class="mb-2 w-6 h-6 text-zinc-500" />
                         <p class="text-zinc-400 text-sm">
                             <span class="font-medium text-zinc-300">Click to upload</span> or drag and drop

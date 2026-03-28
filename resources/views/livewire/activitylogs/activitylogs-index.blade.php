@@ -2,16 +2,16 @@
 
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Activity Logs</h1>
+        <h1 class="font-bold text-fg text-xl">Activity Logs</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">A full history of system and user activity events.</p>
     </div>
 
     {{-- ACTIVITY LOGS TABLE --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl [overflow:clip]">
+    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
 
         {{-- Header --}}
-        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
-            <h2 class="font-bold text-white text-base">Activity Logs</h2>
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
+            <h2 class="font-bold text-fg text-base">Activity Logs</h2>
 
             <div class="flex flex-wrap items-center gap-2">
                 <x-select-dropdown wire-model="filters.type" :value="$filters['type'] ?? ''" placeholder="All Types"
@@ -48,8 +48,8 @@
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
             <table class="min-w-full text-white text-sm stagger-rows">
-                <thead class="top-0 z-10 sticky bg-zinc-900">
-                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                <thead class="top-0 z-10 sticky bg-surface">
+                    <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Actor</th>
                         <th class="px-5 py-3 text-left">Action</th>
                         <th class="px-5 py-3 text-left">Subject</th>
@@ -61,14 +61,14 @@
                 <tbody>
                     @forelse ($logs as $log)
                         <tr wire:click="show('{{ $log->id }}')" wire:key="activity-log-{{ $log->id }}"
-                            class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition cursor-pointer">
+                            class="hover:bg-hover border-surface border-b transition cursor-pointer">
 
-                            <td class="px-5 py-4 text-zinc-300 text-sm">
+                            <td class="px-5 py-4 text-fg-3 text-sm">
                                 {{ $log->actor ? class_basename($log->actor_type) : 'System' }}
                             </td>
 
                             <td class="px-5 py-4">
-                                <div class="text-zinc-200 text-sm">{{ $log->action }}</div>
+                                <div class="text-fg-2 text-sm">{{ $log->action }}</div>
                                 <div class="text-zinc-500 text-xs">{{ $log->event }}</div>
                             </td>
 

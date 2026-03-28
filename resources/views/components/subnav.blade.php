@@ -41,7 +41,7 @@
 
 @if ($activeParent && !empty($visibleChildren))
     <div
-        class="flex items-center gap-0 bg-white dark:bg-[#0c0e12] px-6 border-zinc-200 dark:border-zinc-800 border-b transition-colors duration-300 shrink-0">
+        class="flex items-center gap-0 bg-white dark:bg-surface-3 px-6 border-zinc-200 dark:border-surface border-b transition-colors duration-300 shrink-0">
 
         {{-- Child tabs --}}
         <nav class="flex items-center gap-0 overflow-x-auto" x-data>

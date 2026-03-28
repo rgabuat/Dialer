@@ -79,7 +79,7 @@
 
 <!-- Sidebar -->
 <aside
-    class="lg:top-0 left-0 z-50 lg:z-auto lg:static fixed lg:sticky inset-y-0 flex flex-col bg-white dark:bg-[#0c0e12] border-zinc-200 dark:border-zinc-800/60 border-r w-64 lg:h-screen transition-transform -translate-x-full lg:translate-x-0 duration-300 transform [transition:background-color_0.3s,border-color_0.3s,transform_0.3s]"
+    class="lg:top-0 left-0 z-50 lg:z-auto lg:static fixed lg:sticky inset-y-0 flex flex-col bg-[#0c0e12] border-zinc-800/60 border-r w-64 lg:h-screen transition-transform -translate-x-full lg:translate-x-0 duration-300 transform [transition:transform_0.3s]"
     :class="sidebarOpen ? 'translate-x-0' : ''">
 
     <!-- Logo -->
@@ -102,9 +102,7 @@
             <a href="{{ $url }}" wire:navigate
                 class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
                       transition-colors cursor-pointer
-                      {{ $isActive
-                          ? 'bg-zinc-900/8 dark:bg-white/10 text-zinc-900 dark:text-white'
-                          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-900/5 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white' }}">
+                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                 {{-- Active left accent bar --}}
                 @if ($isActive)
@@ -123,7 +121,7 @@
     </nav>
 
     <!-- Bottom: Settings etc. -->
-    <div class="space-y-0.5 py-2 border-zinc-200 dark:border-zinc-800/60 border-t shrink-0">
+    <div class="space-y-0.5 py-2 border-zinc-800/60 border-t shrink-0">
         @foreach ($bottomItems as $item)
             @php
                 if (!$canViewItem($item)) {
@@ -137,9 +135,7 @@
             <a href="{{ $url }}" wire:navigate
                 class="group relative flex items-center gap-3 pl-5 pr-3 py-2 rounded-lg text-sm font-medium
                       transition-colors cursor-pointer
-                      {{ $isActive
-                          ? 'bg-zinc-900/8 dark:bg-white/10 text-zinc-900 dark:text-white'
-                          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-900/5 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white' }}">
+                      {{ $isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white' }}">
 
                 @if ($isActive)
                     <span class="top-1/2 left-0 absolute bg-blue-500 rounded-r-full w-0.5 h-5 -translate-y-1/2"></span>

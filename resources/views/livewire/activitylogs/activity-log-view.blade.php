@@ -1,60 +1,61 @@
-<div class="fixed inset-0 z-50 flex justify-end bg-black/50">
+<div class="z-50 fixed inset-0 flex justify-end bg-black/50">
 
-    <div class="w-full max-w-xl bg-zinc-950 border-l border-zinc-800 p-6 overflow-y-auto">
+    <div class="bg-surface-4 p-6 border-surface border-l w-full max-w-xl overflow-y-auto">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-lg font-semibold text-zinc-100">
+                <h2 class="font-semibold text-fg text-lg">
                     Activity Details
                 </h2>
-                <div class="text-xs text-zinc-500">
+                <div class="text-zinc-500 text-xs">
                     {{ $log->performed_at->format('M d, Y H:i:s') }}
                 </div>
             </div>
 
-            <button wire:click="closeDrawer" class="text-zinc-400 hover:text-zinc-200">
+            <button wire:click="closeDrawer" class="text-zinc-400 hover:text-fg-2">
                 ✕
             </button>
         </div>
 
         {{-- Action --}}
         <div class="mb-6">
-            <div class="text-sm font-medium text-zinc-200">
+            <div class="font-medium text-fg-2 text-sm">
                 {{ $log->action }}
             </div>
-            <div class="text-xs text-zinc-500">
+            <div class="text-zinc-500 text-xs">
                 {{ $log->event }}
             </div>
         </div>
 
         {{-- Primary Changes --}}
-        @if(!empty($log->properties))
+        @if (!empty($log->properties))
             <div class="mb-8">
-                <h3 class="text-sm font-semibold text-zinc-300 mb-2">
+                <h3 class="mb-2 font-semibold text-fg-3 text-sm">
                     Changes (Primary)
                 </h3>
 
-                <pre class="bg-zinc-900 border border-zinc-800 rounded p-4 text-xs text-zinc-200 overflow-x-auto">
+                <pre class="bg-surface p-4 border border-surface rounded overflow-x-auto text-fg-2 text-xs">
 {{ json_encode($log->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}
                 </pre>
             </div>
         @endif
 
         {{-- Batch Timeline --}}
-        @if($batchLogs->isNotEmpty())
+        @if ($batchLogs->isNotEmpty())
             <div class="mb-8">
-                <h3 class="text-sm font-semibold text-zinc-300 mb-3">
+                <h3 class="mb-3 font-semibold text-fg-3 text-sm">
                     Batch Timeline
                 </h3>
 
-                @foreach($batchLogs as $item)
-                    <div class="border-l border-zinc-700 pl-4 py-2
-                        {{ $item->id === $log->id ? 'bg-zinc-800/40' : '' }}">
-                        <div class="text-xs text-zinc-400">
+                @foreach ($batchLogs as $item)
+                    <div
+                        class="border-l border-surface-2 pl-4 py-2
+                        {{ $item->id === $log->id ? 'bg-surface-2/60' : '' }}">
+                        <div class="text-zinc-400 text-xs">
                             {{ $item->performed_at->format('H:i:s') }}
                         </div>
-                        <div class="text-sm text-zinc-200">
+                        <div class="text-fg-2 text-sm">
                             {{ $item->action }}
                         </div>
                     </div>
@@ -63,20 +64,20 @@
         @endif
 
         {{-- Batch Changes --}}
-        @if($batchLogs->isNotEmpty())
+        @if ($batchLogs->isNotEmpty())
             <div>
-                <h3 class="text-sm font-semibold text-zinc-300 mb-3">
+                <h3 class="mb-3 font-semibold text-fg-3 text-sm">
                     Changes (Batch)
                 </h3>
 
-                @foreach($batchLogs as $item)
-                    @if(!empty($item->properties))
-                        <div class="mb-4 border border-zinc-800 rounded">
-                            <div class="px-3 py-2 bg-zinc-900 text-xs text-zinc-400">
+                @foreach ($batchLogs as $item)
+                    @if (!empty($item->properties))
+                        <div class="mb-4 border border-surface rounded">
+                            <div class="bg-surface px-3 py-2 text-zinc-400 text-xs">
                                 {{ $item->performed_at->format('H:i:s') }} — {{ $item->event }}
                             </div>
 
-                            <pre class="p-3 text-xs text-zinc-200 overflow-x-auto">
+                            <pre class="p-3 overflow-x-auto text-fg-2 text-xs">
 {{ json_encode($item->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}
                             </pre>
                         </div>

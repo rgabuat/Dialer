@@ -5,14 +5,14 @@
      class="flex items-center gap-3">
 
     {{-- LEFT GROUP: Call controls --}}
-    <div class="flex items-center gap-1.5 px-2 py-1 border border-zinc-700 rounded-lg">
+    <div class="flex items-center gap-1.5 px-2 py-1 border border-surface-2 rounded-lg">
 
         {{-- ENABLE CALLING --}}
         <button @click="enableCalling" :disabled="!canAcceptCalls"
             class="px-3 py-1.5 rounded-md font-semibold text-xs transition"
             :class="canAcceptCalls
                 ? 'bg-blue-600 text-white hover:bg-blue-500'
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'">
+                : 'bg-surface-2 text-zinc-500 cursor-not-allowed'">
             Enable Calling
         </button>
 
@@ -20,8 +20,8 @@
         <button @click="openDialer" :disabled="!deviceReady"
             class="px-3 py-1.5 rounded-md font-semibold text-xs transition"
             :class="deviceReady
-                ? 'bg-zinc-700 text-zinc-200 hover:bg-zinc-600'
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'">
+                ? 'bg-zinc-700 text-fg-2 hover:bg-zinc-600'
+                : 'bg-surface-2 text-zinc-500 cursor-not-allowed'">
             Dial
         </button>
 
@@ -31,7 +31,7 @@
     <div class="bg-zinc-700 w-px h-6"></div>
 
     {{-- RIGHT GROUP: Status + time --}}
-    <div class="flex items-center px-2 py-1 border border-zinc-700 rounded-lg">
+    <div class="flex items-center px-2 py-1 border border-surface-2 rounded-lg">
         @livewire('agent.status-switcher')
     </div>
 
@@ -40,15 +40,15 @@
 {{-- DIAL MODAL --}}
 <div x-data="{ open: false }" x-on:open-dialer.window="open = true" x-show="open" x-cloak
     class="z-50 fixed inset-0 flex justify-center items-center bg-black/60">
-    <div class="bg-zinc-900 shadow-xl p-6 border border-zinc-800 rounded-xl w-full max-w-sm">
-        <h2 class="mb-4 font-semibold text-zinc-100 text-lg">Outbound Call</h2>
+    <div class="bg-surface shadow-xl p-6 border border-surface rounded-xl w-full max-w-sm">
+        <h2 class="mb-4 font-semibold text-fg text-lg">Outbound Call</h2>
         <input x-ref="dialNumber" type="tel" placeholder="+1234567890"
-            class="bg-zinc-800 mb-4 px-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 w-full text-zinc-100 placeholder-zinc-500" />
+            class="bg-surface-2 mb-4 px-4 py-2 border border-surface-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 w-full text-fg placeholder-fg-muted" />
         <div class="flex justify-end gap-3">
             <button @click="open = false"
-                class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-zinc-300 text-sm">Cancel</button>
+                class="bg-surface-2 hover:bg-surface px-4 py-2 rounded-lg text-fg-3 text-sm">Cancel</button>
             <button @click="$dispatch('make-call', $refs.dialNumber.value)"
-                class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg font-semibold text-white text-sm">Call</button>
+                class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg font-semibold text-fg text-sm">Call</button>
         </div>
     </div>
 </div>

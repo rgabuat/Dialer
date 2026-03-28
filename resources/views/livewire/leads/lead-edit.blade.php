@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto text-zinc-100">
+<div class="max-w-2xl mx-auto text-fg">
 
     {{-- Header --}}
     <div class="mb-6">
@@ -13,13 +13,13 @@
     @endif
 
     {{-- Form --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
+    <div class="bg-surface border border-surface rounded-lg p-6 space-y-4">
 
         {{-- First Name --}}
         <div>
             <label class="text-sm text-zinc-400">First Name</label>
             <input type="text" wire:model.live="first_name"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('first_name')
                 <span class="text-xs text-red-400">{{ $message }}</span>
             @enderror
@@ -29,7 +29,7 @@
         <div>
             <label class="text-sm text-zinc-400">Last Name</label>
             <input type="text" wire:model.live="last_name"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
             @error('last_name')
                 <span class="text-xs text-red-400">{{ $message }}</span>
             @enderror
@@ -39,21 +39,21 @@
         <div>
             <label class="text-sm text-zinc-400">Phone</label>
             <input type="text" wire:model.live="phone"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
         </div>
 
         {{-- Email --}}
         <div>
             <label class="text-sm text-zinc-400">Email</label>
             <input type="email" wire:model.live="email"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md" />
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md" />
         </div>
 
         {{-- Store --}}
         <div>
             <label class="text-sm text-zinc-400">Store</label>
             <select wire:model.live="store_id"
-                class="w-full mt-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md">
+                class="w-full mt-1 px-3 py-2 bg-surface-2 border border-surface rounded-md">
                 <option value="">Select Store</option>
                 @foreach ($stores as $store)
                     <option value="{{ $store->id }}">{{ $store->name }}</option>
@@ -66,7 +66,7 @@
 
         {{-- Actions --}}
         <div class="flex justify-between items-center pt-6">
-            <a href="{{ route('leads.index') }}" class="text-sm text-zinc-400 hover:text-zinc-200">
+            <a href="{{ route('leads.index') }}" class="text-sm text-zinc-400 hover:text-fg-2">
                 ← Back
             </a>
 
@@ -86,7 +86,7 @@
     {{-- Delete Modal --}}
     @if ($confirmingDelete)
         <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-sm p-6">
+            <div class="bg-surface border border-surface rounded-lg w-full max-w-sm p-6">
 
                 <h2 class="text-lg font-semibold mb-2">Delete Lead</h2>
                 <p class="text-sm text-zinc-400 mb-4">
@@ -95,7 +95,7 @@
 
                 <div class="flex justify-end gap-2">
                     <button wire:click="$set('confirmingDelete', false)"
-                        class="px-3 py-1.5 text-sm bg-zinc-800 rounded-md">
+                        class="px-3 py-1.5 text-sm bg-surface-2 rounded-md">
                         Cancel
                     </button>
 

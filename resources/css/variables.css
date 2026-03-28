@@ -3,6 +3,84 @@
 }
 
 /* ============================================================
+   Theme tokens — dark is the default, .light overrides
+   ============================================================ */
+:root,
+.dark {
+    --bg-base: #0f1115;
+    /* outermost page background                    */
+    --sidebar-bg: #0c0e12;
+    /* sidebar / deep surface                       */
+    --row-hover: #1a1d24;
+    /* gantt row hover (slightly lighter than base) */
+    --topbar-bg: #0f1115;
+    /* topbar gradient end / fallback               */
+    --topbar-from: #151a20;
+    /* topbar gradient start                        */
+    --avatar-bg: #3f3f46;
+    /* zinc-700 — avatar circle bg                  */
+    --avatar-fg: #ffffff;
+    --surface: #18181b;
+    /* zinc-900  — cards / panels                  */
+    --surface-2: #27272a;
+    /* zinc-800  — inputs / secondary surfaces      */
+    --surface-3: #0c0e12;
+    /* custom    — group headers / deeper bg        */
+    --surface-4: #09090b;
+    /* zinc-950  — dropdown bg                      */
+    --border: #27272a;
+    /* zinc-800  — primary border                   */
+    --border-2: #3f3f46;
+    /* zinc-700  — stronger border                  */
+    --fg: #ffffff;
+    /* white     — primary text on surfaces         */
+    --fg-2: #e4e4e7;
+    /* zinc-200  — secondary text                   */
+    --fg-3: #d4d4d8;
+    /* zinc-300  — tertiary text                    */
+    --fg-muted: #71717a;
+    /* zinc-500  — muted / placeholder text         */
+    --hover-bg: rgba(39, 39, 42, 0.3);
+    /* zinc-800/30 — row hover       */
+}
+
+.light {
+    --bg-base: #f4f4f5;
+    /* zinc-100                                     */
+    --sidebar-bg: #ffffff;
+    /* white sidebar                                */
+    --row-hover: #f0f0f1;
+    /* zinc-100 row hover                           */
+    --topbar-bg: #ffffff;
+    --topbar-from: #ffffff;
+    --avatar-bg: #e4e4e7;
+    /* zinc-200 — avatar circle bg                  */
+    --avatar-fg: #27272a;
+    --surface: #ffffff;
+    /* white                                        */
+    --surface-2: #f4f4f5;
+    /* zinc-100  — inputs / secondary surfaces      */
+    --surface-3: #f0f0f1;
+    /* zinc-100/50 — group headers                  */
+    --surface-4: #ffffff;
+    /* white     — dropdown bg                      */
+    --border: #e4e4e7;
+    /* zinc-200  — primary border                   */
+    --border-2: #d4d4d8;
+    /* zinc-300  — stronger border                  */
+    --fg: #09090b;
+    /* zinc-950  — primary text                     */
+    --fg-2: #27272a;
+    /* zinc-800  — secondary text                   */
+    --fg-3: #3f3f46;
+    /* zinc-700  — tertiary text                    */
+    --fg-muted: #71717a;
+    /* zinc-500  — same as dark (neutral grey)      */
+    --hover-bg: rgba(244, 244, 245, 0.8);
+    /* zinc-100 — row hover        */
+}
+
+/* ============================================================
    Smooth theme transitions
    ============================================================ */
 aside,

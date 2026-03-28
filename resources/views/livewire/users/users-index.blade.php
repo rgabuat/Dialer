@@ -2,20 +2,20 @@
 
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Accounts</h1>
+        <h1 class="font-bold text-fg text-xl">Accounts</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">Manage user accounts, roles and access.</p>
     </div>
 
     {{-- USERS TABLE --}}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl [overflow:clip]">
+    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
 
         {{-- Header --}}
-        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-zinc-800 border-b">
-            <h2 class="font-bold text-white text-base">Accounts</h2>
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
+            <h2 class="font-bold text-fg text-base">Accounts</h2>
 
             <div class="flex items-center gap-2">
                 <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search accounts..."
-                    class="bg-zinc-900 px-3 py-1.5 border border-zinc-800 focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-white text-sm transition placeholder-zinc-600">
+                    class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-fg text-sm transition placeholder-fg-muted">
                 <a href="{{ route('user.create') }}"
                     class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition">
                     <x-heroicon-o-plus class="w-4 h-4" />
@@ -33,8 +33,8 @@
         window.addEventListener('resize', update);
         $cleanup(() => window.removeEventListener('resize', update));">
             <table class="min-w-full text-white text-sm stagger-rows">
-                <thead class="top-0 z-10 sticky bg-zinc-900">
-                    <tr class="border-zinc-800 border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                <thead class="top-0 z-10 sticky bg-surface">
+                    <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
                         <th class="px-5 py-3 text-left">ID</th>
                         <th class="px-5 py-3 text-left">Store</th>
@@ -43,7 +43,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $user)
-                        <tr class="hover:bg-zinc-800/30 border-zinc-800/60 border-b transition cursor-pointer"
+                        <tr class="hover:bg-hover border-surface border-b transition cursor-pointer"
                             onclick="window.location='{{ route('user.edit', $user->id) }}'">
 
                             {{-- Name + avatar --}}
@@ -55,7 +55,7 @@
                                         {{ strtoupper(substr($user->first_name, 0, 1)) }}{{ strtoupper(substr($user->last_name, 0, 1)) }}
                                     </span>
                                     <div>
-                                        <div class="font-semibold text-white text-sm">{{ $user->first_name }}
+                                        <div class="font-semibold text-fg text-sm">{{ $user->first_name }}
                                             {{ $user->last_name }}</div>
                                         <div class="text-zinc-500 text-xs">{{ $user->company ?? '—' }}</div>
                                     </div>

@@ -13,7 +13,7 @@
 
             <div class="max-w-4xl space-y-10">
                 {{-- BASICS --}}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-zinc-800 pb-10">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                     <div>
                         <h2 class="font-medium text-white">Basics</h2>
                         <p class="text-sm text-zinc-400">Core user information.</p>
@@ -46,7 +46,7 @@
                 </div>
 
                 {{-- ACCESS --}}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-zinc-800 pb-10">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                     <div>
                         <h2 class="font-medium text-white">Access</h2>
                         <p class="text-sm text-zinc-400">Role & password.</p>
@@ -104,7 +104,7 @@
                 </div>
 
                 {{-- DANGER ZONE --}}
-                <div class="mt-12 border-t border-zinc-800 pt-8">
+                <div class="mt-12 border-t border-surface pt-8">
                     <h3 class="text-sm font-medium text-red-400">
                         Danger zone
                     </h3>
@@ -129,17 +129,17 @@
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/70
                 transition-opacity duration-200 ease-out">
             <div
-                class="w-full max-w-md rounded-lg bg-zinc-900 p-6 shadow-xl
+                class="w-full max-w-md rounded-lg bg-surface p-6 shadow-xl
                     transform transition-all duration-200 ease-out
                     scale-95 opacity-0
                     animate-modal-in">
-                <h2 class="text-lg font-semibold text-zinc-100">
+                <h2 class="text-lg font-semibold text-fg">
                     Delete user
                 </h2>
 
                 <p class="mt-2 text-sm text-zinc-400">
                     Are you sure you want to delete
-                    <span class="font-medium text-zinc-200">
+                    <span class="font-medium text-fg-2">
                         {{ $user->first_name }} {{ $user->last_name }}
                     </span>?
                     This action cannot be undone.
@@ -147,7 +147,7 @@
 
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" wire:click="$set('confirmingDelete', false)"
-                        class="rounded-md bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700">
+                        class="rounded-md bg-surface-2 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700">
                         Cancel
                     </button>
 

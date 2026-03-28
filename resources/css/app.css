@@ -87,6 +87,92 @@
     -ms-overflow-style: none;
 }
 
+/* ── Theme-aware semantic utilities ──────────────────────────── */
+/* Backgrounds */
+@utility bg-base {
+    background-color: var(--bg-base);
+}
+
+@utility bg-sidebar {
+    background-color: var(--sidebar-bg);
+}
+
+@utility bg-row-hover {
+    background-color: var(--row-hover);
+}
+
+@utility bg-topbar {
+    background: linear-gradient(to bottom, var(--topbar-from), var(--topbar-bg));
+}
+
+@utility bg-avatar {
+    background-color: var(--avatar-bg);
+}
+
+@utility text-avatar {
+    color: var(--avatar-fg);
+}
+
+@utility bg-surface {
+    background-color: var(--surface);
+}
+
+@utility bg-surface-2 {
+    background-color: var(--surface-2);
+}
+
+@utility bg-surface-3 {
+    background-color: var(--surface-3);
+}
+
+@utility bg-surface-4 {
+    background-color: var(--surface-4);
+}
+
+@utility bg-hover {
+    background-color: var(--hover-bg);
+}
+
+/* Borders */
+@utility border-surface {
+    border-color: var(--border);
+}
+
+@utility border-surface-2 {
+    border-color: var(--border-2);
+}
+
+/* Text */
+@utility text-fg {
+    color: var(--fg);
+}
+
+@utility text-fg-2 {
+    color: var(--fg-2);
+}
+
+@utility text-fg-3 {
+    color: var(--fg-3);
+}
+
+@utility text-fg-muted {
+    color: var(--fg-muted);
+}
+
+/* Placeholder */
+@utility placeholder-fg-muted {
+    &::placeholder {
+        color: var(--fg-muted);
+    }
+}
+
+/* Ring / focus */
+@utility ring-surface {
+    --tw-ring-color: var(--border-2);
+}
+
+
+
 /* ── Custom scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar {
     width: 6px;

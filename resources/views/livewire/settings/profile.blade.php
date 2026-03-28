@@ -2,16 +2,16 @@
 
     {{-- Page title --}}
     <div>
-        <h1 class="font-bold text-zinc-100 text-xl">Profile</h1>
+        <h1 class="font-bold text-fg text-xl">Profile</h1>
         <p class="mt-0.5 text-zinc-500 text-sm">Manage your personal information and how you appear to others.</p>
     </div>
 
     <form wire:submit.prevent="save" class="space-y-4">
 
         {{-- Basics --}}
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <div class="px-6 py-4 border-zinc-800 border-b">
-                <h2 class="font-semibold text-zinc-100 text-sm">Basics</h2>
+        <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-surface border-b">
+                <h2 class="font-semibold text-fg text-sm">Basics</h2>
                 <p class="mt-0.5 text-zinc-500 text-xs">Your basic account information.</p>
             </div>
             <div class="space-y-4 px-6 py-5">
@@ -19,7 +19,7 @@
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">First Name</label>
                         <input wire:model.defer="first_name"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('first_name')
                             <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
                         @enderror
@@ -27,7 +27,7 @@
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Last Name</label>
                         <input wire:model.defer="last_name"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('last_name')
                             <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
                         @enderror
@@ -37,21 +37,21 @@
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Nickname</label>
                         <input wire:model.defer="nickname" placeholder="Optional"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Job Title</label>
                         <input wire:model.defer="job_title" placeholder="Optional"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Contact --}}
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <div class="px-6 py-4 border-zinc-800 border-b">
-                <h2 class="font-semibold text-zinc-100 text-sm">Contact</h2>
+        <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-surface border-b">
+                <h2 class="font-semibold text-fg text-sm">Contact</h2>
                 <p class="mt-0.5 text-zinc-500 text-xs">Manage your contact details.</p>
             </div>
             <div class="px-6 py-5">
@@ -59,7 +59,7 @@
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Email</label>
                         <input wire:model.defer="email" type="email"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                         @error('email')
                             <p class="mt-1.5 text-red-400 text-xs">{{ $message }}</p>
                         @enderror
@@ -67,7 +67,7 @@
                     <div>
                         <label class="block mb-1.5 font-medium text-zinc-400 text-xs">Mobile Number</label>
                         <input wire:model.defer="mobile" type="tel"
-                            class="bg-zinc-800/50 px-3 py-2.5 border border-zinc-700/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-zinc-100 text-sm transition placeholder-zinc-600">
+                            class="bg-surface-2/70 px-3 py-2.5 border border-surface-2/60 focus:border-zinc-500 rounded-lg focus:outline-none w-full text-fg text-sm transition placeholder-fg-muted">
                     </div>
                 </div>
             </div>
