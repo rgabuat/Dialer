@@ -27,13 +27,18 @@
         </div>
 
         {{-- Table --}}
-        <div class="overflow-auto" x-data x-init="const update = () => {
-            const pg = $el.nextElementSibling;
-            $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
-        };
-        update();
-        window.addEventListener('resize', update);
-        $cleanup(() => window.removeEventListener('resize', update));">
+        <div class="overflow-auto" x-data="{
+            _fn: null,
+            init() {
+                this._fn = () => {
+                    const pg = this.$el.nextElementSibling;
+                    this.$el.style.maxHeight = (window.innerHeight - this.$el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
+                };
+                this._fn();
+                window.addEventListener('resize', this._fn);
+            },
+            destroy() { window.removeEventListener('resize', this._fn); }
+        }">
             <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
@@ -53,7 +58,7 @@
                             <td class="px-5 py-4">
                                 @if ($group->is_active)
                                     <span
-                                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-accent-green text-xs uppercase tracking-wide">
+                                        class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-xs uppercase tracking-wide text-accent-green">
                                         <span class="bg-green-400 rounded-full w-1.5 h-1.5"></span>Active
                                     </span>
                                 @else

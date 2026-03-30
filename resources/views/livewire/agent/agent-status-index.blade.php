@@ -106,13 +106,18 @@
 
         @if ($viewMode === 'table')
             {{-- Table --}}
-            <div class="overflow-auto" x-data x-init="const update = () => {
-                const pg = $el.nextElementSibling;
-                $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
-            };
-            update();
-            window.addEventListener('resize', update);
-            $cleanup(() => window.removeEventListener('resize', update));">
+            <div class="overflow-auto" x-data="{
+                _fn: null,
+                init() {
+                    this._fn = () => {
+                        const pg = this.$el.nextElementSibling;
+                        this.$el.style.maxHeight = (window.innerHeight - this.$el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
+                    };
+                    this._fn();
+                    window.addEventListener('resize', this._fn);
+                },
+                destroy() { window.removeEventListener('resize', this._fn); }
+            }">
                 <table class="min-w-full text-fg text-sm stagger-rows">
                     <thead class="top-0 z-10 sticky bg-surface">
                         <tr

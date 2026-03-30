@@ -1,7 +1,13 @@
-<div class="flex flex-col gap-4 p-6 h-full" x-data="{ isToday: @js($isToday) }" x-init="if (isToday) {
-    const chan = window.Echo.private('agent-status');
-    chan.listen('.AgentStatusUpdated', () => $wire.$refresh());
-    $cleanup(() => chan.stopListening('.AgentStatusUpdated'));
+<div class="flex flex-col gap-4 p-6 h-full" x-data="{
+    isToday: @js($isToday),
+    _chan: null,
+    init() {
+        if (this.isToday) {
+            this._chan = window.Echo.private('agent-status');
+            this._chan.listen('.AgentStatusUpdated', () => this.$wire.$refresh());
+        }
+    },
+    destroy() { if (this._chan) this._chan.stopListening('.AgentStatusUpdated'); }
 }">
 
     {{-- ── Page header ──────────────────────────────────────────── --}}
@@ -100,6 +106,15 @@
                     startY: 0,
                     scrollLeft: 0,
                     scrollTop: 0,
+                    _fn: null,
+                    init() {
+                        this._fn = () => {
+                            this.$el.style.maxHeight = (window.innerHeight - this.$el.getBoundingClientRect().top - 24) + 'px';
+                        };
+                        this._fn();
+                        window.addEventListener('resize', this._fn);
+                    },
+                    destroy() { window.removeEventListener('resize', this._fn); },
                     onDown(e) {
                         if (e.button !== 0) return;
                         this.dragging = true;
@@ -119,13 +134,8 @@
                         this.dragging = false;
                         $el.style.cursor = 'grab';
                     },
-                }" x-init="const update = () => {
-                    $el.style.maxHeight = (window.innerHeight - $el.getBoundingClientRect().top - 24) + 'px';
-                };
-                update();
-                window.addEventListener('resize', update);
-                $cleanup(() => window.removeEventListener('resize', update));" @mousedown="onDown($event)"
-                @mousemove="onMove($event)" @mouseup="onUp()" @mouseleave="onUp()">
+                }" @mousedown="onDown($event)" @mousemove="onMove($event)"
+                @mouseup="onUp()" @mouseleave="onUp()">
 
                 {{-- Min-width wrapper so horizontal scroll works --}}
                 <div class="relative" style="min-width: {{ 260 + $timelineWidth }}px">
@@ -134,15 +144,18 @@
                     @if ($isToday)
                         <div x-data="{
                             left: -1,
+                            _t: null,
                             update() {
                                 const elapsed = (Date.now() / 1000 - {{ $visibleStartTs }}) / 60;
                                 const px = Math.round(elapsed * {{ $pxPerMin }});
                                 this.left = (px >= 0 && px <= {{ $timelineWidth }}) ? (260 + px) : -1;
-                            }
-                        }" x-init="update();
-                        const t = setInterval(() => update(), 30000);
-                        $cleanup(() => clearInterval(t));"
-                            class="top-0 bottom-0 z-[9] absolute w-0 pointer-events-none"
+                            },
+                            init() {
+                                this.update();
+                                this._t = setInterval(() => this.update(), 30000);
+                            },
+                            destroy() { clearInterval(this._t); }
+                        }" class="top-0 bottom-0 z-[9] absolute w-0 pointer-events-none"
                             :class="{ 'hidden': left < 0 }" :style="\
                             `left: \${left}px\`">
                             <div class="opacity-70 w-px h-full"
