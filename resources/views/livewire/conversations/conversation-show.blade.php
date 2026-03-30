@@ -26,13 +26,15 @@
     $channelTitle = ucfirst($conversation->direction) . ' ' . ucfirst($conversation->channel);
 @endphp
 
-<div x-data x-init="const update = () => {
-    $el.style.height = (window.innerHeight - $el.getBoundingClientRect().top - 24) + 'px';
-};
-update();
-window.addEventListener('resize', update);
-$cleanup(() => window.removeEventListener('resize', update));" class="flex bg-surface border border-surface rounded-xl [overflow:clip]"
-    wire:poll.10s>
+<div x-data="{
+    _fn: null,
+    init() {
+        this._fn = () => { this.$el.style.height = (window.innerHeight - this.$el.getBoundingClientRect().top - 24) + 'px'; };
+        this._fn();
+        window.addEventListener('resize', this._fn);
+    },
+    destroy() { window.removeEventListener('resize', this._fn); }
+}" class="flex bg-surface border border-surface rounded-xl [overflow:clip]" wire:poll.10s>
 
     {{-- ===================== LEFT PANEL ===================== --}}
     <div class="flex flex-col flex-1 border-surface border-r min-w-0 overflow-hidden">
