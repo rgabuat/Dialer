@@ -1,8 +1,7 @@
 {{-- Inline agent controls – rendered inside the topbar right section --}}
-<div x-data="agentPhone()"
-     @make-call.window="makeCall($event.detail)"
-     @agent-status-changed.window="canAcceptCalls = ($event.detail.isAvailable ?? canAcceptCalls)"
-     class="flex items-center gap-3">
+<div x-data="agentPhone()" @make-call.window="makeCall($event.detail)"
+    @agent-status-changed.window="canAcceptCalls = ($event.detail.isAvailable ?? canAcceptCalls)"
+    class="flex items-center gap-3">
 
     {{-- LEFT GROUP: Call controls --}}
     <div class="flex items-center gap-1.5 px-2 py-1 border border-surface-2 rounded-lg">
@@ -11,8 +10,9 @@
         <button @click="enableCalling" :disabled="!canAcceptCalls"
             class="px-3 py-1.5 rounded-md font-semibold text-xs transition"
             :class="canAcceptCalls
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
-                : 'bg-surface-2 text-zinc-500 cursor-not-allowed'">
+                ?
+                'bg-blue-600 text-white hover:bg-blue-500' :
+                'bg-surface-2 text-zinc-500 cursor-not-allowed'">
             Enable Calling
         </button>
 
@@ -20,8 +20,9 @@
         <button @click="openDialer" :disabled="!deviceReady"
             class="px-3 py-1.5 rounded-md font-semibold text-xs transition"
             :class="deviceReady
-                ? 'bg-zinc-700 text-fg-2 hover:bg-zinc-600'
-                : 'bg-surface-2 text-zinc-500 cursor-not-allowed'">
+                ?
+                'bg-zinc-700 text-fg-2 hover:bg-zinc-600' :
+                'bg-surface-2 text-zinc-500 cursor-not-allowed'">
             Dial
         </button>
 
@@ -35,6 +36,21 @@
         @livewire('agent.status-switcher')
     </div>
 
+</div>
+
+{{-- INCOMING CALL BANNER --}}
+<div x-data="{ show: false, from: '', accept: null, reject: null }"
+    @incoming-call.window="show = true; from = $event.detail.from; accept = $event.detail.accept; reject = $event.detail.reject"
+    x-show="show" x-cloak
+    class="right-6 bottom-6 z-50 fixed bg-surface shadow-2xl p-4 border border-surface rounded-xl w-72">
+    <p class="mb-1 font-semibold text-fg text-sm">Incoming Call</p>
+    <p class="mb-4 font-mono text-fg-muted text-xs" x-text="from"></p>
+    <div class="flex gap-3">
+        <button @click="accept(); show = false"
+            class="flex-1 bg-green-600 hover:bg-green-500 px-3 py-2 rounded-lg font-semibold text-white text-sm transition">Accept</button>
+        <button @click="reject(); show = false"
+            class="flex-1 bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg font-semibold text-white text-sm transition">Decline</button>
+    </div>
 </div>
 
 {{-- DIAL MODAL --}}
@@ -54,65 +70,79 @@
 </div>
 
 @push('scripts')
-<script>
-    function agentPhone() {
-        return {
-            token: null,
-            identity: null,
-            device: null,
-            deviceReady: false,
-            canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
+    <script>
+        function agentPhone() {
+            return {
+                token: null,
+                identity: null,
+                device: null,
+                deviceReady: false,
+                canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
 
-            async enableCalling() {
-                if (!this.canAcceptCalls) {
-                    window.Toast.show('You are not accepting calls in your current status.', 'warning');
-                    return;
-                }
-                if (this.device) return;
-                try {
-                    const res  = await fetch('{{ route('twilio.getAccessToken') }}');
-                    const data = await res.json();
-                    this.token    = data.token;
-                    this.identity = data.identity;
-                    this.initializeDevice();
-                } catch (e) {
-                    console.error('Failed to get token', e);
-                    window.Toast.show('Failed to initialise calling. Please try again.', 'error');
-                }
-            },
-
-            initializeDevice() {
-                this.device = new window.Device(this.token, {
-                    codecPreferences: ['opus', 'pcmu'],
-                    logLevel: 1,
-                });
-                this.device.on('ready', () => { this.deviceReady = true; });
-                this.device.on('error', error => {
-                    console.error('Twilio error', error);
-                    window.Toast.show('Calling device error. Please reload.', 'error');
-                });
-                this.device.register();
-            },
-
-            openDialer() {
-                if (!this.deviceReady) {
-                    window.Toast.show('Enable calling first.', 'warning');
-                    return;
-                }
-                window.dispatchEvent(new CustomEvent('open-dialer'));
-            },
-
-            async makeCall(number) {
-                if (!this.device || !number) return;
-                await this.device.connect({
-                    params: {
-                        To:    number,
-                        agent: this.identity,
-                        From:  '{{ config('services.twilio.caller_id') }}',
+                async enableCalling() {
+                    if (!this.canAcceptCalls) {
+                        window.Toast.show('You are not accepting calls in your current status.', 'warning');
+                        return;
                     }
-                });
+                    if (this.device) return;
+                    try {
+                        const res = await fetch('{{ route('twilio.getAccessToken') }}');
+                        const data = await res.json();
+                        this.token = data.token;
+                        this.identity = data.identity;
+                        this.initializeDevice();
+                    } catch (e) {
+                        console.error('Failed to get token', e);
+                        window.Toast.show('Failed to initialise calling. Please try again.', 'error');
+                    }
+                },
+
+                initializeDevice() {
+                    this.device = new window.Device(this.token, {
+                        codecPreferences: ['opus', 'pcmu'],
+                        logLevel: 1,
+                    });
+                    this.device.on('registered', () => {
+                        this.deviceReady = true;
+                    });
+                    this.device.on('unregistered', () => {
+                        this.deviceReady = false;
+                    });
+                    this.device.on('error', error => {
+                        console.error('Twilio error', error);
+                        window.Toast.show('Calling device error. Please reload.', 'error');
+                    });
+                    this.device.on('incoming', call => {
+                        window.dispatchEvent(new CustomEvent('incoming-call', {
+                            detail: {
+                                from: call.parameters.From,
+                                accept: () => call.accept(),
+                                reject: () => call.reject(),
+                            }
+                        }));
+                    });
+                    this.device.register();
+                },
+
+                openDialer() {
+                    if (!this.deviceReady) {
+                        window.Toast.show('Enable calling first.', 'warning');
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('open-dialer'));
+                },
+
+                async makeCall(number) {
+                    if (!this.device || !number) return;
+                    await this.device.connect({
+                        params: {
+                            To: number,
+                            agent: this.identity,
+                            From: '{{ config('services.twilio.caller_id') }}',
+                        }
+                    });
+                }
             }
         }
-    }
-</script>
+    </script>
 @endpush
