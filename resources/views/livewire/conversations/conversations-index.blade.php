@@ -11,24 +11,8 @@
     {{-- Main panel --}}
     <div class="flex flex-col flex-1 bg-surface border border-surface rounded-xl min-h-0 [overflow:clip]">
 
-        {{-- Tab bar + search --}}
-        <div class="flex flex-wrap justify-between items-center gap-3 px-5 py-3 border-surface border-b shrink-0">
-            {{-- Search --}}
-            <div class="relative flex items-center w-56">
-                <x-heroicon-o-magnifying-glass class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
-                <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search"
-                    class="pl-8 w-full" />
-                @if ($search)
-                    <button wire:click="$set('search','')" type="button"
-                        class="right-2.5 absolute text-fg-muted hover:text-fg transition">
-                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
-                    </button>
-                @endif
-            </div>
-        </div>
-
-        {{-- Filter bar --}}
-        <div class="flex flex-wrap items-center gap-2 bg-surface-3/30 px-5 py-2.5 border-surface border-b shrink-0">
+        {{-- Filter bar + search (single row) --}}
+        <div class="flex flex-wrap items-center gap-2 px-5 py-2.5 border-surface border-b shrink-0">
             {{-- Date filter --}}
             <x-date-picker wire-model="filterDate" :value="$filterDate" placeholder="Date" />
 
@@ -59,8 +43,20 @@
                 </button>
             @endif
 
-            {{-- Pagination summary (right side) --}}
-            <div class="flex items-center gap-2 ml-auto text-fg-muted text-xs">
+            {{-- Search + pagination (right side) --}}
+            <div class="flex items-center gap-2 ml-auto">
+                <div class="relative flex items-center w-48">
+                    <x-heroicon-o-magnifying-glass
+                        class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
+                    <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search"
+                        class="pl-8 w-full" />
+                    @if ($search)
+                        <button wire:click="$set('search','')" type="button"
+                            class="right-2.5 absolute text-fg-muted hover:text-fg transition">
+                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                        </button>
+                    @endif
+                </div>
                 @if ($conversations->hasPages())
                     <span>
                         {{ number_format($conversations->firstItem()) }} –
