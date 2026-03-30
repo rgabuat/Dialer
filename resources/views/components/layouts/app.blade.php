@@ -173,7 +173,7 @@
     </script>
 </head>
 
-<body class="bg-base m-0 h-screen min-h-screen overflow-hidden transition-colors duration-300">
+<body class="bg-base m-0 h-screen min-h-screen overflow-hidden text-fg transition-colors duration-300">
 
     {{-- Navigate progress bar element --}}
     <div id="nprogress-bar"></div>

@@ -86,7 +86,7 @@
                     <div class="flex items-center gap-0.5">
                         @if ($conversations->onFirstPage())
                             <span
-                                class="flex justify-center items-center rounded-md w-6 h-6 text-surface-3 cursor-not-allowed">
+                                class="flex justify-center items-center opacity-30 rounded-md w-6 h-6 text-fg-muted cursor-not-allowed">
                                 <x-heroicon-o-chevron-left class="w-3.5 h-3.5" />
                             </span>
                         @else
@@ -102,7 +102,7 @@
                             </button>
                         @else
                             <span
-                                class="flex justify-center items-center rounded-md w-6 h-6 text-surface-3 cursor-not-allowed">
+                                class="flex justify-center items-center opacity-30 rounded-md w-6 h-6 text-fg-muted cursor-not-allowed">
                                 <x-heroicon-o-chevron-right class="w-3.5 h-3.5" />
                             </span>
                         @endif
