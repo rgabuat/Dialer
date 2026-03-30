@@ -11,6 +11,8 @@ class StatusSwitcher extends Component
 {
   public $statuses = [];
   public $currentStatus = null;
+  public string $currentStatusName = "";
+  public string $currentStatusColor = "";
   public $startedAt;
 
   public function mount()
@@ -24,6 +26,8 @@ class StatusSwitcher extends Component
       ->first();
 
     $this->currentStatus = $agentStatus?->statusType;
+    $this->currentStatusName = $agentStatus?->statusType?->name ?? "Other";
+    $this->currentStatusColor = $agentStatus?->statusType?->color ?? "#6b7280";
     $this->startedAt = $agentStatus?->started_at?->toIso8601String();
   }
 
@@ -37,6 +41,8 @@ class StatusSwitcher extends Component
 
     // Update local UI state
     $this->currentStatus = $statusType;
+    $this->currentStatusName = $statusType->name;
+    $this->currentStatusColor = $statusType->color;
     $this->startedAt = $now;
 
     // Let status timer in this component react
@@ -49,13 +55,14 @@ class StatusSwitcher extends Component
     );
 
     // Let the agent status index react (same browser tab, self-update)
-    $this->dispatch("agent-row-update", [
-      "user_id" => auth()->id(),
-      "status_name" => $statusType->name,
-      "status_color" => $statusType->color,
-      "is_available" => (bool) $statusType->is_available,
-      "started_at" => $now,
-    ]);
+    $this->dispatch(
+      "agent-row-update",
+      user_id: auth()->id(),
+      status_name: $statusType->name,
+      status_color: $statusType->color,
+      is_available: (bool) $statusType->is_available,
+      started_at: $now
+    );
   }
 
   public function render()

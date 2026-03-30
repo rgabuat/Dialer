@@ -4,19 +4,15 @@
         {{-- STATUS DROPDOWN --}}
         <div class="relative" x-data="{
             open: false,
-            statusName: @js($currentStatus->name ?? 'Other'),
-            statusColor: @js($currentStatus->color ?? '#6b7280'),
-        }"
-            @agent-status-changed.window="
-            statusName  = $event.detail.statusName;
-            statusColor = $event.detail.statusColor;
-        ">
+            statusName: $wire.entangle('currentStatusName'),
+            statusColor: $wire.entangle('currentStatusColor'),
+        }">
             <button type="button" @click="open = !open"
-                class="flex items-center gap-2 bg-surface-2 hover:bg-hover px-3 py-1.5 rounded-lg text-fg text-sm transition">
+                class="flex items-center gap-2 bg-surface-2 hover:bg-hover px-3 py-1.5 rounded-lg w-36 text-fg text-sm transition">
 
                 <span class="rounded-full w-2 h-2 shrink-0" :style="`background: ${statusColor}`"></span>
 
-                <span x-text="statusName"></span>
+                <span x-text="statusName" class="flex-1 text-left truncate"></span>
 
                 <svg class="opacity-60 w-3.5 h-3.5 text-fg-muted shrink-0" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
