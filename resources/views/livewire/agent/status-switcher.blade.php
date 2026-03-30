@@ -24,7 +24,8 @@
                 class="left-0 z-50 absolute bg-surface shadow-xl mt-2 border border-surface rounded-lg w-44">
 
                 @foreach ($statuses as $status)
-                    <button type="button" wire:click.prevent="setStatus({{ $status->id }})" @click="open = false"
+                    <button type="button" wire:click.prevent="setStatus({{ $status->id }})"
+                        @click="statusName = '{{ addslashes($status->name) }}'; statusColor = '{{ $status->color }}'; open = false"
                         class="flex items-center gap-2 hover:bg-surface-2 px-3 py-2 w-full text-fg-2 text-sm">
 
                         <span class="rounded-full w-2 h-2" style="background: {{ $status->color }}"></span>
