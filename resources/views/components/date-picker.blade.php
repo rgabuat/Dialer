@@ -32,6 +32,13 @@
         this.viewMonth = d.getMonth();
         const t = new Date();
         this.today = this.ymd(t.getFullYear(), t.getMonth(), t.getDate());
+        @if ($wireModel) $wire.$watch('{{ $wireModel }}', val => {
+            if (!val || val === this.raw) return;
+            this.raw = val;
+            const nd = new Date(val + 'T00:00:00');
+            this.viewYear = nd.getFullYear();
+            this.viewMonth = nd.getMonth();
+        }); @endif
     },
 
     /* ── helpers ── */
@@ -90,6 +97,9 @@
     select(cell) {
         this.raw = cell.ymd;
         this.open = false;
+        const nd = new Date(cell.ymd + 'T00:00:00');
+        this.viewYear = nd.getFullYear();
+        this.viewMonth = nd.getMonth();
         @if($wireModel)
         $wire.set('{{ $wireModel }}', cell.ymd);
         @endif
@@ -167,7 +177,7 @@
                 <button type="button" @click="select(cell)"
                     class="flex justify-center items-center rounded-lg h-8 font-medium text-sm transition select-none"
                     :class="{
-                        'text-fg-muted hover:text-fg hover:bg-surface': !cell.cur,
+                        'text-fg-muted hover:text-fg hover:bg-surface-2': !cell.cur && cell.ymd !== raw,
                         'text-fg-3 hover:bg-surface-2 hover:text-fg': cell.cur && cell.ymd !== raw && cell.ymd !==
                             today,
                         'bg-surface-2 text-fg ring-1 ring-surface-2': cell.cur && cell.ymd === today && cell.ymd !==
