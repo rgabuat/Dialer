@@ -29,6 +29,8 @@ use App\Livewire\Campaign\CampaignEdit;
 use App\Livewire\UserGroups\UserGroupsIndex;
 use App\Livewire\UserGroups\UserGroupCreate;
 use App\Livewire\UserGroups\UserGroupEdit;
+use App\Livewire\Conversations\ConversationsIndex;
+use App\Livewire\Conversations\ConversationShow;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -145,6 +147,14 @@ Route::middleware(["auth"])->group(function () {
     );
     Route::get("/user-group/{group}/edit", UserGroupEdit::class)->name(
       "user-group.edit"
+    );
+
+    //Conversations
+    Route::get("/conversations", ConversationsIndex::class)->name(
+      "conversations.index"
+    );
+    Route::get("/conversations/{conversation}", ConversationShow::class)->name(
+      "conversations.show"
     );
 
     //Twilio

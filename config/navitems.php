@@ -125,6 +125,16 @@ return [
   ],
 
   [
+    "label" => "Conversations",
+    "route" => "conversations.index",
+    "icon" => "heroicon-o-chat-bubble-left-right",
+    "segments" => ["conversations"],
+    "permission" => null,
+    "bottom" => false,
+    "children" => [],
+  ],
+
+  [
     "label" => "Settings",
     "route" => "settings.profile",
     "icon" => "heroicon-o-cog-6-tooth",
