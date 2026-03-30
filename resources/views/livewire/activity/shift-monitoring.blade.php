@@ -156,8 +156,7 @@
                             },
                             destroy() { clearInterval(this._t); }
                         }" class="top-0 bottom-0 z-[9] absolute w-0 pointer-events-none"
-                            :class="{ 'hidden': left < 0 }" :style="\
-                            `left: \${left}px\`">
+                            :class="{ 'hidden': left < 0 }" :style="'left: ' + left + 'px'">
                             <div class="opacity-70 w-px h-full"
                                 style="background: linear-gradient(to bottom, #ef4444 0%, rgba(239,68,68,0.15) 100%)">
                             </div>
