@@ -16,8 +16,9 @@
     {{-- Track --}}
     <circle cx="{{ $size / 2 }}" cy="{{ $size / 2 }}" r="{{ $r }}" fill="none" stroke="#27272a"
         stroke-width="{{ $thickness }}" />
-    {{-- Fill --}}
+    {{-- Fill (animates from 0 to target via stroke-dashoffset) --}}
     <circle cx="{{ $size / 2 }}" cy="{{ $size / 2 }}" r="{{ $r }}" fill="none"
         stroke="{{ $color }}" stroke-width="{{ $thickness }}" stroke-linecap="round"
-        stroke-dasharray="{{ $filled }} {{ $gap }}" />
+        stroke-dasharray="{{ $circumference }}"
+        style="--donut-start:{{ $circumference }}; --donut-offset:{{ round($circumference - $filled, 2) }}; stroke-dashoffset:{{ $circumference }}; animation:donut-fill 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s forwards" />
 </svg>

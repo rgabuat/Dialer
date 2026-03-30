@@ -14,17 +14,17 @@
         {{-- Volume --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Volume</h3>
-            <div class="gap-4 grid grid-cols-3">
+            <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">661</div>
+                    <div x-data="countUp(661)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Calls Offered</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">0</div>
+                    <div x-data="countUp(0)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Callbacks Remaining</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">05:20</div>
+                    <div x-data="countUpTime(5, 20)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Average Handling Time</div>
                 </div>
             </div>
@@ -33,9 +33,9 @@
         {{-- Service --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Service</h3>
-            <div class="gap-4 grid grid-cols-2">
+            <div class="gap-4 grid grid-cols-2 stagger-children">
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">25:25</div>
+                    <div x-data="countUpTime(25, 25)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Time To Answer</div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -52,21 +52,21 @@
         {{-- Handled --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Handled</h3>
-            <div class="gap-4 grid grid-cols-4">
+            <div class="gap-4 grid grid-cols-4 stagger-children">
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">710</div>
+                    <div x-data="countUp(710)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Total</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">611</div>
+                    <div x-data="countUp(611)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Inbounds</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">99</div>
+                    <div x-data="countUp(99)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Outbounds</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">0</div>
+                    <div x-data="countUp(0)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Callbacks</div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
         {{-- Sales --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Sales</h3>
-            <div class="gap-4 grid grid-cols-2">
+            <div class="gap-4 grid grid-cols-2 stagger-children">
                 <div class="flex items-center gap-3">
                     <x-overview-donut value="18" color="#ec4899" size="52" />
                     <div>
@@ -96,13 +96,13 @@
         {{-- Abandoned Calls --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Abandoned Calls</h3>
-            <div class="gap-4 grid grid-cols-3">
+            <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">1</div>
+                    <div x-data="countUp(1)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Abandoned Calls</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">01:43</div>
+                    <div x-data="countUpTime(1, 43)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Average Time To Abandon</div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -118,17 +118,17 @@
         {{-- Agents --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Agents</h3>
-            <div class="gap-4 grid grid-cols-3">
+            <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">48</div>
+                    <div x-data="countUp(48)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Online</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">11</div>
+                    <div x-data="countUp(11)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Available</div>
                 </div>
                 <div>
-                    <div class="font-black text-3xl text-accent-blue">6</div>
+                    <div x-data="countUp(6)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">After Call Work</div>
                 </div>
             </div>

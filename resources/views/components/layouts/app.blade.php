@@ -41,6 +41,48 @@
     {{-- Alpine theme store (registered before Alpine boots) --}}
     <script>
         document.addEventListener('alpine:init', function() {
+            // Count-up animation for stat numbers
+            Alpine.data('countUp', function(target, duration) {
+                duration = duration || 700;
+                return {
+                    val: '0',
+                    init: function() {
+                        var self = this;
+                        var start = performance.now();
+                        var tick = function(now) {
+                            var t = Math.min((now - start) / duration, 1);
+                            var ease = 1 - Math.pow(1 - t, 3);
+                            self.val = Math.round(target * ease).toString();
+                            if (t < 1) requestAnimationFrame(tick);
+                        };
+                        requestAnimationFrame(tick);
+                    }
+                };
+            });
+
+            // Count-up animation for MM:SS time values
+            Alpine.data('countUpTime', function(targetMins, targetSecs, duration) {
+                duration = duration || 700;
+                var totalSecs = targetMins * 60 + targetSecs;
+                return {
+                    val: '00:00',
+                    init: function() {
+                        var self = this;
+                        var start = performance.now();
+                        var tick = function(now) {
+                            var t = Math.min((now - start) / duration, 1);
+                            var ease = 1 - Math.pow(1 - t, 3);
+                            var cur = Math.round(totalSecs * ease);
+                            var m = Math.floor(cur / 60);
+                            var s = cur % 60;
+                            self.val = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+                            if (t < 1) requestAnimationFrame(tick);
+                        };
+                        requestAnimationFrame(tick);
+                    }
+                };
+            });
+
             Alpine.store('theme', {
                 isDark: localStorage.getItem('theme') !== 'light',
                 toggle: function() {

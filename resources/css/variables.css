@@ -153,6 +153,17 @@ select:-webkit-autofill {
    Keyframes
    ============================================================ */
 
+/* Donut fill animation (stroke-dashoffset to CSS var --donut-offset) */
+@keyframes donut-fill {
+    from {
+        stroke-dashoffset: var(--donut-start);
+    }
+
+    to {
+        stroke-dashoffset: var(--donut-offset);
+    }
+}
+
 /* Page / section fade-up */
 @keyframes fade-up {
     from {
