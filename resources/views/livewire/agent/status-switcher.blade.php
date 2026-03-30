@@ -79,7 +79,7 @@
 
                     const start = new Date(this.startedAt).getTime()
                     const now = Date.now()
-                    const diff = Math.floor((now - start) / 1000)
+                    const diff = Math.max(0, Math.floor((now - start) / 1000))
 
                     const h = String(Math.floor(diff / 3600)).padStart(2, '0')
                     const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0')
