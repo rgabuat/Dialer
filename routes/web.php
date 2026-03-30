@@ -153,6 +153,9 @@ Route::middleware(["auth"])->group(function () {
     Route::get("/conversations", ConversationsIndex::class)->name(
       "conversations.index"
     );
+    Route::get("/conversations/assigned", ConversationsIndex::class)->name(
+      "conversations.assigned"
+    );
     Route::get("/conversations/{conversation}", ConversationShow::class)->name(
       "conversations.show"
     );

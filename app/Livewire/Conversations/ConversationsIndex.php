@@ -28,6 +28,13 @@ class ConversationsIndex extends Component
     "filterDate" => ["except" => ""],
   ];
 
+  public function mount(): void
+  {
+    if (request()->routeIs("conversations.assigned")) {
+      $this->tab = "assigned";
+    }
+  }
+
   public function updatingSearch(): void
   {
     $this->resetPage();

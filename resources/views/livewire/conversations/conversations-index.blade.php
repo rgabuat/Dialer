@@ -13,24 +13,9 @@
 
         {{-- Tab bar + search --}}
         <div class="flex flex-wrap justify-between items-center gap-3 px-5 py-3 border-surface border-b shrink-0">
-            {{-- Tabs --}}
-            <div class="flex items-center gap-1">
-                <button wire:click="setTab('assigned')" type="button"
-                    class="px-3 py-1.5 rounded-md font-medium text-sm transition"
-                    :class="{{ $tab === 'assigned' ? '\'bg-surface-2 text-fg\'' : '\'text-fg-muted hover:text-fg hover:bg-surface-2/60\'' }}">
-                    Assigned
-                </button>
-                <button wire:click="setTab('all')" type="button"
-                    class="px-3 py-1.5 rounded-md font-medium text-sm transition"
-                    :class="{{ $tab === 'all' ? '\'bg-surface-2 text-fg\'' : '\'text-fg-muted hover:text-fg hover:bg-surface-2/60\'' }}">
-                    All Conversations
-                </button>
-            </div>
-
             {{-- Search --}}
             <div class="relative flex items-center w-56">
-                <x-heroicon-o-magnifying-glass
-                    class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
+                <x-heroicon-o-magnifying-glass class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
                 <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search"
                     class="pl-8 w-full" />
                 @if ($search)

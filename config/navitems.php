@@ -126,12 +126,22 @@ return [
 
   [
     "label" => "Conversations",
-    "route" => "conversations.index",
     "icon" => "heroicon-o-chat-bubble-left-right",
     "segments" => ["conversations"],
     "permission" => null,
     "bottom" => false,
-    "children" => [],
+    "children" => [
+      [
+        "label" => "Assigned",
+        "route" => "conversations.assigned",
+        "permission" => null,
+      ],
+      [
+        "label" => "All Conversations",
+        "route" => "conversations.index",
+        "permission" => null,
+      ],
+    ],
   ],
 
   [
