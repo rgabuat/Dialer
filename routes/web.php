@@ -31,6 +31,9 @@ use App\Livewire\UserGroups\UserGroupCreate;
 use App\Livewire\UserGroups\UserGroupEdit;
 use App\Livewire\Conversations\ConversationsIndex;
 use App\Livewire\Conversations\ConversationShow;
+use App\Livewire\Workforce\RosterIndex;
+use App\Livewire\Workforce\RosterCreate;
+use App\Livewire\Workforce\RosterShow;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -158,6 +161,17 @@ Route::middleware(["auth"])->group(function () {
     );
     Route::get("/conversations/{conversation}", ConversationShow::class)->name(
       "conversations.show"
+    );
+
+    //Workforce
+    Route::get("/workforce/rosters", RosterIndex::class)->name(
+      "workforce.rosters.index"
+    );
+    Route::get("/workforce/roster/create", RosterCreate::class)->name(
+      "workforce.roster.create"
+    );
+    Route::get("/workforce/roster/{roster}", RosterShow::class)->name(
+      "workforce.roster.show"
     );
 
     //Twilio

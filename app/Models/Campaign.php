@@ -7,21 +7,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Campaign extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'phone_number',
-        'is_active',
-    ];
+  protected $fillable = ["name", "description", "phone_number", "is_active"];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+  protected $casts = [
+    "is_active" => "boolean",
+  ];
 
-    public function userGroups()
-    {
-        return $this->belongsToMany(UserGroup::class);
-    }
+  public function userGroups()
+  {
+    return $this->belongsToMany(UserGroup::class);
+  }
+
+  public function users()
+  {
+    return $this->belongsToMany(User::class);
+  }
 }

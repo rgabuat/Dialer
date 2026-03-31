@@ -145,6 +145,22 @@ return [
   ],
 
   [
+    "label" => "Workforce",
+    "icon" => "heroicon-o-calendar-days",
+    "segments" => ["workforce"],
+    "permission" => null,
+    "bottom" => false,
+    "children" => [
+      [
+        "label" => "Rosters",
+        "route" => "workforce.rosters.index",
+        "segment" => "workforce",
+        "permission" => null,
+      ],
+    ],
+  ],
+
+  [
     "label" => "Settings",
     "route" => "settings.profile",
     "icon" => "heroicon-o-cog-6-tooth",
