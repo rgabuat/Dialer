@@ -247,12 +247,14 @@ class RosterShow extends Component
 
     // Load campaign users from the session-selected campaign (via user groups)
     $campaign = $this->activeCampaignId
-      ? Campaign::with("userGroups.users")->find($this->activeCampaignId)
+      ? Campaign::with("userGroups.users.userGroup")->find(
+        $this->activeCampaignId
+      )
       : null;
 
     $summaryData = $this->computeSummary();
     $locationData = $this->computeLocationStaffing();
-    $detailsByLocation = $this->computeDetails();
+    $detailsByGroup = $this->computeDetails($campaign);
     $dayViewData =
       $this->activeTab === "day"
         ? $this->computeDayView($this->activeDay, $campaign)
@@ -297,7 +299,7 @@ class RosterShow extends Component
       "dayAbbr" => self::DAY_ABBR,
       "summaryData" => $summaryData,
       "locationData" => $locationData,
-      "detailsByLocation" => $detailsByLocation,
+      "detailsByGroup" => $detailsByGroup,
       "dayViewData" => $dayViewData,
       "statusTypes" => $statusTypes,
       "activityTypeOptions" => $activityTypeOptions,
@@ -409,53 +411,84 @@ class RosterShow extends Component
   /**
    * Details tab: shifts grouped by location then user.
    */
-  private function computeDetails(): array
+  private function computeDetails(?Campaign $campaign = null): array
   {
-    $locations = $this->roster->shifts
-      ->pluck("location")
-      ->unique()
-      ->sort()
-      ->values();
+    // Build a reliable userId → groupName map from already-loaded roster shifts.
+    $groupByUserId = $this->roster->shifts
+      ->map(fn($s) => $s->user)
+      ->filter()
+      ->unique("id")
+      ->mapWithKeys(fn($u) => [$u->id => $u->userGroup?->name ?? "Unassigned"]);
+
+    // All campaign users (includes those with no shifts)
+    $campaignUsers = $campaign
+      ? $campaign->userGroups
+        ->flatMap(fn($g) => $g->users)
+        ->unique("id")
+        ->sortBy(fn($u) => strtolower($u->last_name . " " . $u->first_name))
+      : collect();
+
+    // Fallback: users from shifts if no campaign linked
+    if ($campaignUsers->isEmpty()) {
+      $campaignUsers = $this->roster->shifts
+        ->unique("user_id")
+        ->map(fn($s) => $s->user)
+        ->filter()
+        ->sortBy(fn($u) => strtolower($u->last_name . " " . $u->first_name));
+    }
+
     $data = [];
 
-    foreach ($locations as $location) {
-      $shiftsForLoc = $this->roster->shifts->where("location", $location);
-      $users = $shiftsForLoc
-        ->pluck("user")
-        ->filter()
-        ->unique("id")
-        ->sortBy("last_name");
+    foreach ($campaignUsers as $user) {
+      $fullName = strtolower(trim($user->first_name . " " . $user->last_name));
+      $group =
+        $groupByUserId->get($user->id) ??
+        ($user->userGroup?->name ?? "Unassigned");
 
-      $rows = [];
-      foreach ($users as $user) {
-        $row = [
-          "user" => $user,
-          "total_hours" => null,
-          "days" => [],
-        ];
-        for ($d = 0; $d <= 6; $d++) {
-          $shift = $shiftsForLoc
-            ->where("user_id", $user->id)
-            ->where("day_of_week", $d)
-            ->first();
-          $row["days"][$d] = $shift?->shift_label ?? "—";
-          if ($shift && $shift->total_hours) {
-            $row["total_hours"] =
-              ($row["total_hours"] ?? 0) + (float) $shift->total_hours;
-          }
-        }
-        $rows[] = $row;
+      // Apply search filter
+      if (
+        $this->filterSearch &&
+        !str_contains($fullName, strtolower(trim($this->filterSearch)))
+      ) {
+        continue;
+      }
+      // Apply group filter
+      if ($this->filterGroup && $group !== $this->filterGroup) {
+        continue;
       }
 
-      $data[$location] = $rows;
+      $userShifts = $this->roster->shifts->where("user_id", $user->id);
+
+      // Apply location filter — skip user if they have no shifts at that location
+      if ($this->filterLocation) {
+        $userShifts = $userShifts->where("location", $this->filterLocation);
+        if ($userShifts->isEmpty()) {
+          continue;
+        }
+      }
+
+      $totalHours = null;
+      for ($d = 0; $d <= 6; $d++) {
+        $shift = $userShifts->where("day_of_week", $d)->first();
+        if ($shift && $shift->total_hours) {
+          $totalHours = ($totalHours ?? 0) + (float) $shift->total_hours;
+        }
+      }
+
+      if (!isset($data[$group])) {
+        $data[$group] = [];
+      }
+
+      $data[$group][] = [
+        "user" => $user,
+        "total_hours" => $totalHours,
+      ];
     }
+
+    ksort($data);
 
     return $data;
   }
-
-  /**
-   * Day view: Gantt blocks + interval grid data for the selected day.
-   */
   /**
    * Day view: Gantt with ALL roster users.
    * Users with no shift on this day appear as empty rows.
@@ -467,6 +500,16 @@ class RosterShow extends Component
 
     // Index AgentStatusType by slug for O(1) color/label lookup
     $statusBySlug = AgentStatusType::all()->keyBy("slug");
+
+    // Build a reliable userId → groupName map from the already-eager-loaded
+    // roster shifts (shifts.user.userGroup is loaded in render() every time).
+    // This is our source of truth for grouping because it never relies on the
+    // campaign user-group chain, which can have lazy-load gaps.
+    $groupByUserId = $this->roster->shifts
+      ->map(fn($s) => $s->user)
+      ->filter()
+      ->unique("id")
+      ->mapWithKeys(fn($u) => [$u->id => $u->userGroup?->name ?? "Unassigned"]);
 
     // All users from the session-selected campaign via userGroups (sorted by last name then first name)
     $campaignUsers = $campaign
@@ -531,9 +574,12 @@ class RosterShow extends Component
     // Build an agent row for every campaign user
     $agents = [];
     foreach ($campaignUsers as $user) {
-      // Apply filters before building blocks (cheap early exit)
+      // Resolve group from the shift-based map first (reliably loaded),
+      // then fall back to the campaign user's own relationship.
+      $group =
+        $groupByUserId->get($user->id) ??
+        ($user->userGroup?->name ?? "Unassigned");
       $fullName = strtolower(trim($user->first_name . " " . $user->last_name));
-      $group = $user->userGroup?->name ?? "Unassigned";
       if (
         $this->filterSearch &&
         !str_contains($fullName, strtolower(trim($this->filterSearch)))

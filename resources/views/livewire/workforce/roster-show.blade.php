@@ -181,76 +181,140 @@
 
         {{-- ════════════════ DETAILS TAB ════════════════ --}}
         @if ($activeTab === 'details')
-            @forelse ($detailsByLocation as $location => $rows)
-                <div class="bg-surface mb-4 border border-surface rounded-xl [overflow:clip]">
-                    <div class="px-5 py-4 border-surface border-b">
-                        <h3 class="font-semibold text-fg text-sm">{{ $location }} Shift Summary</h3>
-                        <p class="mt-0.5 text-fg-muted text-xs">Summary of rostered staff at this location.</p>
-                    </div>
+
+            {{-- ── Filter / search bar ─────────────────────────────── --}}
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+
+                {{-- Search --}}
+                <div class="relative flex items-center min-w-[180px]">
+                    <x-heroicon-o-magnifying-glass
+                        class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
+                    <x-input wire:model.live.debounce.200ms="filterSearch" type="text" placeholder="Search agent…"
+                        class="pl-8 w-full" />
+                    @if ($filterSearch)
+                        <button wire:click="$set('filterSearch','')" type="button"
+                            class="right-2.5 absolute text-fg-muted hover:text-fg transition">
+                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                        </button>
+                    @endif
+                </div>
+
+                <x-select-dropdown wire-model="filterGroup" :value="$filterGroup" placeholder="Group" :options="$groupOptions" />
+
+                <x-select-dropdown wire-model="filterLocation" :value="$filterLocation" placeholder="Location"
+                    :options="$locationOptions" />
+
+                @if ($filterSearch || $filterGroup || $filterLocation)
+                    <button wire:click="$set('filterSearch',''); $set('filterGroup',''); $set('filterLocation','')"
+                        type="button"
+                        class="inline-flex items-center gap-1 text-fg-muted hover:text-fg text-xs transition">
+                        <x-heroicon-o-x-mark class="w-3 h-3" />
+                        Clear filters
+                    </button>
+                @endif
+
+            </div>
+
+            {{-- ── Single table with group separator rows ───────────── --}}
+            @if (count($detailsByGroup))
+                <div class="bg-surface-2 border border-surface rounded-xl overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead>
-                                <tr
-                                    class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
-                                    <th class="px-5 py-3 text-left">User</th>
-                                    <th class="px-4 py-3 text-right">Hrs</th>
+                            <thead class="top-0 z-10 sticky">
+                                <tr class="bg-surface border-surface border-b">
+                                    <th
+                                        class="px-4 py-2 w-[260px] font-semibold text-[10px] text-fg-muted text-left uppercase tracking-wider whitespace-nowrap">
+                                        Agent</th>
+                                    <th
+                                        class="px-4 py-2 w-16 font-semibold text-[10px] text-fg-muted text-right uppercase tracking-wider whitespace-nowrap">
+                                        Hrs</th>
                                     @foreach ($days as $dayName)
-                                        <th class="px-4 py-3 text-center">{{ substr($dayName, 0, 3) }}</th>
+                                        <th
+                                            class="px-4 py-2 font-semibold text-[10px] text-fg-muted text-center uppercase tracking-wider whitespace-nowrap">
+                                            {{ $dayName }}</th>
                                     @endforeach
-                                    <th class="px-4 py-3"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($rows as $row)
-                                    <tr class="group hover:bg-hover border-surface border-b transition">
-                                        <td class="px-5 py-3">
+                                @foreach ($detailsByGroup as $group => $rows)
+                                    {{-- Group separator row --}}
+                                    <tr class="bg-surface-3 border-surface border-b">
+                                        <td colspan="{{ 2 + count($days) }}" class="px-4 py-1.5">
                                             <div class="flex items-center gap-2">
-                                                <div
-                                                    class="flex justify-center items-center bg-blue-600 rounded-full w-7 h-7 font-bold text-white text-xs shrink-0">
-                                                    {{ strtoupper(substr($row['user']->first_name ?? '?', 0, 1) . substr($row['user']->last_name ?? '', 0, 1)) }}
-                                                </div>
-                                                <span class="font-medium text-fg">
-                                                    {{ $row['user']->first_name }} {{ $row['user']->last_name }}
-                                                </span>
+                                                <span
+                                                    class="font-bold text-fg-muted text-xs uppercase tracking-widest">{{ $group }}</span>
+                                                <span
+                                                    class="inline-flex justify-center items-center bg-surface-2 rounded-full w-5 h-5 font-bold text-[10px] text-fg-muted">{{ count($rows) }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3 font-mono text-fg-muted text-xs text-right">
-                                            {{ $row['total_hours'] ? number_format($row['total_hours'], 1) . 'H' : '—' }}
-                                        </td>
-                                        @for ($d = 0; $d <= 6; $d++)
-                                            @php
-                                                $shiftObj = $roster->shifts
-                                                    ->where('user_id', $row['user']->id)
-                                                    ->where('day_of_week', $d)
-                                                    ->where('location', $location)
-                                                    ->first();
-                                            @endphp
-                                            <td class="px-4 py-3 text-fg-muted text-xs text-center whitespace-nowrap">
-                                                @if ($shiftObj)
-                                                    {{-- click cell → jump to that day view --}}
-                                                    <button wire:click="setDay({{ $d }})"
-                                                        class="hover:text-blue-400 transition"
-                                                        title="View {{ $days[$d] }}">
-                                                        {{ $shiftObj->shift_label }}
-                                                    </button>
-                                                @else
-                                                    <span class="opacity-40">—</span>
-                                                @endif
-                                            </td>
-                                        @endfor
-                                        <td class="px-4 py-3"></td>
                                     </tr>
+                                    {{-- Agent rows --}}
+                                    @foreach ($rows as $row)
+                                        @php
+                                            $initials = strtoupper(
+                                                substr($row['user']->first_name ?? '?', 0, 1) .
+                                                    substr($row['user']->last_name ?? '', 0, 1),
+                                            );
+                                            $hasShift = $roster->shifts
+                                                ->where('user_id', $row['user']->id)
+                                                ->isNotEmpty();
+                                        @endphp
+                                        <tr
+                                            class="bg-surface hover:bg-hover border-surface border-b last:border-b-0 transition">
+                                            <td class="px-4 py-2.5 w-[260px]">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[10px] uppercase select-none shrink-0"
+                                                        style="{{ $hasShift ? 'background-color:#6366f122;color:#818cf8;border:1px solid #6366f140' : 'background-color:var(--surface-3);color:var(--fg-muted);border:1px solid var(--border)' }}">
+                                                        {{ $initials }}
+                                                    </div>
+                                                    <span
+                                                        class="font-medium text-fg-2 text-sm truncate">{{ $row['user']->first_name }}
+                                                        {{ $row['user']->last_name }}</span>
+                                                </div>
+                                            </td>
+                                            <td
+                                                class="px-4 py-2.5 w-16 font-mono text-[11px] text-fg-muted text-right whitespace-nowrap">
+                                                {{ $row['total_hours'] ? number_format($row['total_hours'], 1) . 'H' : '—' }}
+                                            </td>
+                                            @for ($d = 0; $d <= 6; $d++)
+                                                @php
+                                                    $shiftsForCell = $roster->shifts
+                                                        ->where('user_id', $row['user']->id)
+                                                        ->where('day_of_week', $d);
+                                                    if ($filterLocation) {
+                                                        $shiftsForCell = $shiftsForCell->where(
+                                                            'location',
+                                                            $filterLocation,
+                                                        );
+                                                    }
+                                                    $shiftObj = $shiftsForCell->first();
+                                                @endphp
+                                                <td class="px-4 py-2.5 text-[11px] text-center whitespace-nowrap">
+                                                    @if ($shiftObj)
+                                                        <button wire:click="setDay({{ $d }})"
+                                                            class="inline-flex items-center gap-1 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-0.5 rounded font-medium text-indigo-400 transition"
+                                                            title="View {{ $days[$d] }}">
+                                                            {{ $shiftObj->shift_label }}
+                                                        </button>
+                                                    @else
+                                                        <span class="opacity-30 text-fg-muted">—</span>
+                                                    @endif
+                                                </td>
+                                            @endfor
+                                        </tr>
+                                    @endforeach
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
-            @empty
+            @else
                 <div
-                    class="bg-surface px-5 py-12 border border-surface rounded-xl text-fg-muted text-sm text-center italic">
-                    No shift details yet. Add shifts to see this breakdown.
+                    class="bg-surface px-5 py-16 border border-surface rounded-xl text-fg-muted text-sm text-center italic">
+                    No agents
+                    found{{ $filterSearch || $filterGroup || $filterLocation ? ' matching the selected filters' : '' }}.
                 </div>
-            @endforelse
+            @endif
         @endif
 
         {{-- ════════════════ DAY TAB (Gantt) ════════════════ --}}
@@ -456,7 +520,7 @@
                     No agents found for this campaign.
                 </div>
             @else
-                @php $byLocation = collect($dv['agents'])->groupBy('location'); @endphp
+                @php $byGroup = collect($dv['agents'])->groupBy('group'); @endphp
 
                 {{-- ── Filter bar ──────────────────────────────────────── --}}
                 <div class="flex flex-wrap items-center gap-2 mb-3">
@@ -556,18 +620,18 @@
                                 </div>
                             </div>
 
-                            {{-- ── Locations + Agents ──────────────────────────── --}}
-                            @foreach ($byLocation as $location => $locationAgents)
-                                {{-- Location separator --}}
+                            {{-- ── Groups + Agents ──────────────────────────── --}}
+                            @foreach ($byGroup as $groupName => $groupAgents)
+                                {{-- Group separator --}}
                                 <div class="flex items-stretch bg-surface-3 border-b"
                                     style="border-color: var(--border)">
                                     <div
                                         class="left-0 z-10 sticky flex items-center gap-2 bg-surface-3 px-4 py-1.5 border-surface border-r w-[260px] shrink-0">
                                         <span class="font-bold text-fg-muted text-xs uppercase tracking-widest">
-                                            {{ $location ?: 'Unassigned' }}
+                                            {{ $groupName ?: 'Unassigned' }}
                                         </span>
                                         <span
-                                            class="font-medium text-[10px] text-fg-muted">{{ count($locationAgents) }}</span>
+                                            class="font-medium text-[10px] text-fg-muted">{{ count($groupAgents) }}</span>
                                     </div>
                                     <div class="relative flex-none"
                                         style="width: {{ $dv['timelineWidth'] }}px; height: 28px">
@@ -579,7 +643,7 @@
                                 </div>
 
                                 {{-- Agent rows --}}
-                                @foreach ($locationAgents as $agent)
+                                @foreach ($groupAgents as $agent)
                                     <div class="group flex items-stretch hover:bg-hover border-b transition-colors"
                                         style="border-color: var(--border)">
 
