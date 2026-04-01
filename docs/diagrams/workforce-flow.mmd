@@ -1,0 +1,91 @@
+---
+title: Workforce Module — Roster Lifecycle & Data Flow
+---
+flowchart TD
+    subgraph DATA["Data Model"]
+        direction TB
+        C["Campaign"]
+        UG["UserGroup"]
+        U["User"]
+        R["Roster\nstatus: draft | published\nweek_start, timezone"]
+        RS["RosterShift\nday_of_week 0–6\nstart_time, end_time"]
+        SA["ShiftActivity\ntype: phones | break | lunch\nquality | outbound | support | escalations"]
+        SI["StaffingInterval\nagents_required\ncalls_forecast"]
+
+        C -->|"hasMany"| R
+        C -->|"hasMany"| UG
+        UG -->|"hasMany"| U
+        U -->|"hasMany"| RS
+        R -->|"hasMany"| RS
+        RS -->|"hasMany"| SA
+        R -->|"hasMany"| SI
+    end
+
+    subgraph UI["UI Flow"]
+        direction TB
+        IDX["RosterIndex\n/workforce/rosters"]
+        MODAL["Create Modal\nname, week_start, timezone"]
+        RSHOW["RosterShow\n/workforce/roster/{id}"]
+
+        subgraph TABS["RosterShow Tabs"]
+            direction LR
+            T_SUM["Summary Tab\nstaffing % per day"]
+            T_DET["Details Tab\nagents by group\nweekly hours grid"]
+            T_DAY["Day View Tab\nGantt timeline\nper agent per day"]
+        end
+
+        ACT_MODAL["Activity Modal\nadd / edit ShiftActivity\ntype, start_time, end_time"]
+    end
+
+    subgraph LIFECYCLE["Roster Lifecycle"]
+        direction LR
+        DRAFT["status: draft"]
+        PUBLISHED["status: published"]
+        UNPUBLISHED["status: draft\nunpublished"]
+
+        DRAFT -->|"publish()"| PUBLISHED
+        PUBLISHED -->|"unpublish()"| UNPUBLISHED
+    end
+
+    subgraph MONITOR["Shift Monitoring"]
+        SM["ShiftMonitoring\n/activity/shift-monitoring"]
+        ASL["AgentStatusLog\nlive status history"]
+        AS["AgentStatus\ncurrent live status"]
+        AST["AgentStatusType\nphones | break | lunch\nquality | outbound | support"]
+
+        SM -->|"reads published roster"| R
+        SM -->|"queries"| ASL
+        SM -->|"reads"| AS
+        AS -->|"belongs to"| AST
+        ASL -->|"belongs to"| AST
+    end
+
+    %% UI interactions
+    IDX -->|"openCreateModal()"| MODAL
+    MODAL -->|"Roster::create status=draft\nredirect"| RSHOW
+    RSHOW --- TABS
+    T_DAY -->|"click slot / drag"| ACT_MODAL
+    ACT_MODAL -->|"saveActivity()\nRosterShift::firstOrCreate\nShiftActivity::create\nsyncShiftTimes()"| RS
+    RSHOW -->|"publish()"| LIFECYCLE
+    PUBLISHED -->|"used by"| SM
+
+    %% Computed views
+    R -->|"computeSummary()\nphones coverage %"| T_SUM
+    R -->|"computeDetails()\ngrouped by UserGroup"| T_DET
+    R -->|"computeDayView()\npx-offset blocks"| T_DAY
+
+    %% Data feeds into monitoring
+    SA -->|"scheduled activity\nat current time"| SM
+
+    %% Styles
+    classDef page fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    classDef model fill:#1e293b,stroke:#10b981,color:#e2e8f0
+    classDef action fill:#1e293b,stroke:#f59e0b,color:#e2e8f0
+    classDef status fill:#1e293b,stroke:#8b5cf6,color:#e2e8f0
+    classDef monitor fill:#1e293b,stroke:#ef4444,color:#e2e8f0
+
+    class IDX,MODAL,RSHOW page
+    class C,UG,U,R,RS,SA,SI model
+    class ACT_MODAL,T_SUM,T_DET,T_DAY action
+    class DRAFT,PUBLISHED,UNPUBLISHED status
+    class SM,ASL,AS,AST monitor
