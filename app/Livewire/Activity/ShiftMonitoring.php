@@ -4,6 +4,9 @@ namespace App\Livewire\Activity;
 
 use App\Models\AgentStatusLog;
 use App\Models\AgentStatusType;
+use App\Models\Campaign;
+use App\Models\Roster;
+use App\Models\ShiftActivity;
 use App\Models\User;
 use App\Models\UserGroup;
 use Carbon\Carbon;
@@ -81,9 +84,78 @@ class ShiftMonitoring extends Component
       $visibleEnd->diffInMinutes($visibleStart) * $pxPerMin
     );
 
+    // ── Active roster + scheduled activity map (built early so $shiftUserIds is available for the agent query) ──
+    $statusBySlug = AgentStatusType::all()->keyBy("slug");
+    $dayOfWeek = $date->dayOfWeek; // 0 = Sunday … 6 = Saturday
+    $nowTime =
+      $this->date === now()->toDateString()
+        ? now()->format("H:i:s")
+        : "23:59:59";
+
+    $roster = Roster::with(["shifts.activities"])
+      ->where("week_start", "<=", $date->toDateString())
+      ->whereRaw("DATE_ADD(week_start, INTERVAL 6 DAY) >= ?", [
+        $date->toDateString(),
+      ])
+      ->where("status", "published")
+      ->orderByDesc("week_start")
+      ->first();
+
+    $scheduledByUser = collect();
+    $shiftUserIds = collect();
+    if ($roster) {
+      foreach ($roster->shifts->where("day_of_week", $dayOfWeek) as $shift) {
+        $shiftUserIds->push($shift->user_id);
+
+        // 1st choice: activity currently in progress
+        $activity = $shift->activities
+          ->filter(
+            fn($a) => $a->start_time <= $nowTime && $a->end_time > $nowTime
+          )
+          ->first();
+
+        // 2nd choice: next upcoming activity (shift not started yet / gap)
+        if (!$activity && $nowTime < $shift->end_time) {
+          $activity =
+            $shift->activities
+              ->filter(fn($a) => $a->start_time >= $nowTime)
+              ->sortBy("start_time")
+              ->first() ?? $shift->activities->sortByDesc("end_time")->first();
+        }
+
+        if ($activity) {
+          $st = $statusBySlug->get($activity->activity_type);
+          $scheduledByUser[$shift->user_id] = [
+            "slug" => $activity->activity_type,
+            "label" => $st?->name ?? ucfirst($activity->activity_type),
+            "color" =>
+              $st?->color ??
+              (ShiftActivity::COLORS[$activity->activity_type]["hex"] ??
+                "#71717a"),
+          ];
+        }
+      }
+    }
+
+    // ── All campaign users (the source of truth for who should be here) ──
+    $campaignUserIds = collect();
+    $campaignId = session("active_campaign_id");
+    if ($campaignId) {
+      $campaignUserIds =
+        Campaign::find($campaignId)?->users()->pluck("users.id") ?? collect();
+    }
+    // Fall back: include anyone with logs or a shift today
+    if ($campaignUserIds->isEmpty()) {
+      $campaignUserIds = $allLogs
+        ->pluck("user_id")
+        ->merge($shiftUserIds)
+        ->unique();
+    }
+
     // ── Agents with eager loads ────────────────────────────────────────
     $agents = User::query()
       ->with(["userGroup", "agentStatus.statusType"])
+      ->whereIn("id", $campaignUserIds->all())
       ->when(
         $this->search,
         fn($q) => $q->where(function ($q) {
@@ -110,10 +182,6 @@ class ShiftMonitoring extends Component
           "userGroup",
           fn($g) => $g->whereIn("name", $this->filterGroup)
         )
-      )
-      ->whereHas(
-        "statusLogs",
-        fn($q) => $q->whereBetween("started_at", [$start, $end])
       )
       ->orderBy("first_name")
       ->get();
@@ -190,6 +258,18 @@ class ShiftMonitoring extends Component
         $userTotalSec > 0 ? round(($userAvailSec / $userTotalSec) * 100) : 0;
       $user->totalShiftLabel =
         $userTotalSec > 0 ? self::formatSeconds((int) $userTotalSec) : "—";
+    });
+
+    // ── Attach scheduled status (built above, before agents query) ──
+    $agents->each(function ($user) use ($scheduledByUser) {
+      $sched = $scheduledByUser->get($user->id);
+      $actualSlug = $user->agentStatus?->statusType?->slug;
+      $user->scheduledLabel = $sched["label"] ?? null;
+      $user->scheduledColor = $sched["color"] ?? "#71717a";
+      $user->scheduledSlug = $sched["slug"] ?? null;
+      $user->isMatch = $sched && $actualSlug && $actualSlug === $sched["slug"];
+      $user->hasMismatch =
+        $sched && $actualSlug && $actualSlug !== $sched["slug"];
     });
 
     // ── Group agents by user_group ─────────────────────────────────────

@@ -138,7 +138,7 @@
                 @mouseup="onUp()" @mouseleave="onUp()">
 
                 {{-- Min-width wrapper so horizontal scroll works --}}
-                <div class="relative" style="min-width: {{ 260 + $timelineWidth }}px">
+                <div class="relative" style="min-width: {{ 600 + $timelineWidth }}px">
 
                     {{-- "Now" time indicator --}}
                     @if ($isToday)
@@ -148,7 +148,7 @@
                             update() {
                                 const elapsed = (Date.now() / 1000 - {{ $visibleStartTs }}) / 60;
                                 const px = Math.round(elapsed * {{ $pxPerMin }});
-                                this.left = (px >= 0 && px <= {{ $timelineWidth }}) ? (260 + px) : -1;
+                                this.left = (px >= 0 && px <= {{ $timelineWidth }}) ? (600 + px) : -1;
                             },
                             init() {
                                 this.update();
@@ -173,6 +173,21 @@
                         <div
                             class="left-0 z-30 sticky flex items-center bg-surface px-4 py-2.5 border-surface border-r w-[260px] shrink-0">
                             <span class="font-semibold text-fg-muted text-xs uppercase tracking-widest">Agent</span>
+                        </div>
+                        {{-- Match col --}}
+                        <div class="z-30 sticky flex justify-center items-center bg-surface px-1 py-2.5 border-surface border-r w-10 shrink-0"
+                            style="left:260px">
+                            <span class="font-semibold text-fg-muted text-xs">&#9888;</span>
+                        </div>
+                        {{-- Actual col --}}
+                        <div class="z-30 sticky flex items-center bg-surface px-3 py-2.5 border-surface border-r w-[150px] shrink-0"
+                            style="left:300px">
+                            <span class="font-semibold text-fg-muted text-xs uppercase tracking-widest">Actual</span>
+                        </div>
+                        {{-- Scheduled col --}}
+                        <div class="z-30 sticky flex items-center bg-surface px-3 py-2.5 border-surface border-r w-[150px] shrink-0"
+                            style="left:450px">
+                            <span class="font-semibold text-fg-muted text-xs uppercase tracking-widest">Scheduled</span>
                         </div>
                         {{-- Hour ticks --}}
                         <div class="relative flex-none h-9" style="width: {{ $timelineWidth }}px">
@@ -208,6 +223,15 @@
                                 </span>
                                 <span class="font-medium text-[10px] text-fg-muted">{{ $g['count'] }}</span>
                             </div>
+                            {{-- Match spacer --}}
+                            <div class="z-10 sticky bg-surface-3 border-surface border-r w-10 shrink-0"
+                                style="left:260px"></div>
+                            {{-- Actual spacer --}}
+                            <div class="z-10 sticky bg-surface-3 border-surface border-r w-[150px] shrink-0"
+                                style="left:300px"></div>
+                            {{-- Scheduled spacer --}}
+                            <div class="z-10 sticky bg-surface-3 border-surface border-r w-[150px] shrink-0"
+                                style="left:450px"></div>
                             <div class="relative flex-none" style="width: {{ $timelineWidth }}px; height: 28px">
                                 @foreach ($hours as $hour)
                                     <div class="absolute inset-y-0 {{ $hour['isHalf'] ? 'border-zinc-800/10 border-dashed' : 'border-zinc-800/20' }} border-l"
@@ -240,17 +264,6 @@
                                             <span class="flex-1 min-w-0 font-medium text-fg-2 text-sm truncate">
                                                 {{ $agent->first_name }} {{ $agent->last_name }}
                                             </span>
-                                            @if ($currentStatus)
-                                                <span class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
-                                                    style="background-color: {{ $currentStatus->color }}22; color: {{ $currentStatus->color }}">
-                                                    {{ $currentStatus->name }}
-                                                </span>
-                                            @else
-                                                <span
-                                                    class="bg-surface-2 px-1.5 py-0.5 rounded font-semibold text-[10px] text-fg-muted shrink-0">
-                                                    Offline
-                                                </span>
-                                            @endif
                                         </div>
                                         <div class="flex items-center gap-1 mt-0.5">
                                             <span class="text-[10px] text-fg-muted">{{ $agent->shiftStartLabel }} →
@@ -263,6 +276,51 @@
                                                 class="text-[10px] text-fg-muted">{{ $agent->totalShiftLabel }}</span>
                                         </div>
                                     </div>
+                                </div>
+
+                                {{-- Match column --}}
+                                <div class="z-10 sticky flex justify-center items-center bg-surface group-hover:bg-row-hover px-1 py-2 border-surface border-r w-10 transition-colors shrink-0"
+                                    style="left:260px">
+                                    @if ($agent->scheduledSlug)
+                                        @if ($agent->isMatch)
+                                            <span class="text-base" style="color:#22c55e"
+                                                title="On schedule">&#10003;</span>
+                                        @else
+                                            <span class="text-base" style="color:#f59e0b"
+                                                title="Off schedule">&#9888;</span>
+                                        @endif
+                                    @else
+                                        <span class="text-fg-muted text-xs">&ndash;</span>
+                                    @endif
+                                </div>
+
+                                {{-- Actual column --}}
+                                <div class="z-10 sticky flex items-center bg-surface group-hover:bg-row-hover px-3 py-2 border-surface border-r w-[150px] transition-colors shrink-0"
+                                    style="left:300px">
+                                    @if ($currentStatus)
+                                        <span class="px-2 py-0.5 rounded font-semibold text-[11px] truncate"
+                                            style="background-color:{{ $currentStatus->color }}22; color:{{ $currentStatus->color }}">
+                                            {{ $currentStatus->name }}
+                                        </span>
+                                    @else
+                                        <span
+                                            class="bg-surface-2 px-2 py-0.5 rounded font-semibold text-[11px] text-fg-muted">Offline</span>
+                                    @endif
+                                </div>
+
+                                {{-- Scheduled column --}}
+                                <div class="z-10 sticky flex items-center bg-surface group-hover:bg-row-hover px-3 py-2 border-surface border-r w-[150px] transition-colors shrink-0"
+                                    style="left:450px">
+                                    @if ($agent->scheduledLabel)
+                                        <span class="px-2 py-0.5 rounded font-semibold text-[11px] truncate"
+                                            style="background-color:{{ $agent->scheduledColor }}22; color:{{ $agent->scheduledColor }}">
+                                            {{ $agent->scheduledLabel }}
+                                        </span>
+                                    @else
+                                        <span
+                                            class="bg-surface-2 px-2 py-0.5 rounded font-semibold text-[11px] text-fg-muted">No
+                                            Shift</span>
+                                    @endif
                                 </div>
 
                                 {{-- Timeline --}}
