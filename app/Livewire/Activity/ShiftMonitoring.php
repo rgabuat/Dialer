@@ -47,22 +47,66 @@ class ShiftMonitoring extends Component
       ->with("statusType")
       ->get();
 
-    // ── Visible time range from actual data ────────────────────────────
-    $minLog = $allLogs
+    // ── Visible time range: full roster day (earliest shift → latest shift) ──
+    // Pre-load the roster shifts for today to compute the time window
+    $dayOfWeekForRange = Carbon::parse($this->date)->dayOfWeek;
+    $rosterForRange = Roster::with(["shifts"])
+      ->where("week_start", "<=", $date->toDateString())
+      ->whereRaw("DATE_ADD(week_start, INTERVAL 6 DAY) >= ?", [
+        $date->toDateString(),
+      ])
+      ->where("status", "published")
+      ->orderByDesc("week_start")
+      ->first();
+
+    $shiftsForRange = $rosterForRange
+      ? $rosterForRange->shifts->where("day_of_week", $dayOfWeekForRange)
+      : collect();
+
+    // Earliest shift start (fall back to first log, then 6am)
+    $earliestShift = $shiftsForRange
+      ->filter(fn($s) => $s->start_time)
+      ->sortBy("start_time")
+      ->first();
+    $firstLog = $allLogs
       ->filter(fn($l) => $l->started_at)
       ->sortBy("started_at")
       ->first();
-    $maxLog = $allLogs
+
+    $visibleStartCandidates = collect();
+    if ($earliestShift) {
+      $visibleStartCandidates->push(
+        Carbon::parse($date->toDateString() . " " . $earliestShift->start_time)
+      );
+    }
+    if ($firstLog) {
+      $visibleStartCandidates->push($firstLog->started_at->copy());
+    }
+    $visibleStart = $visibleStartCandidates->isNotEmpty()
+      ? $visibleStartCandidates->min()->startOfHour()
+      : $date->copy()->setHour(6)->setMinute(0)->setSecond(0);
+
+    // Latest shift end (fall back to last log, then 10pm)
+    $latestShift = $shiftsForRange
+      ->filter(fn($s) => $s->end_time)
+      ->sortByDesc("end_time")
+      ->first();
+    $lastLog = $allLogs
       ->filter(fn($l) => $l->ended_at)
       ->sortByDesc("ended_at")
       ->first();
 
-    $visibleStart = $minLog
-      ? $minLog->started_at->copy()->startOfHour()
-      : $date->copy()->setHour(6)->setMinute(0)->setSecond(0);
-
-    $visibleEnd = $maxLog
-      ? $maxLog->ended_at->copy()->addHour()->startOfHour()
+    $visibleEndCandidates = collect();
+    if ($latestShift) {
+      $visibleEndCandidates->push(
+        Carbon::parse($date->toDateString() . " " . $latestShift->end_time)
+      );
+    }
+    if ($lastLog) {
+      $visibleEndCandidates->push($lastLog->ended_at->copy());
+    }
+    $visibleEnd = $visibleEndCandidates->isNotEmpty()
+      ? $visibleEndCandidates->max()->addHour()->startOfHour()
       : $date->copy()->setHour(22)->setMinute(0)->setSecond(0);
 
     // ── Hours array for the timeline header (every 30 min) ──────────
@@ -86,11 +130,13 @@ class ShiftMonitoring extends Component
 
     // ── Active roster + scheduled activity map (built early so $shiftUserIds is available for the agent query) ──
     $statusBySlug = AgentStatusType::all()->keyBy("slug");
-    $dayOfWeek = $date->dayOfWeek; // 0 = Sunday … 6 = Saturday
-    $nowTime =
-      $this->date === now()->toDateString()
-        ? now()->format("H:i:s")
-        : "23:59:59";
+
+    // Use the roster's timezone for all local-time comparisons
+    $rosterTz = $rosterForRange?->timezone ?? config("app.timezone", "UTC");
+    $nowInRosterTz = now($rosterTz);
+    $dayOfWeek = Carbon::parse($this->date, $rosterTz)->dayOfWeek; // 0 = Sunday … 6 = Saturday
+    $isToday = $this->date === $nowInRosterTz->toDateString();
+    $nowTime = $isToday ? $nowInRosterTz->format("H:i:s") : "23:59:59";
 
     $roster = Roster::with(["shifts.activities"])
       ->where("week_start", "<=", $date->toDateString())
@@ -295,7 +341,7 @@ class ShiftMonitoring extends Component
       $totalSeconds > 0 ? round(($availSeconds / $totalSeconds) * 100) : 0;
 
     $statusTypes = AgentStatusType::orderBy("name")->get();
-    $isToday = $this->date === now()->toDateString();
+    $isToday = $isToday; // already computed in roster-tz above
 
     $availableNow = $agents
       ->filter(
@@ -303,7 +349,10 @@ class ShiftMonitoring extends Component
       )
       ->count();
 
+    // "Now" indicator offset — calculated in roster timezone so it aligns with stored shift times
     $visibleStartTs = $visibleStart->timestamp;
+    // Pass the roster-tz "now" timestamp so the JS indicator is also correct
+    $nowTs = $nowInRosterTz->timestamp;
 
     $userGroups = UserGroup::orderBy("name")->get();
 
@@ -323,6 +372,9 @@ class ShiftMonitoring extends Component
         "availableNow",
         "pxPerMin",
         "visibleStartTs",
+        "nowTs",
+        "rosterTz",
+        "nowInRosterTz",
         "userGroups"
       )
     )->layout("components.layouts.app");

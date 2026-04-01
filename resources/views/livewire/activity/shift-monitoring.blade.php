@@ -26,7 +26,11 @@
             <p class="mt-0.5 text-fg-muted text-sm">Monitor scheduled slots and activity for day-to-day agents.</p>
         </div>
         <div class="text-right">
-            <div class="font-semibold text-fg text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
+            <div class="font-semibold text-fg text-sm">{{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}</div>
+            <div class="flex justify-end items-center gap-2 mt-0.5">
+                <span class="text-fg-muted text-xs">{{ $nowInRosterTz->format('g:i:s A') }}</span>
+                <span
+                    class="bg-surface-2 px-1.5 py-0.5 rounded font-mono text-[10px] text-fg-muted">{{ $rosterTz }}</span>
             </div>
             <div class="mt-0.5 text-fg-muted text-xs">{{ number_format($totalAgents) }} agents on shift</div>
         </div>
@@ -146,7 +150,11 @@
                             left: -1,
                             _t: null,
                             update() {
-                                const elapsed = (Date.now() / 1000 - {{ $visibleStartTs }}) / 60;
+                                // Use server-side roster-tz timestamp as anchor so the indicator
+                                // aligns with stored shift times (which are in the roster timezone)
+                                const serverNowTs = {{ $nowTs }};
+                                const clientOffsetSecs = Math.round(Date.now() / 1000) - serverNowTs;
+                                const elapsed = (serverNowTs + clientOffsetSecs - {{ $visibleStartTs }}) / 60;
                                 const px = Math.round(elapsed * {{ $pxPerMin }});
                                 this.left = (px >= 0 && px <= {{ $timelineWidth }}) ? (600 + px) : -1;
                             },
