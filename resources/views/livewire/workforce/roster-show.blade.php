@@ -732,81 +732,116 @@
                                             @foreach ($agent['blocks'] as $block)
                                                 @if ($block['id'] ?? null)
                                                     {{-- Draggable / resizable activity block --}}
-                                                    <div data-block x-data="{
-                                                        id: {{ $block['id'] }},
-                                                        left: {{ $block['left'] }},
-                                                        width: {{ $block['width'] }},
-                                                        ppm: {{ $dv['pxPerMin'] }},
-                                                        vsm: {{ $dv['visibleStartMinutes'] }},
-                                                        mode: null,
-                                                        startX: 0,
-                                                        origLeft: 0,
-                                                        origWidth: 0,
-                                                        dragMoved: false,
-                                                        sFmt() {
-                                                            const t = this.vsm + (this.left / this.ppm);
-                                                            const h = Math.floor(t / 60) % 24,
-                                                                m = Math.round(t % 60);
-                                                            return (h % 12 || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h >= 12 ? 'pm' : 'am');
-                                                        },
-                                                        eFmt() {
-                                                            const t = this.vsm + ((this.left + this.width) / this.ppm);
-                                                            const h = Math.floor(t / 60) % 24,
-                                                                m = Math.round(t % 60);
-                                                            return (h % 12 || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h >= 12 ? 'pm' : 'am');
-                                                        },
-                                                        toHHMM(px) {
-                                                            const m = Math.round(px / (this.ppm * 15)) * 15;
-                                                            const t = this.vsm + m;
-                                                            return String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
-                                                        },
-                                                        startMove(e) {
-                                                            if (e.button) return;
-                                                            this.mode = 'move';
-                                                            this.startX = e.pageX;
-                                                            this.origLeft = this.left;
-                                                            this.dragMoved = false;
-                                                            document.body.style.cursor = 'grabbing';
-                                                            document.body.style.userSelect = 'none';
-                                                        },
-                                                        startResize(e) {
-                                                            if (e.button) return;
-                                                            this.mode = 'resize';
-                                                            this.startX = e.pageX;
-                                                            this.origWidth = this.width;
-                                                            this.dragMoved = false;
-                                                            document.body.style.cursor = 'ew-resize';
-                                                            document.body.style.userSelect = 'none';
-                                                        },
-                                                        onMove(e) {
-                                                            if (!this.mode) return;
-                                                            const dx = e.pageX - this.startX;
-                                                            if (Math.abs(dx) > 3) this.dragMoved = true;
-                                                            if (this.mode === 'move') this.left = Math.max(0, this.origLeft + dx);
-                                                            else this.width = Math.max(15 * this.ppm, this.origWidth + dx);
-                                                        },
-                                                        onUp() {
-                                                            if (!this.mode) return;
-                                                            this.mode = null;
-                                                            document.body.style.cursor = '';
-                                                            document.body.style.userSelect = '';
-                                                            if (!this.dragMoved) return;
-                                                            const sp = 15 * this.ppm;
-                                                            this.left = Math.round(this.left / sp) * sp;
-                                                            this.width = Math.max(sp, Math.round(this.width / sp) * sp);
-                                                            $wire.moveActivity(this.id, this.toHHMM(this.left), this.toHHMM(this.left + this.width));
-                                                        },
-                                                        onClick() {
-                                                            if (this.dragMoved) return;
-                                                            $wire.openEditActivity(this.id);
-                                                        }
-                                                    }"
-                                                        @mousedown.stop="startMove($event)"
+                                                    <div wire:key="block-{{ $block['id'] }}" data-block
+                                                        x-data="{
+                                                            id: {{ $block['id'] }},
+                                                            left: {{ $block['left'] }},
+                                                            width: {{ $block['width'] }},
+                                                            ppm: {{ $dv['pxPerMin'] }},
+                                                            vsm: {{ $dv['visibleStartMinutes'] }},
+                                                            mode: null,
+                                                            startX: 0,
+                                                            origLeft: 0,
+                                                            origWidth: 0,
+                                                            dragMoved: false,
+                                                            fmtMins(totalMins) {
+                                                                // Round to nearest minute then handle 60-minute rollover
+                                                                let t = Math.round(totalMins);
+                                                                let h = Math.floor(t / 60) % 24;
+                                                                let m = t % 60;
+                                                                return (h % 12 || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h >= 12 ? 'pm' : 'am');
+                                                            },
+                                                            sFmt() {
+                                                                return this.fmtMins(this.vsm + (this.left / this.ppm));
+                                                            },
+                                                            eFmt() {
+                                                                return this.fmtMins(this.vsm + ((this.left + this.width) / this.ppm));
+                                                            },
+                                                            toHHMM(px) {
+                                                                const m = Math.round(px / (this.ppm * 15)) * 15;
+                                                                const t = this.vsm + m;
+                                                                return String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+                                                            },
+                                                            startMove(e) {
+                                                                if (e.button) return;
+                                                                this.mode = 'move';
+                                                                this.startX = e.pageX;
+                                                                this.origLeft = this.left;
+                                                                this.dragMoved = false;
+                                                                document.body.style.cursor = 'grabbing';
+                                                                document.body.style.userSelect = 'none';
+                                                            },
+                                                            startResize(e) {
+                                                                if (e.button) return;
+                                                                this.mode = 'resize';
+                                                                this.startX = e.pageX;
+                                                                this.origWidth = this.width;
+                                                                this.dragMoved = false;
+                                                                document.body.style.cursor = 'ew-resize';
+                                                                document.body.style.userSelect = 'none';
+                                                            },
+                                                            startResizeLeft(e) {
+                                                                if (e.button) return;
+                                                                this.mode = 'resize-left';
+                                                                this.startX = e.pageX;
+                                                                this.origLeft = this.left;
+                                                                this.origWidth = this.width;
+                                                                this.dragMoved = false;
+                                                                document.body.style.cursor = 'ew-resize';
+                                                                document.body.style.userSelect = 'none';
+                                                            },
+                                                            onMove(e) {
+                                                                if (!this.mode) return;
+                                                                const dx = e.pageX - this.startX;
+                                                                if (Math.abs(dx) > 3) this.dragMoved = true;
+                                                                if (this.mode === 'move') this.left = Math.max(0, this.origLeft + dx);
+                                                                else if (this.mode === 'resize') this.width = Math.max(15 * this.ppm, this.origWidth + dx);
+                                                                else if (this.mode === 'resize-left') {
+                                                                    const minWidth = 15 * this.ppm;
+                                                                    // Right edge stays fixed; compute new left clamped between 0 and (right edge - minWidth)
+                                                                    const rightEdge = this.origLeft + this.origWidth;
+                                                                    const newLeft = Math.max(0, Math.min(rightEdge - minWidth, this.origLeft + dx));
+                                                                    this.width = rightEdge - newLeft;
+                                                                    this.left = newLeft;
+                                                                }
+                                                            },
+                                                            onUp() {
+                                                                if (!this.mode) return;
+                                                                const wasMode = this.mode;
+                                                                this.mode = null;
+                                                                document.body.style.cursor = '';
+                                                                document.body.style.userSelect = '';
+                                                                if (!this.dragMoved) return;
+                                                                const sp = 15 * this.ppm;
+                                                                if (wasMode === 'resize-left') {
+                                                                    // Right edge is fixed — snap left only, derive width
+                                                                    const rightEdge = this.origLeft + this.origWidth;
+                                                                    this.left = Math.round(this.left / sp) * sp;
+                                                                    this.width = Math.max(sp, rightEdge - this.left);
+                                                                } else if (wasMode === 'resize') {
+                                                                    // Left edge is fixed — snap width only
+                                                                    this.width = Math.max(sp, Math.round(this.width / sp) * sp);
+                                                                } else {
+                                                                    // move — snap left only, keep width
+                                                                    this.left = Math.round(this.left / sp) * sp;
+                                                                }
+                                                                $wire.moveActivity(this.id, this.toHHMM(this.left), this.toHHMM(this.left + this.width));
+                                                            },
+                                                            onClick() {
+                                                                if (this.dragMoved) return;
+                                                                $wire.openEditActivity(this.id);
+                                                            }
+                                                        }" @mousedown.stop="startMove($event)"
                                                         @mousemove.window="onMove($event)" @mouseup.window="onUp()"
                                                         @click.stop="onClick()"
                                                         class="top-2 bottom-2 absolute flex items-stretch rounded overflow-hidden cursor-grab select-none"
                                                         :class="{ 'opacity-70 shadow-lg z-10 scale-y-105': mode }"
                                                         :style="`left:${left}px;width:${width}px;background-color:{{ $block['color'] }}`">
+                                                        {{-- Left-edge resize handle --}}
+                                                        <div x-show="width > 28"
+                                                            @mousedown.stop="startResizeLeft($event)"
+                                                            class="left-0 absolute inset-y-0 hover:bg-white/30 rounded-l w-2 transition-colors cursor-ew-resize">
+                                                        </div>
                                                         {{-- Labels (reactive to live width) --}}
                                                         <div
                                                             class="flex flex-col flex-1 justify-center px-1.5 min-w-0 overflow-hidden pointer-events-none">
