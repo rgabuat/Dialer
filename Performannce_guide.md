@@ -334,6 +334,39 @@ php artisan optimize:clear
 
 ---
 
+## 7. Clear All Caches & Restart FPM (One Command)
+
+A custom Artisan command was added to handle the full cache-clear + FPM restart + optimize cycle in one step:
+
+**File:** `app/Console/Commands/ClearAndOptimize.php`
+
+### Usage
+
+```bash
+# Full run: clear all caches → restart php8.3-fpm → artisan optimize
+php artisan app:clear-optimize
+
+# Skip FPM restart (e.g. local dev or CI)
+php artisan app:clear-optimize --skip-fpm
+```
+
+### What it does (in order)
+
+| Step | Detail |
+|---|---|
+| Config cache clear | `config:clear` |
+| Route cache clear | `route:clear` |
+| View cache clear | `view:clear` |
+| Application cache clear | `cache:clear` |
+| Event cache clear | `event:clear` |
+| Queue cache clear | `queue:clear --force` |
+| Compiled services clear | `clear-compiled` |
+| OPcache reset | `opcache_reset()` via PHP CLI |
+| PHP-FPM restart | `sudo systemctl restart php8.3-fpm` (flushes web-process OPcache) |
+| Optimize | `artisan optimize` (re-caches config + routes) |
+
+---
+
 ## Summary
 
 | Area | Optimization | Impact |
@@ -344,3 +377,4 @@ php artisan optimize:clear
 | Cache/Sessions | Redis instead of file driver | In-memory I/O, sub-millisecond response |
 | Redis | 512MB cap, allkeys-lru, no RDB snapshotting | Stable memory, no disk overhead |
 | PHP-FPM | 20 workers, max_requests=500 | Handles more concurrent users, prevents memory leaks |
+| Deployment | `php artisan app:clear-optimize` | One command clears all caches, restarts FPM, re-optimizes |
