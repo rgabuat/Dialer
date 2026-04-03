@@ -3,6 +3,9 @@ import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+    resolve: {
+        dedupe: ['@twilio/voice-sdk'],
+    },
     plugins: [
         laravel({
             input: [
