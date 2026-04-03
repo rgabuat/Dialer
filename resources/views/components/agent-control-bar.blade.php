@@ -3,6 +3,7 @@
      Tokens used: bg-surface, border-surface, text-fg, text-fg-muted
      Dark / light mode handled automatically via CSS custom properties.
      ══════════════════════════════════════════════════════════════════ --}}
+@persist('agent-phone-bar')
 <div x-data="agentPhone()" @make-call.window="makeCall($event.detail)"
     @agent-status-changed.window="canAcceptCalls = ($event.detail.isAvailable ?? canAcceptCalls)"
     class="flex items-center gap-2">
@@ -134,11 +135,14 @@
     </div>
 
 </div>
+@endpersist
 
 
 {{-- ══════════════════════════════════════════════════════════════════
      DIAL MODAL — numeric keypad dialer
      ══════════════════════════════════════════════════════════════════ --}}
+@persist('dial-modal')
+{{-- ── DIAL POPOVER — opens below the Dial button, never blocks navigation ── --}}
 <div x-data="{
     open: false,
     digits: '',
@@ -150,50 +154,53 @@
         this.open = false;
         this.digits = '';
     }
-}"
-    x-on:open-dialer.window="open = true; digits = ''; $nextTick(() => $refs.dialDisplay?.focus())" x-show="open"
-    x-cloak x-trap.noscroll="open" @keydown.escape.window="open = false"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+}" x-on:open-dialer.window="open = true; digits = ''; $nextTick(() => $refs.dialDisplay?.focus())"
+    @keydown.escape.window="open = false">
 
-    {{-- Backdrop --}}
-    <div class="absolute inset-0" @click="open = false"></div>
-
-    {{-- Panel --}}
-    <div class="relative z-10 w-full max-w-xs bg-surface border border-surface rounded-2xl shadow-2xl animate-modal-in overflow-hidden"
-        @click.stop>
+    {{-- Popover panel — fixed below topbar, right-aligned, no overlay --}}
+    <div x-show="open" x-cloak
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+        x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+        @click.outside="open = false"
+        class="fixed top-[4.25rem] right-4 z-50 w-72 bg-surface border border-surface rounded-2xl shadow-2xl overflow-hidden"
+        style="transform-origin: top right;">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-5 py-4 border-b border-surface">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-surface">
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500/15">
-                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500/15">
+                    <svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
                     </svg>
                 </span>
-                <h2 class="text-fg font-semibold text-sm">Outbound Call</h2>
+                <span class="text-fg font-semibold text-sm">Outbound Call</span>
             </div>
             <button @click="open = false"
-                class="flex items-center justify-center w-7 h-7 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                class="flex items-center justify-center w-6 h-6 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
         {{-- Number display --}}
-        <div class="px-5 pt-4 pb-2">
+        <div class="px-4 pt-3 pb-2">
             <div class="relative flex items-center">
                 <input x-ref="dialDisplay" x-model="digits" type="tel" placeholder="+1 (000) 000-0000"
                     @keydown.enter="call()"
-                    class="w-full bg-surface-2 border border-surface rounded-xl px-4 py-3 pr-10
-                              text-fg text-base font-mono tracking-widest text-center
+                    class="w-full bg-surface-2 border border-surface rounded-xl px-4 py-2.5 pr-9
+                              text-fg text-sm font-mono tracking-widest text-center
                               placeholder-fg-muted
                               focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
                 {{-- Backspace --}}
                 <button @click="del()" x-show="digits.length > 0"
-                    class="absolute right-3 text-fg-muted hover:text-fg transition">
+                    class="absolute right-2.5 text-fg-muted hover:text-fg transition">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
@@ -203,33 +210,28 @@
         </div>
 
         {{-- Keypad --}}
-        <div class="px-5 pb-5 pt-2 grid grid-cols-3 gap-2">
+        <div class="px-4 pb-3 pt-2 grid grid-cols-3 gap-1.5">
             @foreach ([['1', ''], ['2', 'ABC'], ['3', 'DEF'], ['4', 'GHI'], ['5', 'JKL'], ['6', 'MNO'], ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ'], ['*', ''], ['0', '+'], ['#', '']] as [$digit, $sub])
                 <button @click="press('{{ $digit }}')"
-                    class="flex flex-col items-center justify-center h-14 rounded-xl
+                    class="flex flex-col items-center justify-center h-12 rounded-xl
                            bg-surface-2 hover:bg-hover active:scale-95
-                           text-fg font-semibold text-base
+                           text-fg font-semibold text-sm
                            border border-surface
                            transition-all duration-100 select-none">
                     {{ $digit }}
                     @if ($sub)
-                        <span
-                            class="text-fg-muted text-[9px] font-normal tracking-widest mt-0.5">{{ $sub }}</span>
+                        <span class="text-fg-muted text-[8px] font-normal tracking-widest mt-0.5">{{ $sub }}</span>
                     @endif
                 </button>
             @endforeach
         </div>
 
-        {{-- Action buttons --}}
-        <div class="flex gap-3 px-5 pb-5">
-            <button @click="open = false; digits = ''"
-                class="flex-1 py-2.5 rounded-xl bg-surface-2 hover:bg-hover text-fg-3 text-sm font-medium transition">
-                Cancel
-            </button>
+        {{-- Call button --}}
+        <div class="px-4 pb-4">
             <button @click="call()" :disabled="!digits"
                 :class="digits ? 'bg-green-600 hover:bg-green-500 text-white shadow-sm' :
                     'bg-surface-2 text-fg-muted opacity-50 cursor-not-allowed'"
-                class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition inline-flex items-center justify-center gap-2">
+                class="w-full py-2.5 rounded-xl font-semibold text-sm transition inline-flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
@@ -240,11 +242,13 @@
 
     </div>
 </div>
+@endpersist
 
 
 {{-- ══════════════════════════════════════════════════════════════════
      TRANSFER MODAL — blind (cold) transfer to number or agent
      ══════════════════════════════════════════════════════════════════ --}}
+@persist('transfer-modal')
 <div x-data="{
     open: false,
     tab: 'number',
@@ -346,10 +350,12 @@
         </div>
     </div>
 </div>
+@endpersist
 
 {{-- ══════════════════════════════════════════════════════════════════
      INCOMING CALL MODAL
      ══════════════════════════════════════════════════════════════════ --}}
+@persist('incoming-call-modal')
 <div x-data="{ show: false, callerNumber: '' }" @incoming-call.window="show = true; callerNumber = $event.detail" x-show="show" x-cloak
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
 
@@ -417,15 +423,18 @@
 
     </div>
 </div>
+@endpersist
 
 @push('scripts')
     <script>
-        // Twilio Device and Call objects are stored outside Alpine's reactive proxy
-        // to avoid "read-only non-configurable property" errors caused by Alpine
-        // wrapping Twilio's internal _log and other non-configurable props.
-        let _twilioDevice = null;
-        let _twilioActiveCall = null;
-        let _twilioIncomingCall = null;
+        // ── Persistent Twilio globals ────────────────────────────────────────────────
+        // Stored on window so they survive wire:navigate page transitions.
+        // Guard-checks ensure these are never reset when the script is re-evaluated.
+        if (!('_twilioDevice'        in window)) window._twilioDevice        = null;
+        if (!('_twilioActiveCall'    in window)) window._twilioActiveCall    = null;
+        if (!('_twilioIncomingCall'  in window)) window._twilioIncomingCall  = null;
+        if (!('_twilioCallStartedAt' in window)) window._twilioCallStartedAt = null;
+        if (!('_twilioIdentity'      in window)) window._twilioIdentity      = null;
 
         function agentPhone() {
             return {
@@ -441,6 +450,40 @@
                 isOnHold: false,
                 canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
 
+                // ── restore state after wire:navigate ────────────────────────────────
+                // Alpine may re-initialise this component when Livewire morphs the DOM.
+                // init() pulls live state back from the window-level globals so the call
+                // UI is restored immediately on the new page.
+
+                init() {
+                    // Restore identity so outbound calls work after navigation
+                    if (window._twilioIdentity) this.identity = window._twilioIdentity;
+
+                    if (window._twilioDevice) {
+                        this.deviceReady = (window._twilioDevice.state === 'registered');
+                        // Re-bind device events to this (new) Alpine instance
+                        this._rebindDeviceEvents();
+                    }
+                    if (window._twilioActiveCall) {
+                        this.hasActiveCall = true;
+                        this.callStatus    = 'In call';
+                        this.isMuted       = window._twilioActiveCall.isMuted?.() ?? false;
+                        // Re-start the elapsed timer anchored to the original call start
+                        if (window._twilioCallStartedAt) this._startTimer();
+                        // Ensure the call-ended handler points to this Alpine instance
+                        window._twilioActiveCall.on('disconnect', () => this._onCallEnded());
+                        window._twilioActiveCall.on('cancel',     () => this._onCallEnded());
+                    }
+                    if (window._twilioIncomingCall) {
+                        // Re-surface the incoming call modal for a ringing call
+                        this.hasIncomingCall = true;
+                        const from = window._twilioIncomingCall.parameters?.From || '';
+                        window.dispatchEvent(new CustomEvent('incoming-call', { detail: from }));
+                        window.addEventListener('accept-call', () => this.acceptIncoming(), { once: true });
+                        window.addEventListener('reject-call', () => this.rejectIncoming(), { once: true });
+                    }
+                },
+
                 // ── initialisation ──────────────────────────────────────
 
                 async enableCalling() {
@@ -448,12 +491,13 @@
                         window.Toast.show('You are not accepting calls in your current status.', 'warning');
                         return;
                     }
-                    if (_twilioDevice) return;
+                    if (window._twilioDevice) return;
                     try {
                         const res = await fetch('{{ route('twilio.getAccessToken') }}');
                         const data = await res.json();
-                        this.token = data.token;
+                        this.token    = data.token;
                         this.identity = data.identity;
+                        window._twilioIdentity = data.identity;
                         this.initializeDevice();
                     } catch (e) {
                         console.error('Failed to get token', e);
@@ -462,61 +506,61 @@
                 },
 
                 initializeDevice() {
-                    _twilioDevice = new window.Device(this.token, {
+                    window._twilioDevice = new window.Device(this.token, {
                         codecPreferences: ['opus', 'pcmu'],
                         logLevel: 1,
                     });
+                    this._rebindDeviceEvents();
+                    window._twilioDevice.register();
+                },
 
-                    _twilioDevice.on('registered', () => {
+                // Bind (or re-bind) device-level events to the current Alpine instance.
+                // Removes previous listeners first so navigating between pages never
+                // accumulates duplicate handlers.
+                _rebindDeviceEvents() {
+                    window._twilioDevice.removeAllListeners('registered');
+                    window._twilioDevice.removeAllListeners('error');
+                    window._twilioDevice.removeAllListeners('incoming');
+
+                    window._twilioDevice.on('registered', () => {
                         this.deviceReady = true;
                         window.Toast.show('Calling enabled.', 'success');
                     });
 
-                    _twilioDevice.on('error', error => {
+                    window._twilioDevice.on('error', error => {
                         console.error('Twilio error', error);
                         window.Toast.show('Calling device error. Please reload.', 'error');
                     });
 
-                    _twilioDevice.on('incoming', call => {
-                        _twilioIncomingCall = call;
+                    window._twilioDevice.on('incoming', call => {
+                        window._twilioIncomingCall = call;
                         this.hasIncomingCall = true;
                         const from = call.parameters.From || '';
-                        window.dispatchEvent(new CustomEvent('incoming-call', {
-                            detail: from
-                        }));
-
-                        const acceptHandler = () => this.acceptIncoming();
-                        const rejectHandler = () => this.rejectIncoming();
-                        window.addEventListener('accept-call', acceptHandler, {
-                            once: true
-                        });
-                        window.addEventListener('reject-call', rejectHandler, {
-                            once: true
-                        });
+                        window.dispatchEvent(new CustomEvent('incoming-call', { detail: from }));
+                        window.addEventListener('accept-call', () => this.acceptIncoming(), { once: true });
+                        window.addEventListener('reject-call', () => this.rejectIncoming(), { once: true });
                     });
-
-                    _twilioDevice.register();
                 },
 
                 // ── inbound ─────────────────────────────────────────────
 
                 acceptIncoming() {
-                    if (!_twilioIncomingCall) return;
-                    _twilioIncomingCall.accept();
-                    _twilioActiveCall = _twilioIncomingCall;
-                    _twilioIncomingCall = null;
+                    if (!window._twilioIncomingCall) return;
+                    window._twilioIncomingCall.accept();
+                    window._twilioActiveCall   = window._twilioIncomingCall;
+                    window._twilioIncomingCall = null;
                     this.hasIncomingCall = false;
-                    this.hasActiveCall = true;
-                    this.isMuted = false;
-                    this.isOnHold = false;
-                    this.callStatus = 'In call…';
-                    this.attachCallEvents(_twilioActiveCall);
+                    this.hasActiveCall   = true;
+                    this.isMuted         = false;
+                    this.isOnHold        = false;
+                    this.callStatus      = 'In call…';
+                    this.attachCallEvents(window._twilioActiveCall);
                 },
 
                 rejectIncoming() {
-                    if (!_twilioIncomingCall) return;
-                    _twilioIncomingCall.reject();
-                    _twilioIncomingCall = null;
+                    if (!window._twilioIncomingCall) return;
+                    window._twilioIncomingCall.reject();
+                    window._twilioIncomingCall = null;
                     this.hasIncomingCall = false;
                 },
 
@@ -531,21 +575,21 @@
                 },
 
                 makeCall(number) {
-                    if (!_twilioDevice || !number) return;
+                    if (!window._twilioDevice || !number) return;
                     this.callStatus = 'Dialling…';
-                    this.isMuted = false;
-                    this.isOnHold = false;
+                    this.isMuted    = false;
+                    this.isOnHold   = false;
                     const agent = this.identity;
                     setTimeout(async () => {
                         try {
-                            const call = await _twilioDevice.connect({
+                            const call = await window._twilioDevice.connect({
                                 params: {
-                                    To: number,
+                                    To:    number,
                                     agent: agent,
-                                    From: '{{ config('services.twilio.caller_id') }}',
+                                    From:  '{{ config('services.twilio.caller_id') }}',
                                 }
                             });
-                            _twilioActiveCall = call;
+                            window._twilioActiveCall = call;
                             this.hasActiveCall = true;
                             this.attachCallEvents(call);
                         } catch (e) {
@@ -563,50 +607,38 @@
                         this.callStatus = 'In call';
                         this._startTimer();
                     });
-                    call.on('disconnect', () => {
-                        _twilioActiveCall = null;
-                        this.hasActiveCall = false;
-                        this.isMuted = false;
-                        this.isOnHold = false;
-                        this.callStatus = 'Connecting…';
-                        this._stopTimer();
-                    });
-                    call.on('cancel', () => {
-                        _twilioActiveCall = null;
-                        this.hasActiveCall = false;
-                        this.isMuted = false;
-                        this.isOnHold = false;
-                        this.callStatus = 'Connecting…';
-                        this._stopTimer();
-                    });
-                    call.on('reject', () => {
-                        _twilioActiveCall = null;
-                        this.hasActiveCall = false;
-                        this.isMuted = false;
-                        this.isOnHold = false;
-                        this.callStatus = 'Connecting…';
-                        this._stopTimer();
-                    });
+                    call.on('disconnect', () => this._onCallEnded());
+                    call.on('cancel',     () => this._onCallEnded());
+                    call.on('reject',     () => this._onCallEnded());
                     // Listen for do-transfer dispatched from the transfer modal
-                    window.addEventListener('do-transfer', e => this.transferCall(e.detail), {
-                        once: true
-                    });
+                    window.addEventListener('do-transfer', e => this.transferCall(e.detail), { once: true });
+                },
+
+                // Central teardown called by disconnect / cancel / reject events.
+                _onCallEnded() {
+                    window._twilioActiveCall    = null;
+                    window._twilioCallStartedAt = null; // clear start time only on actual call end
+                    this.hasActiveCall = false;
+                    this.isMuted       = false;
+                    this.isOnHold      = false;
+                    this.callStatus    = 'Connecting…';
+                    this._stopTimer();
                 },
 
                 // ── mute ────────────────────────────────────────────────
 
                 toggleMute() {
-                    if (!_twilioActiveCall) return;
+                    if (!window._twilioActiveCall) return;
                     this.isMuted = !this.isMuted;
-                    _twilioActiveCall.mute(this.isMuted);
+                    window._twilioActiveCall.mute(this.isMuted);
                     this.callStatus = this.isMuted ? 'Muted' : 'In call';
                 },
 
                 // ── hold ────────────────────────────────────────────────
 
                 async toggleHold() {
-                    if (!_twilioActiveCall) return;
-                    const callSid = _twilioActiveCall.parameters?.CallSid;
+                    if (!window._twilioActiveCall) return;
+                    const callSid = window._twilioActiveCall.parameters?.CallSid;
                     if (!callSid) {
                         window.Toast.show('Call SID not available yet.', 'warning');
                         return;
@@ -617,30 +649,24 @@
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ??
-                                        ''
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
                                 },
-                                body: JSON.stringify({
-                                    call_sid: callSid
-                                }),
+                                body: JSON.stringify({ call_sid: callSid }),
                                 credentials: 'same-origin',
                             });
-                            this.isOnHold = true;
+                            this.isOnHold   = true;
                             this.callStatus = 'On hold';
                         } else {
                             await fetch('{{ route('twilio.resumeCall') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ??
-                                        ''
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
                                 },
-                                body: JSON.stringify({
-                                    call_sid: callSid
-                                }),
+                                body: JSON.stringify({ call_sid: callSid }),
                                 credentials: 'same-origin',
                             });
-                            this.isOnHold = false;
+                            this.isOnHold   = false;
                             this.callStatus = 'In call';
                         }
                     } catch (e) {
@@ -656,8 +682,8 @@
                 },
 
                 async transferCall(destination) {
-                    if (!_twilioActiveCall || !destination) return;
-                    const callSid = _twilioActiveCall.parameters?.CallSid;
+                    if (!window._twilioActiveCall || !destination) return;
+                    const callSid = window._twilioActiveCall.parameters?.CallSid;
                     if (!callSid) {
                         window.Toast.show('Call SID not available — cannot transfer.', 'warning');
                         return;
@@ -670,10 +696,7 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
                             },
-                            body: JSON.stringify({
-                                call_sid: callSid,
-                                to: destination
-                            }),
+                            body: JSON.stringify({ call_sid: callSid, to: destination }),
                             credentials: 'same-origin',
                         });
                         // Hang up the agent's leg — caller is now ringing the transfer target
@@ -689,28 +712,32 @@
                 // ── hang up ─────────────────────────────────────────────
 
                 hangUp() {
-                    if (_twilioActiveCall) {
-                        _twilioActiveCall.disconnect();
-                        _twilioActiveCall = null;
+                    if (window._twilioActiveCall) {
+                        window._twilioActiveCall.disconnect();
+                        window._twilioActiveCall    = null;
+                        window._twilioCallStartedAt = null;
                         this.hasActiveCall = false;
-                        this.isMuted = false;
-                        this.isOnHold = false;
+                        this.isMuted       = false;
+                        this.isOnHold      = false;
                         this._stopTimer();
                     }
                 },
 
                 // ── timer helpers ───────────────────────────────────────
+                // The timer is anchored to window._twilioCallStartedAt (a wall-clock
+                // timestamp) so the elapsed time is accurate even after navigation.
 
                 _startTimer() {
                     this._stopTimer();
-                    this.callDuration = '00:00';
-                    let secs = 0;
-                    this._callTimer = setInterval(() => {
-                        secs++;
+                    if (!window._twilioCallStartedAt) window._twilioCallStartedAt = Date.now();
+                    const tick = () => {
+                        const secs = Math.floor((Date.now() - window._twilioCallStartedAt) / 1000);
                         const m = String(Math.floor(secs / 60)).padStart(2, '0');
                         const s = String(secs % 60).padStart(2, '0');
                         this.callDuration = `${m}:${s}`;
-                    }, 1000);
+                    };
+                    tick();
+                    this._callTimer = setInterval(tick, 1000);
                 },
 
                 _stopTimer() {
@@ -718,6 +745,9 @@
                         clearInterval(this._callTimer);
                         this._callTimer = null;
                     }
+                    // Do NOT reset window._twilioCallStartedAt here — it must survive
+                    // wire:navigate page transitions so the timer continues from where
+                    // it left off. Only _onCallEnded() and hangUp() clear it.
                     this.callDuration = '';
                 },
             }
