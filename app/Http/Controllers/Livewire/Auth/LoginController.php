@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Livewire\Auth;
 
 use Illuminate\Http\Request;
 use App\Services\ActivityLogger;
-use App\Services\AuditLogService;
 use App\Services\AgentStatusService;
 use App\Models\AgentStatusType;
 use App\Http\Controllers\Controller;

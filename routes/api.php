@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/call/hold',     [TwilioController::class, 'holdCall'])->name('twilio.holdCall');
     Route::post('/call/resume',   [TwilioController::class, 'resumeCall'])->name('twilio.resumeCall');
     Route::post('/call/transfer', [TwilioController::class, 'transferCall'])->name('twilio.transferCall');
+    Route::post('/call/mute',     [TwilioController::class, 'muteCall'])->name('twilio.muteCall');
     Route::get('/call/agents',    [TwilioController::class, 'availableAgents'])->name('twilio.availableAgents');
 });
 

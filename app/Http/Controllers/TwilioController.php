@@ -66,23 +66,52 @@ class TwilioController extends Controller
         $dial->client($dialedNumber);
       }
     } elseif ($dialedNumber == config("services.twilio.caller_id")) {
-      // Incoming call from external number — ring only agents on "Phones" status
+      // Incoming call from external number — ring only agents on "Phones" status,
+      // skipping agents with Do Not Disturb enabled or with call forwarding active.
       $dial = $voiceResponse->dial("", [
         "callerId" => config("services.twilio.caller_id"),
+        "timeout"  => 20,
       ]);
 
-      $availableAgents = \App\Models\AgentStatus::with("statusType")
+      $availableAgents = \App\Models\AgentStatus::with(["statusType", "user"])
         ->whereHas("statusType", fn($q) => $q->where("slug", "phones"))
         ->get();
 
-      if ($availableAgents->isEmpty()) {
+      $ringable = $availableAgents->filter(function ($agentStatus) {
+        $user = $agentStatus->user;
+        // Skip agents who have Do Not Disturb on
+        if ((bool) $user->getMeta('do_not_disturb', false)) {
+          return false;
+        }
+        // Skip agents who are individually forwarding calls elsewhere
+        if ((bool) $user->getMeta('call_forwarding_enabled', false)) {
+          return false;
+        }
+        return true;
+      });
+
+      // Agents with call forwarding enabled get dialled to their forwarding number
+      $forwardAgents = $availableAgents->filter(
+        fn($s) => (bool) $s->user->getMeta('call_forwarding_enabled', false)
+      );
+      foreach ($forwardAgents as $agentStatus) {
+        $forwardTo = (string) $agentStatus->user->getMeta('call_forward_to', '');
+        if ($forwardTo !== '') {
+          $dial->number($forwardTo);
+        }
+      }
+
+      // Browser-client agents (not forwarding, not DND)
+      foreach ($ringable as $agentStatus) {
+        $dial->client("user_" . $agentStatus->user_id);
+      }
+
+      if ($ringable->isEmpty() && $forwardAgents->filter(
+            fn($s) => (string) $s->user->getMeta('call_forward_to', '') !== ''
+          )->isEmpty()) {
         $voiceResponse->say(
           "All agents are currently unavailable. Please try again later."
         );
-      } else {
-        foreach ($availableAgents as $agentStatus) {
-          $dial->client("user_" . $agentStatus->user_id);
-        }
       }
     } else {
       //Default response for unmatched numbers
@@ -173,14 +202,27 @@ class TwilioController extends Controller
   }
 
   /**
-   * Forward all inbound calls to an external number (stored in config / DB).
-   * Returns TwiML used by Twilio webhook when a new inbound call arrives.
+   * Forward all inbound calls to an external number.
+   * Reads the calling agent's (or a fallback global) forward_to number.
    *
-   * GET /api/call/forward-twiml
+   * GET /api/call/forward-twiml?user_id=42
    */
   public function forwardTwiml(Request $request)
   {
-    $forwardTo = config('services.twilio.forward_to');
+    // Try per-user forwarding number first (passed as query param from routing)
+    $forwardTo = null;
+    $userId    = $request->query('user_id');
+    if ($userId) {
+      $user = \App\Models\User::find($userId);
+      if ($user && (bool) $user->getMeta('call_forwarding_enabled', false)) {
+        $forwardTo = (string) $user->getMeta('call_forward_to', '');
+      }
+    }
+
+    // Fall back to global env value
+    if (empty($forwardTo)) {
+      $forwardTo = config('services.twilio.forward_to');
+    }
 
     $voice = new VoiceResponse();
 

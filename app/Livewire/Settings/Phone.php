@@ -56,11 +56,10 @@ class Phone extends Component
 
         $user = Auth::user();
 
+        // Only persist the implemented settings (voicemail is coming-soon)
         $keys = [
             'call_forwarding_enabled',
             'call_forward_to',
-            'voicemail_enabled',
-            'voicemail_greeting',
             'do_not_disturb',
         ];
 
@@ -72,8 +71,6 @@ class Phone extends Component
         $metaAfter = [
             'call_forwarding_enabled' => $this->call_forwarding_enabled,
             'call_forward_to'         => $this->call_forward_to,
-            'voicemail_enabled'       => $this->voicemail_enabled,
-            'voicemail_greeting'      => $this->voicemail_greeting,
             'do_not_disturb'          => $this->do_not_disturb,
         ];
 
@@ -90,7 +87,13 @@ class Phone extends Component
         }
 
         if (!empty($metaChanges)) {
-            ActivityLogger::log('settings.phone.updated', $metaChanges);
+            ActivityLogger::log(
+                type:       'audit',
+                event:      'settings.phone.updated',
+                action:     'Updated phone settings',
+                actor:      $user,
+                properties: $metaChanges,
+            );
         }
 
         $this->dispatch('toast', message: 'Phone settings saved.', type: 'success');
