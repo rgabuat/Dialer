@@ -65,13 +65,13 @@ class TwilioController extends Controller
         $dial->client($dialedNumber);
       }
     } elseif ($dialedNumber == config("services.twilio.caller_id")) {
-      // Incoming call from external number — ring all available agents
+      // Incoming call from external number — ring only agents on "Phones" status
       $dial = $voiceResponse->dial("", [
         "callerId" => config("services.twilio.caller_id"),
       ]);
 
       $availableAgents = \App\Models\AgentStatus::with("statusType")
-        ->whereHas("statusType", fn($q) => $q->where("is_available", true))
+        ->whereHas("statusType", fn($q) => $q->where("slug", "phones"))
         ->get();
 
       if ($availableAgents->isEmpty()) {
