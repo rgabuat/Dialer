@@ -10,6 +10,11 @@ return [
                 'key'   => 'knowledge',
                 'icon'  => 'heroicon-o-book-open',
             ],
+            [
+                'label' => 'Phone',
+                'key'   => 'phone',
+                'icon'  => 'heroicon-o-phone',
+            ],
         ],
     ],
 

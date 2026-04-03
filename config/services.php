@@ -32,11 +32,12 @@ return [
     ],
 
     'twilio' => [
-        'sid' => env('TWILIO_ACCOUNT_SID'),
-        'key' => env('TWILIO_API_KEY'),
-        'secret' => env('TWILIO_API_SECRET'),
+        'sid'           => env('TWILIO_ACCOUNT_SID'),
+        'key'           => env('TWILIO_API_KEY'),
+        'secret'        => env('TWILIO_API_SECRET'),
         'twiml_app_sid' => env('TWILIO_TWIML_APP_SID'),
-        'caller_id' => env('TWILIO_CALLER_ID'),
+        'caller_id'     => env('TWILIO_CALLER_ID'),
+        'forward_to'    => env('TWILIO_FORWARD_TO'),   // used by forwardTwiml()
     ],
 
 ];

@@ -44,7 +44,7 @@
             </div>
         </template>
 
-        {{-- ACTIVE CALL: pulsing dot + timer + status + hang-up --}}
+        {{-- ACTIVE CALL: pulsing dot + timer + status + action buttons --}}
         <template x-if="hasActiveCall">
             <div class="flex items-center gap-2">
                 {{-- Live pulse indicator --}}
@@ -56,6 +56,61 @@
                 {{-- Status + elapsed timer --}}
                 <span class="text-xs text-fg font-medium font-mono tracking-wide"
                     x-text="callStatus + (callDuration ? '  ' + callDuration : '')"></span>
+
+                {{-- Mute toggle --}}
+                <button @click="toggleMute" :title="isMuted ? 'Unmute' : 'Mute'"
+                    :class="isMuted
+                        ?
+                        'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                        'bg-surface-2 text-fg-muted border-surface hover:bg-hover'"
+                    class="inline-flex items-center justify-center w-7 h-7 rounded-md text-xs border transition-all duration-150">
+                    <template x-if="!isMuted">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+                        </svg>
+                    </template>
+                    <template x-if="isMuted">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                        </svg>
+                    </template>
+                </button>
+
+                {{-- Hold / Resume toggle --}}
+                <button @click="toggleHold" :title="isOnHold ? 'Resume' : 'Hold'"
+                    :class="isOnHold
+                        ?
+                        'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                        'bg-surface-2 text-fg-muted border-surface hover:bg-hover'"
+                    class="inline-flex items-center justify-center w-7 h-7 rounded-md text-xs border transition-all duration-150">
+                    <template x-if="!isOnHold">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                        </svg>
+                    </template>
+                    <template x-if="isOnHold">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                        </svg>
+                    </template>
+                </button>
+
+                {{-- Transfer --}}
+                <button @click="openTransfer" title="Transfer call"
+                    class="inline-flex items-center justify-center w-7 h-7 rounded-md text-xs bg-surface-2 text-fg-muted border border-surface hover:bg-hover transition-all duration-150">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                </button>
+
                 {{-- Hang Up --}}
                 <button @click="hangUp"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition-all duration-150 shadow-sm">
@@ -188,6 +243,111 @@
 
 
 {{-- ══════════════════════════════════════════════════════════════════
+     TRANSFER MODAL — blind (cold) transfer to number or agent
+     ══════════════════════════════════════════════════════════════════ --}}
+<div x-data="{
+    open: false,
+    tab: 'number',
+    destination: '',
+    agents: [],
+    loading: false,
+    async loadAgents() {
+        try {
+            const r = await fetch('{{ route('twilio.availableAgents') }}');
+            this.agents = await r.json();
+        } catch { this.agents = []; }
+    }
+}" x-on:open-transfer.window="open = true; destination = ''; tab = 'number'; loadAgents()"
+    x-show="open" x-cloak x-trap.noscroll="open" @keydown.escape.window="open = false"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+
+    <div class="absolute inset-0" @click="open = false"></div>
+
+    <div class="relative z-10 w-full max-w-sm bg-surface border border-surface rounded-2xl shadow-2xl animate-modal-in overflow-hidden"
+        @click.stop>
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-surface">
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500/15">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                </span>
+                <h2 class="text-fg font-semibold text-sm">Transfer Call</h2>
+            </div>
+            <button @click="open = false"
+                class="flex items-center justify-center w-7 h-7 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        {{-- Tabs --}}
+        <div class="flex border-b border-surface text-sm">
+            <button @click="tab='number'"
+                :class="tab === 'number' ? 'border-b-2 border-indigo-500 text-fg font-semibold' : 'text-fg-muted hover:text-fg'"
+                class="flex-1 py-3 transition">External Number</button>
+            <button @click="tab='agent'"
+                :class="tab === 'agent' ? 'border-b-2 border-indigo-500 text-fg font-semibold' : 'text-fg-muted hover:text-fg'"
+                class="flex-1 py-3 transition">Agent</button>
+        </div>
+
+        {{-- Number tab --}}
+        <div x-show="tab==='number'" class="px-5 py-4 space-y-3">
+            <p class="text-fg-muted text-xs">Enter the number to transfer this call to.</p>
+            <input x-model="destination" type="tel" placeholder="+1 (000) 000-0000"
+                @keydown.enter="$dispatch('do-transfer', destination); open = false"
+                class="w-full bg-surface-2 border border-surface rounded-xl px-4 py-3 text-fg text-sm font-mono tracking-widest text-center placeholder-fg-muted focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
+        </div>
+
+        {{-- Agent tab --}}
+        <div x-show="tab==='agent'" class="px-5 py-4">
+            <p class="text-fg-muted text-xs mb-3">Select an online agent to transfer this call to.</p>
+            <div class="space-y-1 max-h-52 overflow-y-auto">
+                <template x-if="agents.length === 0">
+                    <p class="text-fg-muted text-xs py-3 text-center">No agents currently on Phones status.</p>
+                </template>
+                <template x-for="agent in agents" :key="agent.id">
+                    <button
+                        @click="destination = agent.identity; $dispatch('do-transfer', agent.identity); open = false"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-hover text-fg text-sm transition">
+                        <span
+                            class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-bold shrink-0"
+                            x-text="agent.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()"></span>
+                        <span x-text="agent.name" class="truncate"></span>
+                        <span class="ml-auto w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex gap-3 px-5 pb-5">
+            <button @click="open = false"
+                class="flex-1 py-2.5 rounded-xl bg-surface-2 hover:bg-hover text-fg-muted text-sm font-medium transition">
+                Cancel
+            </button>
+            <button x-show="tab==='number'"
+                @click="if(destination){ $dispatch('do-transfer', destination); open = false; }"
+                :disabled="!destination"
+                :class="destination ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm' :
+                    'bg-surface-2 text-fg-muted opacity-50 cursor-not-allowed'"
+                class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Transfer
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════
      INCOMING CALL MODAL
      ══════════════════════════════════════════════════════════════════ --}}
 <div x-data="{ show: false, callerNumber: '' }" @incoming-call.window="show = true; callerNumber = $event.detail" x-show="show" x-cloak
@@ -277,7 +437,11 @@
                 callStatus: 'Connecting…',
                 callDuration: '',
                 _callTimer: null,
+                isMuted: false,
+                isOnHold: false,
                 canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
+
+                // ── initialisation ──────────────────────────────────────
 
                 async enableCalling() {
                     if (!this.canAcceptCalls) {
@@ -334,6 +498,8 @@
                     _twilioDevice.register();
                 },
 
+                // ── inbound ─────────────────────────────────────────────
+
                 acceptIncoming() {
                     if (!_twilioIncomingCall) return;
                     _twilioIncomingCall.accept();
@@ -341,6 +507,8 @@
                     _twilioIncomingCall = null;
                     this.hasIncomingCall = false;
                     this.hasActiveCall = true;
+                    this.isMuted = false;
+                    this.isOnHold = false;
                     this.callStatus = 'In call…';
                     this.attachCallEvents(_twilioActiveCall);
                 },
@@ -351,6 +519,8 @@
                     _twilioIncomingCall = null;
                     this.hasIncomingCall = false;
                 },
+
+                // ── outbound ────────────────────────────────────────────
 
                 openDialer() {
                     if (!this.deviceReady) {
@@ -363,9 +533,8 @@
                 makeCall(number) {
                     if (!_twilioDevice || !number) return;
                     this.callStatus = 'Dialling…';
-                    // Defer connect() outside Alpine's synchronous proxy evaluation
-                    // context to prevent the "_log non-configurable proxy" invariant
-                    // violation in Twilio's internal SDK logging.
+                    this.isMuted = false;
+                    this.isOnHold = false;
                     const agent = this.identity;
                     setTimeout(async () => {
                         try {
@@ -387,6 +556,8 @@
                     }, 0);
                 },
 
+                // ── call events ─────────────────────────────────────────
+
                 attachCallEvents(call) {
                     call.on('accept', () => {
                         this.callStatus = 'In call';
@@ -395,22 +566,140 @@
                     call.on('disconnect', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
+                        this.isMuted = false;
+                        this.isOnHold = false;
                         this.callStatus = 'Connecting…';
                         this._stopTimer();
                     });
                     call.on('cancel', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
+                        this.isMuted = false;
+                        this.isOnHold = false;
                         this.callStatus = 'Connecting…';
                         this._stopTimer();
                     });
                     call.on('reject', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
+                        this.isMuted = false;
+                        this.isOnHold = false;
                         this.callStatus = 'Connecting…';
                         this._stopTimer();
                     });
+                    // Listen for do-transfer dispatched from the transfer modal
+                    window.addEventListener('do-transfer', e => this.transferCall(e.detail), {
+                        once: true
+                    });
                 },
+
+                // ── mute ────────────────────────────────────────────────
+
+                toggleMute() {
+                    if (!_twilioActiveCall) return;
+                    this.isMuted = !this.isMuted;
+                    _twilioActiveCall.mute(this.isMuted);
+                    this.callStatus = this.isMuted ? 'Muted' : 'In call';
+                },
+
+                // ── hold ────────────────────────────────────────────────
+
+                async toggleHold() {
+                    if (!_twilioActiveCall) return;
+                    const callSid = _twilioActiveCall.parameters?.CallSid;
+                    if (!callSid) {
+                        window.Toast.show('Call SID not available yet.', 'warning');
+                        return;
+                    }
+                    try {
+                        if (!this.isOnHold) {
+                            await fetch('{{ route('twilio.holdCall') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ??
+                                        ''
+                                },
+                                body: JSON.stringify({
+                                    call_sid: callSid
+                                }),
+                                credentials: 'same-origin',
+                            });
+                            this.isOnHold = true;
+                            this.callStatus = 'On hold';
+                        } else {
+                            await fetch('{{ route('twilio.resumeCall') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ??
+                                        ''
+                                },
+                                body: JSON.stringify({
+                                    call_sid: callSid
+                                }),
+                                credentials: 'same-origin',
+                            });
+                            this.isOnHold = false;
+                            this.callStatus = 'In call';
+                        }
+                    } catch (e) {
+                        console.error('Hold/Resume failed', e);
+                        window.Toast.show('Could not update hold state. Please try again.', 'error');
+                    }
+                },
+
+                // ── transfer ────────────────────────────────────────────
+
+                openTransfer() {
+                    window.dispatchEvent(new CustomEvent('open-transfer'));
+                },
+
+                async transferCall(destination) {
+                    if (!_twilioActiveCall || !destination) return;
+                    const callSid = _twilioActiveCall.parameters?.CallSid;
+                    if (!callSid) {
+                        window.Toast.show('Call SID not available — cannot transfer.', 'warning');
+                        return;
+                    }
+                    try {
+                        this.callStatus = 'Transferring…';
+                        await fetch('{{ route('twilio.transferCall') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
+                            },
+                            body: JSON.stringify({
+                                call_sid: callSid,
+                                to: destination
+                            }),
+                            credentials: 'same-origin',
+                        });
+                        // Hang up the agent's leg — caller is now ringing the transfer target
+                        this.hangUp();
+                        window.Toast.show('Call transferred successfully.', 'success');
+                    } catch (e) {
+                        console.error('Transfer failed', e);
+                        this.callStatus = 'In call';
+                        window.Toast.show('Transfer failed. Please try again.', 'error');
+                    }
+                },
+
+                // ── hang up ─────────────────────────────────────────────
+
+                hangUp() {
+                    if (_twilioActiveCall) {
+                        _twilioActiveCall.disconnect();
+                        _twilioActiveCall = null;
+                        this.hasActiveCall = false;
+                        this.isMuted = false;
+                        this.isOnHold = false;
+                        this._stopTimer();
+                    }
+                },
+
+                // ── timer helpers ───────────────────────────────────────
 
                 _startTimer() {
                     this._stopTimer();
@@ -430,15 +719,6 @@
                         this._callTimer = null;
                     }
                     this.callDuration = '';
-                },
-
-                hangUp() {
-                    if (_twilioActiveCall) {
-                        _twilioActiveCall.disconnect();
-                        _twilioActiveCall = null;
-                        this.hasActiveCall = false;
-                        this._stopTimer();
-                    }
                 },
             }
         }

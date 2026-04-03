@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Twilio\Jwt\AccessToken;
 use Illuminate\Http\Request;
+use Twilio\Rest\Client as TwilioClient;
 use Twilio\TwiML\VoiceResponse;
 use Twilio\Jwt\Grants\VoiceGrant;
 
@@ -91,6 +92,138 @@ class TwilioController extends Controller
     return response($voiceResponse->__toString(), 200)->header(
       "Content-Type",
       "text/xml"
+    );
+  }
+
+  /**
+   * Mute / unmute — handled entirely client-side via Twilio JS SDK.
+   * This endpoint exists for completeness / server-side audit logging.
+   */
+  public function muteCall(Request $request)
+  {
+    $request->validate(['call_sid' => 'required|string|max:64', 'muted' => 'required|boolean']);
+    // Actual muting is done in the browser SDK; nothing to do server-side.
+    return response()->json(['success' => true]);
+  }
+
+  /**
+   * Put a call on hold — redirects the caller's leg to TwiML that plays
+   * hold music on a loop.
+   */
+  public function holdCall(Request $request)
+  {
+    $request->validate(['call_sid' => 'required|string|max:64']);
+
+    $client = $this->twilioClient();
+    $voice  = new VoiceResponse();
+    $voice->play('https://demo.twilio.com/docs/classic.mp3', ['loop' => 0]);
+
+    $client->calls($request->call_sid)
+      ->update(['twiml' => $voice->__toString()]);
+
+    return response()->json(['success' => true]);
+  }
+
+  /**
+   * Resume a call that is on hold — redirects back to the call-routing webhook
+   * so the live agent can be reconnected.
+   */
+  public function resumeCall(Request $request)
+  {
+    $request->validate(['call_sid' => 'required|string|max:64']);
+
+    $client = $this->twilioClient();
+    $client->calls($request->call_sid)
+      ->update(['url' => route('twilio.handleCallRouting'), 'method' => 'POST']);
+
+    return response()->json(['success' => true]);
+  }
+
+  /**
+   * Blind (cold) transfer — redirect the call to a new destination and
+   * disconnect the current agent leg.
+   *
+   * POST /api/call/transfer
+   * { call_sid: "CA…", to: "+15551234567" | "user_42" }
+   */
+  public function transferCall(Request $request)
+  {
+    $request->validate([
+      'call_sid' => 'required|string|max:64',
+      'to'       => 'required|string|max:64',
+    ]);
+
+    $to     = $request->to;
+    $client = $this->twilioClient();
+
+    // Build TwiML that dials the transfer target
+    $voice = new VoiceResponse();
+    $dial  = $voice->dial('', ['callerId' => config('services.twilio.caller_id')]);
+
+    if (preg_match('/^[\d\+\-\(\) ]+$/', $to)) {
+      $dial->number($to);
+    } else {
+      $dial->client($to);
+    }
+
+    $client->calls($request->call_sid)
+      ->update(['twiml' => $voice->__toString()]);
+
+    return response()->json(['success' => true]);
+  }
+
+  /**
+   * Forward all inbound calls to an external number (stored in config / DB).
+   * Returns TwiML used by Twilio webhook when a new inbound call arrives.
+   *
+   * GET /api/call/forward-twiml
+   */
+  public function forwardTwiml(Request $request)
+  {
+    $forwardTo = config('services.twilio.forward_to');
+
+    $voice = new VoiceResponse();
+
+    if (empty($forwardTo)) {
+      $voice->say('Call forwarding is not configured. Please try again later.');
+    } else {
+      $dial = $voice->dial('', ['callerId' => config('services.twilio.caller_id')]);
+      if (preg_match('/^[\d\+\-\(\) ]+$/', $forwardTo)) {
+        $dial->number($forwardTo);
+      } else {
+        $dial->client($forwardTo);
+      }
+    }
+
+    return response($voice->__toString(), 200)->header('Content-Type', 'text/xml');
+  }
+
+  /**
+   * Return online agents that can receive a transferred call.
+   * Used to populate the transfer modal's agent list.
+   */
+  public function availableAgents()
+  {
+    $agents = \App\Models\AgentStatus::with(['statusType', 'user'])
+      ->whereHas('statusType', fn($q) => $q->where('slug', 'phones'))
+      ->get()
+      ->map(fn($s) => [
+        'id'       => $s->user_id,
+        'name'     => trim($s->user->first_name . ' ' . $s->user->last_name),
+        'identity' => 'user_' . $s->user_id,
+      ]);
+
+    return response()->json($agents);
+  }
+
+  // ── helpers ──────────────────────────────────────────────────────
+
+  private function twilioClient(): TwilioClient
+  {
+    return new TwilioClient(
+      config('services.twilio.key'),    // API Key SID  (SK…)
+      config('services.twilio.secret'), // API Secret
+      config('services.twilio.sid')     // Account SID  (AC…)
     );
   }
 }
