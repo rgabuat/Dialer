@@ -1,33 +1,68 @@
-{{-- Inline agent controls – rendered inside the topbar right section --}}
+{{-- ══════════════════════════════════════════════════════════════════
+     Agent Control Bar — topbar widget
+     Tokens used: bg-surface, border-surface, text-fg, text-fg-muted
+     Dark / light mode handled automatically via CSS custom properties.
+     ══════════════════════════════════════════════════════════════════ --}}
 <div x-data="agentPhone()" @make-call.window="makeCall($event.detail)"
     @agent-status-changed.window="canAcceptCalls = ($event.detail.isAvailable ?? canAcceptCalls)"
-    class="flex items-center gap-3">
+    class="flex items-center gap-2">
 
-    {{-- LEFT GROUP: Call controls --}}
-    <div class="flex items-center gap-1.5 px-2 py-1 border border-surface-2 rounded-lg">
+    {{-- ── CALL CONTROLS pill ──────────────────────────────────── --}}
+    <div class="flex items-center gap-1 bg-surface border border-surface rounded-lg px-1.5 py-1">
 
-        {{-- ENABLE CALLING --}}
+        {{-- ENABLE CALLING (device not yet initialised) --}}
         <button x-show="!deviceReady" @click="enableCalling" :disabled="!canAcceptCalls"
-            class="px-3 py-1.5 rounded-md font-semibold text-xs transition"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-150"
             :class="canAcceptCalls
                 ?
-                'bg-blue-600 text-white hover:bg-blue-500' :
-                'bg-surface-2 text-zinc-500 cursor-not-allowed'">
+                'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm' :
+                'bg-surface-2 text-fg-muted cursor-not-allowed opacity-60'">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+            </svg>
             Enable Calling
         </button>
 
-        {{-- DIAL --}}
-        <button x-show="deviceReady && !hasActiveCall" @click="openDialer"
-            class="px-3 py-1.5 rounded-md font-semibold text-xs bg-zinc-700 text-fg-2 hover:bg-zinc-600 transition">
-            Dial
-        </button>
+        {{-- READY — no active call: green dot + Dial button --}}
+        <template x-if="deviceReady && !hasActiveCall">
+            <div class="flex items-center gap-2">
+                {{-- Ready indicator --}}
+                <span class="inline-flex items-center gap-1.5 text-xs text-fg-muted font-medium">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                    Ready
+                </span>
+                {{-- Dial button --}}
+                <button @click="openDialer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-surface-2 hover:bg-hover text-fg transition-all duration-150">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+                    </svg>
+                    Dial
+                </button>
+            </div>
+        </template>
 
-        {{-- ACTIVE CALL status + HANG UP --}}
+        {{-- ACTIVE CALL: pulsing dot + timer + status + hang-up --}}
         <template x-if="hasActiveCall">
             <div class="flex items-center gap-2">
-                <span class="text-xs text-green-400 font-semibold" x-text="callStatus"></span>
+                {{-- Live pulse indicator --}}
+                <span class="relative inline-flex w-2.5 h-2.5">
+                    <span
+                        class="absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-75 animate-ping"></span>
+                    <span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                </span>
+                {{-- Status + elapsed timer --}}
+                <span class="text-xs text-fg font-medium font-mono tracking-wide"
+                    x-text="callStatus + (callDuration ? '  ' + callDuration : '')"></span>
+                {{-- Hang Up --}}
                 <button @click="hangUp"
-                    class="px-3 py-1.5 rounded-md font-semibold text-xs bg-red-600 text-white hover:bg-red-500 transition">
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition-all duration-150 shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 3.75a.75.75 0 0 1 .75.75V8.25a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75V4.5a.75.75 0 0 1 .75-.75h4.5ZM9 15.75a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-.75.75H4.5a.75.75 0 0 1-.75-.75V16.5a.75.75 0 0 1 .75-.75H9ZM3.375 7.5A.375.375 0 0 0 3 7.875v8.25c0 .207.168.375.375.375h17.25A.375.375 0 0 0 21 16.125V7.875A.375.375 0 0 0 20.625 7.5H3.375Z" />
+                    </svg>
                     Hang Up
                 </button>
             </div>
@@ -35,45 +70,191 @@
 
     </div>
 
-    {{-- SEPARATOR --}}
-    <div class="bg-zinc-700 w-px h-6"></div>
+    {{-- ── SEPARATOR ───────────────────────────────────────────── --}}
+    <div class="w-px h-5 bg-surface-2"></div>
 
-    {{-- RIGHT GROUP: Status + time --}}
-    <div class="flex items-center px-2 py-1 border border-surface-2 rounded-lg">
+    {{-- ── AGENT STATUS switcher ───────────────────────────────── --}}
+    <div class="flex items-center bg-surface border border-surface rounded-lg px-1.5 py-1">
         @livewire('agent.status-switcher')
     </div>
 
 </div>
 
-{{-- DIAL MODAL --}}
-<div x-data="{ open: false }" x-on:open-dialer.window="open = true" x-show="open" x-cloak
-    class="z-50 fixed inset-0 flex justify-center items-center bg-black/60">
-    <div class="bg-surface shadow-xl p-6 border border-surface rounded-xl w-full max-w-sm">
-        <h2 class="mb-4 font-semibold text-fg text-lg">Outbound Call</h2>
-        <input x-ref="dialNumber" type="tel" placeholder="+1234567890"
-            class="bg-surface-2 mb-4 px-4 py-2 border border-surface-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 w-full text-fg placeholder-fg-muted" />
-        <div class="flex justify-end gap-3">
+
+{{-- ══════════════════════════════════════════════════════════════════
+     DIAL MODAL — numeric keypad dialer
+     ══════════════════════════════════════════════════════════════════ --}}
+<div x-data="{
+    open: false,
+    digits: '',
+    press(d) { this.digits += d; },
+    del() { this.digits = this.digits.slice(0, -1); },
+    call() {
+        if (!this.digits) return;
+        this.$dispatch('make-call', this.digits);
+        this.open = false;
+        this.digits = '';
+    }
+}"
+    x-on:open-dialer.window="open = true; digits = ''; $nextTick(() => $refs.dialDisplay?.focus())" x-show="open"
+    x-cloak x-trap.noscroll="open" @keydown.escape.window="open = false"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+
+    {{-- Backdrop --}}
+    <div class="absolute inset-0" @click="open = false"></div>
+
+    {{-- Panel --}}
+    <div class="relative z-10 w-full max-w-xs bg-surface border border-surface rounded-2xl shadow-2xl animate-modal-in overflow-hidden"
+        @click.stop>
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-surface">
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500/15">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+                    </svg>
+                </span>
+                <h2 class="text-fg font-semibold text-sm">Outbound Call</h2>
+            </div>
             <button @click="open = false"
-                class="bg-surface-2 hover:bg-surface px-4 py-2 rounded-lg text-fg-3 text-sm">Cancel</button>
-            <button @click="$dispatch('make-call', $refs.dialNumber.value); open = false"
-                class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg font-semibold text-fg text-sm">Call</button>
+                class="flex items-center justify-center w-7 h-7 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
+
+        {{-- Number display --}}
+        <div class="px-5 pt-4 pb-2">
+            <div class="relative flex items-center">
+                <input x-ref="dialDisplay" x-model="digits" type="tel" placeholder="+1 (000) 000-0000"
+                    @keydown.enter="call()"
+                    class="w-full bg-surface-2 border border-surface rounded-xl px-4 py-3 pr-10
+                              text-fg text-base font-mono tracking-widest text-center
+                              placeholder-fg-muted
+                              focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition" />
+                {{-- Backspace --}}
+                <button @click="del()" x-show="digits.length > 0"
+                    class="absolute right-3 text-fg-muted hover:text-fg transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Keypad --}}
+        <div class="px-5 pb-5 pt-2 grid grid-cols-3 gap-2">
+            @foreach ([['1', ''], ['2', 'ABC'], ['3', 'DEF'], ['4', 'GHI'], ['5', 'JKL'], ['6', 'MNO'], ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ'], ['*', ''], ['0', '+'], ['#', '']] as [$digit, $sub])
+                <button @click="press('{{ $digit }}')"
+                    class="flex flex-col items-center justify-center h-14 rounded-xl
+                           bg-surface-2 hover:bg-hover active:scale-95
+                           text-fg font-semibold text-base
+                           border border-surface
+                           transition-all duration-100 select-none">
+                    {{ $digit }}
+                    @if ($sub)
+                        <span
+                            class="text-fg-muted text-[9px] font-normal tracking-widest mt-0.5">{{ $sub }}</span>
+                    @endif
+                </button>
+            @endforeach
+        </div>
+
+        {{-- Action buttons --}}
+        <div class="flex gap-3 px-5 pb-5">
+            <button @click="open = false; digits = ''"
+                class="flex-1 py-2.5 rounded-xl bg-surface-2 hover:bg-hover text-fg-3 text-sm font-medium transition">
+                Cancel
+            </button>
+            <button @click="call()" :disabled="!digits"
+                :class="digits ? 'bg-green-600 hover:bg-green-500 text-white shadow-sm' :
+                    'bg-surface-2 text-fg-muted opacity-50 cursor-not-allowed'"
+                class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+                </svg>
+                Call
+            </button>
+        </div>
+
     </div>
 </div>
 
-{{-- INCOMING CALL MODAL --}}
+
+{{-- ══════════════════════════════════════════════════════════════════
+     INCOMING CALL MODAL
+     ══════════════════════════════════════════════════════════════════ --}}
 <div x-data="{ show: false, callerNumber: '' }" @incoming-call.window="show = true; callerNumber = $event.detail" x-show="show" x-cloak
-    class="z-50 fixed inset-0 flex justify-center items-center bg-black/60">
-    <div class="bg-surface shadow-xl p-6 border border-surface rounded-xl w-full max-w-sm text-center">
-        <div class="mb-1 text-4xl">📞</div>
-        <h2 class="mb-1 font-semibold text-fg text-lg">Incoming Call</h2>
-        <p class="mb-5 text-fg-3 text-sm" x-text="callerNumber || 'Unknown caller'"></p>
-        <div class="flex justify-center gap-4">
-            <button @click="$dispatch('reject-call'); show = false"
-                class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg font-semibold text-fg text-sm">Reject</button>
-            <button @click="$dispatch('accept-call'); show = false"
-                class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-lg font-semibold text-fg text-sm">Accept</button>
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+
+    <div class="relative z-10 w-full max-w-xs bg-surface border border-surface rounded-2xl shadow-2xl animate-modal-in overflow-hidden text-center"
+        @click.stop>
+
+        {{-- Animated ring --}}
+        <div class="relative flex items-center justify-center pt-8 pb-4">
+            {{-- outer ripples --}}
+            <span class="absolute w-24 h-24 rounded-full bg-green-500/10 animate-ping"
+                style="animation-duration:1.4s"></span>
+            <span class="absolute w-16 h-16 rounded-full bg-green-500/15 animate-ping"
+                style="animation-duration:1s"></span>
+            {{-- icon circle --}}
+            <span
+                class="relative inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-500/20 border border-green-500/30">
+                <svg class="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+                </svg>
+            </span>
         </div>
+
+        {{-- Info --}}
+        <div class="px-6 pb-2">
+            <p class="text-fg-muted text-xs font-medium tracking-widest uppercase mb-1">Incoming Call</p>
+            <p class="text-fg font-semibold text-lg truncate" x-text="callerNumber || 'Unknown caller'"></p>
+            {{-- ringing dots --}}
+            <p class="text-fg-muted text-xs mt-1 flex items-center justify-center gap-0.5">
+                Ringing
+                <span class="inline-flex gap-0.5 ml-1">
+                    <span class="w-1 h-1 bg-fg-muted rounded-full animate-bounce" style="animation-delay:0ms"></span>
+                    <span class="w-1 h-1 bg-fg-muted rounded-full animate-bounce"
+                        style="animation-delay:150ms"></span>
+                    <span class="w-1 h-1 bg-fg-muted rounded-full animate-bounce"
+                        style="animation-delay:300ms"></span>
+                </span>
+            </p>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex gap-3 px-6 py-5">
+            <button @click="$dispatch('reject-call'); show = false"
+                class="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl
+                           bg-red-600/15 hover:bg-red-600/25 text-red-500 font-semibold text-sm
+                           border border-red-500/20 transition">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" />
+                </svg>
+                Reject
+            </button>
+            <button @click="$dispatch('accept-call'); show = false"
+                class="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl
+                           bg-green-600 hover:bg-green-500 text-white font-semibold text-sm
+                           shadow-sm transition">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" />
+                </svg>
+                Accept
+            </button>
+        </div>
+
     </div>
 </div>
 
@@ -94,6 +275,8 @@
                 hasActiveCall: false,
                 hasIncomingCall: false,
                 callStatus: 'Connecting…',
+                callDuration: '',
+                _callTimer: null,
                 canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
 
                 async enableCalling() {
@@ -206,23 +389,47 @@
 
                 attachCallEvents(call) {
                     call.on('accept', () => {
-                        this.callStatus = 'In call…';
+                        this.callStatus = 'In call';
+                        this._startTimer();
                     });
                     call.on('disconnect', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
                         this.callStatus = 'Connecting…';
+                        this._stopTimer();
                     });
                     call.on('cancel', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
                         this.callStatus = 'Connecting…';
+                        this._stopTimer();
                     });
                     call.on('reject', () => {
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
                         this.callStatus = 'Connecting…';
+                        this._stopTimer();
                     });
+                },
+
+                _startTimer() {
+                    this._stopTimer();
+                    this.callDuration = '00:00';
+                    let secs = 0;
+                    this._callTimer = setInterval(() => {
+                        secs++;
+                        const m = String(Math.floor(secs / 60)).padStart(2, '0');
+                        const s = String(secs % 60).padStart(2, '0');
+                        this.callDuration = `${m}:${s}`;
+                    }, 1000);
+                },
+
+                _stopTimer() {
+                    if (this._callTimer) {
+                        clearInterval(this._callTimer);
+                        this._callTimer = null;
+                    }
+                    this.callDuration = '';
                 },
 
                 hangUp() {
@@ -230,6 +437,7 @@
                         _twilioActiveCall.disconnect();
                         _twilioActiveCall = null;
                         this.hasActiveCall = false;
+                        this._stopTimer();
                     }
                 },
             }
