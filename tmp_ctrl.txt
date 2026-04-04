@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -18,8 +18,8 @@ class TwilioController extends Controller
     $identity = $user ? "user_" . $user->id : "guest";
 
     $token = new AccessToken(
-      config("services.twilio.sid"), // Account SID (AC…)
-      config("services.twilio.key"), // API Key (SK…)
+      config("services.twilio.sid"), // Account SID (ACâ€¦)
+      config("services.twilio.key"), // API Key (SKâ€¦)
       config("services.twilio.secret"), // API Secret
       3600, // 1 hour
       $identity
@@ -47,8 +47,6 @@ class TwilioController extends Controller
 
   public function handleCallRouting(Request $request)
   {
-    \Log::info('[Twilio] handleCallRouting', $request->all());
-
     $to         = $request->input('To', '');
     $from       = $request->input('From', '');
     $callSid    = $request->input('CallSid');
@@ -58,7 +56,7 @@ class TwilioController extends Controller
     $voiceResponse = new VoiceResponse();
 
     if (!empty($to) && $to === config('services.twilio.phone_number')) {
-      // ── Inbound: someone rang our Twilio number ────────────────────────
+      // â”€â”€ Inbound: someone rang our Twilio number â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       $availableAgents = \App\Models\AgentStatus::with(['statusType', 'user'])
         ->whereHas('statusType', fn($q) => $q->where('is_available', true))
         ->get();
@@ -80,11 +78,9 @@ class TwilioController extends Controller
       } else {
         $dial = $voiceResponse->dial('', [
           'callerId' => config('services.twilio.caller_id'),
-          'timeout'          => 20,
-          'action'            => $callbackUrl,
-          'method'            => 'POST',
-          'statusCallback'    => $callbackUrl,
-          'statusCallbackEvent' => 'completed',
+          'timeout'  => 20,
+          'action'   => $callbackUrl,
+          'method'   => 'POST',
         ]);
         foreach ($availableAgents as $status) {
           $dial->client('agent_' . $status->user_id);
@@ -92,9 +88,9 @@ class TwilioController extends Controller
       }
 
     } elseif (!empty($to)) {
-      // ── Outbound: browser client dialling a number/agent ──────────────
+      // â”€â”€ Outbound: browser client dialling a number/agent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       $userId = null;
-      if ($agentParam && preg_match('/^(?:agent|user)_(\d+)$/', $agentParam, $m)) {
+      if ($agentParam && preg_match('/^agent_(\d+)$/', $agentParam, $m)) {
         $userId = (int) $m[1];
       }
 
@@ -117,11 +113,9 @@ class TwilioController extends Controller
       ]);
 
       $dial = $voiceResponse->dial('', [
-        'callerId'            => config('services.twilio.caller_id'),
-        'action'              => $callbackUrl,
-        'method'              => 'POST',
-        'statusCallback'      => $callbackUrl,
-        'statusCallbackEvent' => 'completed',
+        'callerId' => config('services.twilio.caller_id'),
+        'action'   => $callbackUrl,
+        'method'   => 'POST',
       ]);
 
       if (preg_match('/^[\d\+\-\(\) ]+$/', $to)) {
@@ -134,8 +128,6 @@ class TwilioController extends Controller
       $voiceResponse->say('Sorry, no destination was provided.');
     }
 
-    \Log::info('[Twilio] TwiML response', ['xml' => $voiceResponse->__toString()]);
-
     return response($voiceResponse->__toString(), 200)
       ->header('Content-Type', 'text/xml');
   }
@@ -143,12 +135,10 @@ class TwilioController extends Controller
   /**
    * Twilio posts here when the Dial leg finishes.
    * Updates the conversation with final status and duration.
-   * POST /api/call/complete  (no CSRF – Twilio webhook)
+   * POST /api/call/complete  (no CSRF â€“ Twilio webhook)
    */
   public function callComplete(Request $request)
   {
-    \Log::info('[Twilio] callComplete', $request->all());
-
     $callSid      = $request->input('CallSid');
     $dialStatus   = $request->input('DialCallStatus', 'completed');
     $dialDuration = (int) $request->input('DialCallDuration', 0);
@@ -163,7 +153,7 @@ class TwilioController extends Controller
 
     $dialTo      = $request->input('DialTo', '');
     $agentUserId = null;
-    if (preg_match('/^client:(?:agent|user)_(\d+)$/', $dialTo, $m)) {
+    if (preg_match('/^client:agent_(\d+)$/', $dialTo, $m)) {
       $agentUserId = (int) $m[1];
     }
 
@@ -185,7 +175,7 @@ class TwilioController extends Controller
   }
 
   /**
-   * Mute / unmute — handled entirely client-side via Twilio JS SDK.
+   * Mute / unmute â€” handled entirely client-side via Twilio JS SDK.
    * This endpoint exists for completeness / server-side audit logging.
    */
   public function muteCall(Request $request)
@@ -196,7 +186,7 @@ class TwilioController extends Controller
   }
 
   /**
-   * Put a call on hold — redirects the caller's leg to TwiML that plays
+   * Put a call on hold â€” redirects the caller's leg to TwiML that plays
    * hold music on a loop.
    */
   public function holdCall(Request $request)
@@ -214,7 +204,7 @@ class TwilioController extends Controller
   }
 
   /**
-   * Resume a call that is on hold — redirects back to the call-routing webhook
+   * Resume a call that is on hold â€” redirects back to the call-routing webhook
    * so the live agent can be reconnected.
    */
   public function resumeCall(Request $request)
@@ -229,11 +219,11 @@ class TwilioController extends Controller
   }
 
   /**
-   * Blind (cold) transfer — redirect the call to a new destination and
+   * Blind (cold) transfer â€” redirect the call to a new destination and
    * disconnect the current agent leg.
    *
    * POST /api/call/transfer
-   * { call_sid: "CA…", to: "+15551234567" | "user_42" }
+   * { call_sid: "CAâ€¦", to: "+15551234567" | "user_42" }
    */
   public function transferCall(Request $request)
   {
@@ -318,14 +308,14 @@ class TwilioController extends Controller
     return response()->json($agents);
   }
 
-  // ── helpers ──────────────────────────────────────────────────────
+  // â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private function twilioClient(): TwilioClient
   {
     return new TwilioClient(
-      config('services.twilio.key'),    // API Key SID  (SK…)
+      config('services.twilio.key'),    // API Key SID  (SKâ€¦)
       config('services.twilio.secret'), // API Secret
-      config('services.twilio.sid')     // Account SID  (AC…)
+      config('services.twilio.sid')     // Account SID  (ACâ€¦)
     );
   }
 }

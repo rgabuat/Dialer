@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/call/agents',    [TwilioController::class, 'availableAgents'])->name('twilio.availableAgents');
 });
 
-// ── Forward TwiML — called directly by Twilio (no auth) ──────────────────
+// ── Twilio webhooks — no auth, called directly by Twilio ─────────────────
+Route::post('/call/complete',     [TwilioController::class, 'callComplete'])->name('twilio.callComplete');
 Route::get('/call/forward-twiml', [TwilioController::class, 'forwardTwiml'])->name('twilio.forwardTwiml');
 

@@ -10,6 +10,7 @@ class Conversation extends Model
   use HasFactory;
 
   protected $fillable = [
+    "call_sid",
     "channel",
     "direction",
     "status",
@@ -21,11 +22,13 @@ class Conversation extends Model
     "campaign_id",
     "assigned_to",
     "completed_by",
+    "ended_at",
     "started_at",
   ];
 
   protected $casts = [
     "started_at" => "datetime",
+    "ended_at"   => "datetime",
   ];
 
   public function campaign()
