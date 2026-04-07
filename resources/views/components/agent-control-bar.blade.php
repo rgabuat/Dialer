@@ -480,6 +480,14 @@
                             once: true
                         });
                     }
+
+                    // Auto-start device on fresh page load if status is already call-eligible
+                    if (!window._twilioDevice) {
+                        const slug = @json(strtolower(auth()->user()?->agentStatus?->statusType?->slug ?? ''));
+                        if (slug === 'phones' || slug === 'outbound') {
+                            this.$nextTick(() => this.enableCalling());
+                        }
+                    }
                 },
 
                 // ── initialisation ──────────────────────────────────────
