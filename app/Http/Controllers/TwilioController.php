@@ -82,14 +82,12 @@ class TwilioController extends Controller
       } else {
         $dial = $voiceResponse->dial('', [
           'callerId' => config('services.twilio.caller_id'),
-          'timeout'          => 20,
-          'action'            => $callbackUrl,
-          'method'            => 'POST',
-          'statusCallback'    => $callbackUrl,
-          'statusCallbackEvent' => 'completed',
+          'timeout'  => 20,
+          'action'   => $callbackUrl,
+          'method'   => 'POST',
         ]);
         foreach ($availableAgents as $status) {
-          $dial->client('user_' . $status->user_id);
+          $dial->client()->identity('user_' . $status->user_id);
         }
       }
 
@@ -121,17 +119,15 @@ class TwilioController extends Controller
       );
 
       $dial = $voiceResponse->dial('', [
-        'callerId'            => config('services.twilio.caller_id'),
-        'action'              => $callbackUrl,
-        'method'              => 'POST',
-        'statusCallback'      => $callbackUrl,
-        'statusCallbackEvent' => 'completed',
+        'callerId' => config('services.twilio.caller_id'),
+        'action'   => $callbackUrl,
+        'method'   => 'POST',
       ]);
 
       if (preg_match('/^[\d\+\-\(\) ]+$/', $to)) {
         $dial->number($to);
       } else {
-        $dial->client($to);
+        $dial->client()->identity($to);
       }
 
     } else {
@@ -184,7 +180,17 @@ class TwilioController extends Controller
 
     \App\Models\Conversation::where('call_sid', $callSid)->update($update);
 
-    return response('<Response></Response>', 200)
+    $voice = new VoiceResponse();
+
+    if (in_array($dialStatus, ['busy', 'no-answer', 'failed', 'canceled'])) {
+      $voice->say('We\'re sorry, no agents are currently available. Please call back later. Goodbye.');
+    } else {
+      $voice->say('Thank you for calling. Goodbye.');
+    }
+
+    $voice->hangup();
+
+    return response($voice->__toString(), 200)
       ->header('Content-Type', 'text/xml');
   }
 

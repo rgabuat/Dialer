@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'api/call-routing',
+        'api/call/complete',
+        'api/call/forward-twiml',
     ];
 }
