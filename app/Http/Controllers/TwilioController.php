@@ -65,15 +65,17 @@ class TwilioController extends Controller
 
       $campaign = \App\Models\Campaign::where('phone_number', $to)->first();
 
-      \App\Models\Conversation::create([
-        'call_sid'      => $callSid,
-        'channel'       => 'voice',
-        'direction'     => 'inbound',
-        'status'        => 'in_progress',
-        'contact_phone' => $from,
-        'campaign_id'   => $campaign?->id,
-        'started_at'    => now(),
-      ]);
+      \App\Models\Conversation::firstOrCreate(
+        ['call_sid' => $callSid],
+        [
+          'channel'       => 'voice',
+          'direction'     => 'inbound',
+          'status'        => 'in_progress',
+          'contact_phone' => $from,
+          'campaign_id'   => $campaign?->id,
+          'started_at'    => now(),
+        ]
+      );
 
       if ($availableAgents->isEmpty()) {
         $voiceResponse->say('All agents are currently unavailable. Please try again later.');
@@ -87,7 +89,7 @@ class TwilioController extends Controller
           'statusCallbackEvent' => 'completed',
         ]);
         foreach ($availableAgents as $status) {
-          $dial->client('agent_' . $status->user_id);
+          $dial->client('user_' . $status->user_id);
         }
       }
 
@@ -105,16 +107,18 @@ class TwilioController extends Controller
           ->first();
       }
 
-      \App\Models\Conversation::create([
-        'call_sid'      => $callSid,
-        'channel'       => 'voice',
-        'direction'     => 'outbound',
-        'status'        => 'in_progress',
-        'contact_phone' => $to,
-        'campaign_id'   => $campaign?->id,
-        'assigned_to'   => $userId,
-        'started_at'    => now(),
-      ]);
+      \App\Models\Conversation::firstOrCreate(
+        ['call_sid' => $callSid],
+        [
+          'channel'       => 'voice',
+          'direction'     => 'outbound',
+          'status'        => 'in_progress',
+          'contact_phone' => $to,
+          'campaign_id'   => $campaign?->id,
+          'assigned_to'   => $userId,
+          'started_at'    => now(),
+        ]
+      );
 
       $dial = $voiceResponse->dial('', [
         'callerId'            => config('services.twilio.caller_id'),

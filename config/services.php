@@ -37,6 +37,7 @@ return [
         'secret'        => env('TWILIO_API_SECRET'),
         'twiml_app_sid' => env('TWILIO_TWIML_APP_SID'),
         'caller_id'     => env('TWILIO_CALLER_ID'),
+        'phone_number'  => env('TWILIO_CALLER_ID'), // inbound number — same as caller_id
         'forward_to'    => env('TWILIO_FORWARD_TO'),   // used by forwardTwiml()
     ],
 
