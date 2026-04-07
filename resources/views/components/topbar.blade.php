@@ -26,13 +26,6 @@
             <x-heroicon-o-bell class="w-6 h-6" />
         </button>
 
-        {{-- Theme toggle --}}
-        <button @click="$store.theme.toggle()" title="Toggle light / dark mode"
-            class="flex items-center justify-center w-8 h-8 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors">
-            <x-heroicon-o-sun class="w-5 h-5" x-show="$store.theme.isDark" />
-            <x-heroicon-o-moon class="w-5 h-5" x-show="!$store.theme.isDark" x-cloak />
-        </button>
-
         <!-- User dropdown -->
         <div x-data="{ open: false }" class="relative">
             <!-- Avatar -->
