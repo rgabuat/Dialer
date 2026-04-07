@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Twilio\Rest\Client as TwilioClient;
 use Twilio\TwiML\VoiceResponse;
 use Twilio\Jwt\Grants\VoiceGrant;
+use App\Models\VoiceSetting;
 
 class TwilioController extends Controller
 {
@@ -56,6 +57,7 @@ class TwilioController extends Controller
 
     $callbackUrl   = rtrim(config('app.url'), '/') . '/api/call/complete';
     $voiceResponse = new VoiceResponse();
+    $vs            = VoiceSetting::instance();
 
     if (!empty($to) && $to === config('services.twilio.phone_number')) {
       // ── Inbound: someone rang our Twilio number ────────────────────────
@@ -78,14 +80,29 @@ class TwilioController extends Controller
       );
 
       if ($availableAgents->isEmpty()) {
-        $voiceResponse->say('All agents are currently unavailable. Please try again later.');
+        $voiceResponse->say($vs->tts_no_answer, [
+          'voice'    => $vs->tts_voice,
+          'language' => $vs->tts_language,
+        ]);
       } else {
-        $dial = $voiceResponse->dial('', [
+        // Optional greeting while agents ring
+        if (!empty($vs->greeting_message)) {
+          $voiceResponse->say($vs->greeting_message, [
+            'voice'    => $vs->tts_voice,
+            'language' => $vs->tts_language,
+          ]);
+        }
+        $dialAttrs = [
           'callerId' => config('services.twilio.caller_id'),
-          'timeout'  => 20,
+          'timeout'  => $vs->inbound_timeout,
           'action'   => $callbackUrl,
           'method'   => 'POST',
-        ]);
+        ];
+        if ($vs->recording_enabled) {
+          $dialAttrs['record']            = 'record-from-answer';
+          $dialAttrs['recordingChannels'] = $vs->recording_channels;
+        }
+        $dial = $voiceResponse->dial('', $dialAttrs);
         foreach ($availableAgents as $status) {
           $dial->client()->identity('user_' . $status->user_id);
         }
@@ -118,11 +135,16 @@ class TwilioController extends Controller
         ]
       );
 
-      $dial = $voiceResponse->dial('', [
+      $dialAttrs = [
         'callerId' => config('services.twilio.caller_id'),
         'action'   => $callbackUrl,
         'method'   => 'POST',
-      ]);
+      ];
+      if ($vs->recording_enabled) {
+        $dialAttrs['record']            = 'record-from-answer';
+        $dialAttrs['recordingChannels'] = $vs->recording_channels;
+      }
+      $dial = $voiceResponse->dial('', $dialAttrs);
 
       if (preg_match('/^[\d\+\-\(\) ]+$/', $to)) {
         $dial->number($to);
@@ -180,14 +202,19 @@ class TwilioController extends Controller
 
     \App\Models\Conversation::where('call_sid', $callSid)->update($update);
 
+    $vs    = VoiceSetting::instance();
     $voice = new VoiceResponse();
 
-    if (in_array($dialStatus, ['busy', 'no-answer', 'failed', 'canceled'])) {
-      $voice->say('We\'re sorry, no agents are currently available. Please call back later. Goodbye.');
-    } else {
-      $voice->say('Thank you for calling. Goodbye.');
-    }
+    $ttsMap = [
+      'completed' => $vs->tts_completed,
+      'busy'      => $vs->tts_busy,
+      'no-answer' => $vs->tts_no_answer,
+      'failed'    => $vs->tts_failed,
+      'canceled'  => $vs->tts_canceled,
+    ];
 
+    $message = $ttsMap[$dialStatus] ?? $vs->tts_completed;
+    $voice->say($message, ['voice' => $vs->tts_voice, 'language' => $vs->tts_language]);
     $voice->hangup();
 
     return response($voice->__toString(), 200)
@@ -215,7 +242,7 @@ class TwilioController extends Controller
 
     $client = $this->twilioClient();
     $voice  = new VoiceResponse();
-    $voice->play('https://demo.twilio.com/docs/classic.mp3', ['loop' => 0]);
+    $voice->play(VoiceSetting::instance()->hold_music_url, ['loop' => 0]);
 
     $client->calls($request->call_sid)
       ->update(['twiml' => $voice->__toString()]);

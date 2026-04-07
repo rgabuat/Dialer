@@ -9,6 +9,7 @@ use App\Livewire\Leads\LeadsIndex;
 use App\Livewire\Roles\RolesIndex;
 use App\Livewire\Settings\Phone;
 use App\Livewire\Settings\Profile;
+use App\Livewire\Settings\Voice;
 use App\Livewire\Stores\StoreEdit;
 use App\Livewire\Users\UserCreate;
 use App\Livewire\Users\UsersIndex;
@@ -88,6 +89,7 @@ Route::middleware(["auth"])->group(function () {
       "settings.preferences"
     );
     Route::get("/settings/phone", Phone::class)->name("settings.phone");
+    Route::get("/settings/voice", Voice::class)->name("settings.voice");
 
     //users
     Route::get("/users", UsersIndex::class)->name("users.index");
