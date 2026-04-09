@@ -1,0 +1,38 @@
+---
+title: DIDs Module — Data Model & UI Flow
+---
+flowchart TD
+    subgraph DATA["Data Model"]
+        direction TB
+        DID["Did\nphone_number (unique)\ndescription\nis_active"]
+        IG["InGroup"]
+        IVR["IvrMenu"]
+        CAMP["Campaign"]
+
+        DID -->|"belongsTo (nullable)"| IG
+        DID -->|"belongsTo (nullable)"| IVR
+        DID -->|"belongsTo (nullable)"| CAMP
+    end
+
+    subgraph ROUTING["Call Routing Decision"]
+        direction LR
+        MATCH["DID matched\nphone_number = Twilio To"]
+        HAS_IVR{"ivr_menu_id set?"}
+        HAS_GROUP{"in_group_id set?"}
+        SERVE_IVR["serveIvrMenu"]
+        ROUTE_GROUP["routeToInGroup"]
+        NO_DEST["Hang up\nnot configured"]
+
+        MATCH --> HAS_IVR
+        HAS_IVR -- "yes" --> SERVE_IVR
+        HAS_IVR -- "no" --> HAS_GROUP
+        HAS_GROUP -- "yes" --> ROUTE_GROUP
+        HAS_GROUP -- "no" --> NO_DEST
+    end
+
+    subgraph UI["UI Components"]
+        direction TB
+        IDX["DidsIndex\n/dids\nsearch, paginate\nshows In-Group / IVR Menu / Campaign"]
+        CREATE["DidCreate\n/did/create\nphone_number, description\ndestination: in_group | ivr_menu\nis_active"]
+        EDIT["DidEdit\n/did/{id}/edit\nsame form + delete confirm"]
+    end

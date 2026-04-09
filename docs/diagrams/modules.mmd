@@ -1,5 +1,6 @@
 flowchart TD
     Dialer["Dialer Modules"]
+    Dialer --> Inbound["Inbound"]
     Dialer --> Activitylogs["Activity Logs"]
     Dialer --> Agent["Agent"]
     Dialer --> Auth["Auth"]
@@ -11,3 +12,7 @@ flowchart TD
     Dialer --> Stores["Stores"]
     Dialer --> UserGroups["User Groups"]
     Dialer --> Users["Users"]
+
+    Inbound --> InGroups["In-Groups"]
+    Inbound --> DIDs["DIDs"]
+    Inbound --> IvrMenus["IVR Menus"]

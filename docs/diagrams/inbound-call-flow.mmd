@@ -1,0 +1,108 @@
+---
+title: Inbound Call Flow — DID → IVR → In-Group → Agent
+---
+flowchart TD
+    TWILIO(["Twilio\nInbound Call"])
+    WEBHOOK["POST /api/call-routing\nTwilioController@handleCallRouting"]
+
+    TWILIO --> WEBHOOK
+
+    DID_LOOKUP{"DID lookup\nphone_number = To"}
+
+    WEBHOOK --> DID_LOOKUP
+
+    %% ── DID found paths ───────────────────────────────────────────────────
+    DID_FOUND["DID record\nis_active = true"]
+    DID_LOOKUP -- "found" --> DID_FOUND
+
+    DID_HAS_IVR{"ivr_menu_id\nset?"}
+    DID_HAS_GROUP{"in_group_id\nset?"}
+
+    DID_FOUND --> DID_HAS_IVR
+    DID_HAS_IVR -- "no" --> DID_HAS_GROUP
+
+    %% ── IVR path ──────────────────────────────────────────────────────────
+    IVR_SERVE["serveIvrMenu\n<Gather numDigits=1>"]
+    IVR_GATHER["POST /api/call/ivr-gather\nivrGather"]
+    DIGIT_VALID{"digit matches\noption?"}
+    INVALID_ATTEMPT{"attempts ≥\nmax_invalid?"}
+    INVALID_REPEAT["Re-play menu"]
+    INVALID_ACTION["executeIvrInvalidAction\nhangup | repeat | transfer"]
+
+    DID_HAS_IVR -- "yes" --> IVR_SERVE
+    IVR_SERVE -->|"caller presses digit"| IVR_GATHER
+    IVR_GATHER --> DIGIT_VALID
+    DIGIT_VALID -- "no" --> INVALID_ATTEMPT
+    INVALID_ATTEMPT -- "no" --> INVALID_REPEAT
+    INVALID_REPEAT --> IVR_SERVE
+    INVALID_ATTEMPT -- "yes" --> INVALID_ACTION
+
+    OPT_ACTION{"option.action"}
+    DIGIT_VALID -- "yes" --> OPT_ACTION
+
+    OPT_INGROUP["route to\nin_group"]
+    OPT_NESTED["serveIvrMenu\nnested"]
+    OPT_TRANSFER["<Dial><Number>\ntransfer"]
+    OPT_VOICEMAIL["<Record>\nvoicemail"]
+    OPT_HANGUP["<Hangup>"]
+
+    OPT_ACTION -- "in_group" --> OPT_INGROUP
+    OPT_ACTION -- "ivr_menu" --> OPT_NESTED
+    OPT_NESTED --> IVR_SERVE
+    OPT_ACTION -- "transfer" --> OPT_TRANSFER
+    OPT_ACTION -- "voicemail" --> OPT_VOICEMAIL
+    OPT_ACTION -- "hangup" --> OPT_HANGUP
+
+    %% ── In-Group path ──────────────────────────────────────────────────────
+    ROUTE_GROUP["routeToInGroup"]
+
+    DID_HAS_GROUP -- "yes" --> ROUTE_GROUP
+    OPT_INGROUP --> ROUTE_GROUP
+
+    HOURS_CHECK{"isWithinHours\n(hours_json)"}
+    AFTER_HOURS["executeDropAction\nafter_hours_action"]
+    hours_json_null{"hours_json\nnull = always open"}
+
+    ROUTE_GROUP --> hours_json_null
+    hours_json_null -- "null" --> SELECT_AGENTS
+    hours_json_null -- "set" --> HOURS_CHECK
+    HOURS_CHECK -- "outside hours" --> AFTER_HOURS
+    HOURS_CHECK -- "within hours" --> SELECT_AGENTS
+
+    SELECT_AGENTS["selectAgents\nalgorithm"]
+    ROUTING_ALG{"agent_routing"}
+
+    SELECT_AGENTS --> ROUTING_ALG
+
+    RING_ALL["All available\nagents"]
+    ROUND_ROBIN["Oldest\nlast_call_at"]
+    FEWEST["Fewest calls\ntoday"]
+    LONGEST_IDLE["Earliest\nagent_statuses.started_at"]
+
+    ROUTING_ALG -- "ring_all" --> RING_ALL
+    ROUTING_ALG -- "round_robin" --> ROUND_ROBIN
+    ROUTING_ALG -- "fewest_calls" --> FEWEST
+    ROUTING_ALG -- "longest_idle" --> LONGEST_IDLE
+
+    AGENTS_EMPTY{"agents\nfound?"}
+    DROP_ACTION["executeDropAction\ndrop_action"]
+    DIAL["<Dial>\n<Client user_N>"]
+
+    RING_ALL & ROUND_ROBIN & FEWEST & LONGEST_IDLE --> AGENTS_EMPTY
+    AGENTS_EMPTY -- "none" --> DROP_ACTION
+    AGENTS_EMPTY -- "yes" --> DIAL
+
+    DROP_OPTIONS["hangup | transfer\n| voicemail"]
+    DROP_ACTION --> DROP_OPTIONS
+
+    COMPLETE["POST /api/call/complete\ncallComplete\nupdate Conversation"]
+    DIAL -->|"call ends"| COMPLETE
+
+    %% ── No DID: legacy fallback ─────────────────────────────────────────
+    LEGACY["handleLegacyInbound\nCampaign.phone_number match"]
+    OUTBOUND["handleOutbound\nbrowser client dial"]
+
+    DID_LOOKUP -- "not found\n(campaign phone)" --> LEGACY
+    DID_LOOKUP -- "not found\n(To = client:user_N)" --> OUTBOUND
+
+    LEGACY & OUTBOUND --> DIAL

@@ -9,6 +9,12 @@ Module guides are split by domain so feature documentation stays small and easy 
 3. [../tech-stack.md](../tech-stack.md)
 4. [../diagrams/README.md](../diagrams/README.md)
 
+## Inbound
+
+- [in-groups.md](in-groups.md): inbound call queues, agent routing algorithms, and operating hours.
+- [dids.md](dids.md): DID phone numbers and inbound routing targets.
+- [ivr-menus.md](ivr-menus.md): IVR menu configuration and digit-option routing.
+
 ## Operations
 
 - [activitylogs.md](activitylogs.md): activity history and audit visibility.

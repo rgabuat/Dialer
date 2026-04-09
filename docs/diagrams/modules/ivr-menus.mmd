@@ -1,0 +1,51 @@
+---
+title: IVR Menus Module — Data Model & UI Flow
+---
+flowchart TD
+    subgraph DATA["Data Model"]
+        direction TB
+        IVR["IvrMenu\nname, description\ngreeting_type: tts | audio\ngreeting_value\ngather_timeout (default 10s)\ninvalid_attempts_max (default 3)\ninvalid_action: hangup | repeat | transfer\ninvalid_destination\nis_active"]
+        OPT["IvrMenuOption\ndigit (0–9, *, #)\ndescription\naction\ndestination"]
+
+        IVR -->|"hasMany (ordered by digit)"| OPT
+    end
+
+    subgraph OPTION_ACTIONS["Option Action Types"]
+        direction LR
+        A_IG["in_group\ndestination = InGroup.id"]
+        A_IVR["ivr_menu\ndestination = IvrMenu.id\n(nested menu)"]
+        A_TRANS["transfer\ndestination = phone number"]
+        A_VM["voicemail\n<Record> TwiML"]
+        A_HUP["hangup\n<Hangup> TwiML"]
+    end
+
+    subgraph GATHER_FLOW["IVR Gather Flow"]
+        direction TB
+        SERVE["serveIvrMenu\n<Gather numDigits=1 timeout=N>\nplay greeting (TTS or audio)"]
+        WEBHOOK["POST /api/call/ivr-gather\n?menu_id=N&attempts=N"]
+        DIGIT{"digit in\noptions?"}
+        EXECUTE["executeIvrOption\nroute by action"]
+        INVALID{"attempts\n≥ max?"}
+        REPLAY["Re-play\nmenu"]
+        INVALID_ACT["executeIvrInvalidAction\nhangup | repeat | transfer"]
+
+        SERVE -->|"caller presses digit"| WEBHOOK
+        WEBHOOK --> DIGIT
+        DIGIT -- "yes" --> EXECUTE
+        DIGIT -- "no" --> INVALID
+        INVALID -- "no" --> REPLAY
+        REPLAY --> SERVE
+        INVALID -- "yes" --> INVALID_ACT
+    end
+
+    subgraph UI["UI Components"]
+        direction TB
+        IDX["IvrMenusIndex\n/ivr-menus\nsearch, paginate\nshows options count"]
+        CREATE["IvrMenuCreate\n/ivr-menu/create\nname, greeting type/value\ngather_timeout, invalid config\nis_active"]
+        EDIT["IvrMenuEdit\n/ivr-menu/{id}/edit\nSettings | Digit Options tabs"]
+        subgraph EDIT_TABS["Edit Tabs"]
+            T_SET["Settings tab\nall IvrMenu fields"]
+            T_OPT["Digit Options tab\nadd/remove digit options\ndynamic destination based on action"]
+        end
+        EDIT --> EDIT_TABS
+    end

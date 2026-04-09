@@ -193,23 +193,28 @@ class TwilioController extends Controller
 
     Conversation::where("call_sid", $callSid)->update($update);
 
-    $vs    = VoiceSetting::instance();
+    $vs = VoiceSetting::instance();
     $voice = new VoiceResponse();
 
     $ttsMap = [
-      'completed' => $vs->tts_completed,
-      'busy'      => $vs->tts_busy,
-      'no-answer' => $vs->tts_no_answer,
-      'failed'    => $vs->tts_failed,
-      'canceled'  => $vs->tts_canceled,
+      "completed" => $vs->tts_completed,
+      "busy" => $vs->tts_busy,
+      "no-answer" => $vs->tts_no_answer,
+      "failed" => $vs->tts_failed,
+      "canceled" => $vs->tts_canceled,
     ];
 
     $message = $ttsMap[$dialStatus] ?? $vs->tts_completed;
-    $voice->say($message, ['voice' => $vs->tts_voice, 'language' => $vs->tts_language]);
+    $voice->say($message, [
+      "voice" => $vs->tts_voice,
+      "language" => $vs->tts_language,
+    ]);
     $voice->hangup();
 
-    return response($voice->__toString(), 200)
-      ->header('Content-Type', 'text/xml');
+    return response($voice->__toString(), 200)->header(
+      "Content-Type",
+      "text/xml"
+    );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -231,7 +236,11 @@ class TwilioController extends Controller
 
     $client = $this->twilioClient();
     $voice = new VoiceResponse();
-    $voice->play(VoiceSetting::instance()->hold_music_url ?: 'https://demo.twilio.com/docs/classic.mp3', ['loop' => 0]);
+    $voice->play(
+      VoiceSetting::instance()->hold_music_url ?:
+      "https://demo.twilio.com/docs/classic.mp3",
+      ["loop" => 0]
+    );
 
     $client
       ->calls($request->call_sid)
@@ -245,12 +254,10 @@ class TwilioController extends Controller
     $request->validate(["call_sid" => "required|string|max:64"]);
 
     $client = $this->twilioClient();
-    $client
-      ->calls($request->call_sid)
-      ->update([
-        "url" => route("twilio.handleCallRouting"),
-        "method" => "POST",
-      ]);
+    $client->calls($request->call_sid)->update([
+      "url" => route("twilio.handleCallRouting"),
+      "method" => "POST",
+    ]);
 
     return response()->json(["success" => true]);
   }
@@ -577,11 +584,9 @@ class TwilioController extends Controller
       ]) &&
       $agents->count() === 1
     ) {
-      $inGroup
-        ->users()
-        ->updateExistingPivot($agents->first()["user_id"], [
-          "last_call_at" => now(),
-        ]);
+      $inGroup->users()->updateExistingPivot($agents->first()["user_id"], [
+        "last_call_at" => now(),
+      ]);
     }
 
     return $this->twimlResponse($voice);

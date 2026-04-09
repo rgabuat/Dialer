@@ -14,7 +14,17 @@ This directory stores Mermaid source files used by the documentation.
 - [app-structure.mmd](app-structure.mmd): repository structure overview.
 - [modules.mmd](modules.mmd): high-level feature module map.
 
+## Core Diagrams
+
+- [inbound-call-flow.mmd](inbound-call-flow.mmd): end-to-end inbound call flow (DID → IVR → In-Group → Agent).
+
 ## Module Diagrams
+
+### Inbound
+
+- [modules/in-groups.mmd](modules/in-groups.mmd)
+- [modules/dids.mmd](modules/dids.mmd)
+- [modules/ivr-menus.mmd](modules/ivr-menus.mmd)
 
 ### Operations
 

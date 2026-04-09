@@ -14,6 +14,13 @@ This directory centralizes application documentation so operational guides, modu
 - [app-structure.md](app-structure.md): repository and `app/` layout.
 - [tech-stack.md](tech-stack.md): frameworks, libraries, and tooling.
 
+## Inbound Call System
+
+- [diagrams/inbound-call-flow.mmd](diagrams/inbound-call-flow.mmd): end-to-end call flow diagram (DID → IVR → In-Group → Agent).
+- [modules/in-groups.md](modules/in-groups.md): in-group queue configuration and routing algorithms.
+- [modules/dids.md](modules/dids.md): DID phone number management.
+- [modules/ivr-menus.md](modules/ivr-menus.md): IVR menu and digit-option configuration.
+
 ## Indexes
 
 - [modules/README.md](modules/README.md): module-by-module documentation.

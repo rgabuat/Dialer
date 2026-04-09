@@ -1,0 +1,48 @@
+---
+title: In-Groups Module — Data Model & UI Flow
+---
+flowchart TD
+    subgraph DATA["Data Model"]
+        direction TB
+        IG["InGroup\nname, description\nis_active, queue_priority\nagent_routing\nmax_wait_seconds\ndrop_action, drop_destination\nafter_hours_action\nafter_hours_destination\nhours_json (JSON | null)\ntimezone"]
+        U["User\n(agents)"]
+        DID["Did\nphone_number"]
+        CAMP["Campaign"]
+        CONV["Conversation\nin_group_id"]
+        PIVOT["in_group_user (pivot)\npriority\nlast_call_at\nis_active"]
+
+        IG -->|"belongsToMany via pivot"| PIVOT
+        PIVOT -->|"User"| U
+        IG -->|"hasMany"| DID
+        IG -->|"belongsTo"| CAMP
+        IG -->|"hasMany"| CONV
+    end
+
+    subgraph ROUTING["Agent Routing Algorithms"]
+        direction TB
+        RA["ring_all\nDial all available agents"]
+        RR["round_robin\nOldest last_call_at in pivot"]
+        FC["fewest_calls\nFewest conversations today"]
+        LI["longest_idle\nEarliest AgentStatus.started_at"]
+    end
+
+    subgraph HOURS["After-Hours Logic"]
+        direction TB
+        NULL_HOURS["hours_json = null\n→ Always open"]
+        JSON_HOURS["hours_json set\n→ isWithinHours check"]
+        WITHIN["Within hours\n→ route normally"]
+        OUTSIDE["Outside hours\n→ after_hours_action"]
+    end
+
+    subgraph UI["UI Components"]
+        direction TB
+        IDX["InGroupsIndex\n/in-groups\nsearch, paginate"]
+        CREATE["InGroupCreate\n/in-group/create\nform + hours schedule editor"]
+        EDIT["InGroupEdit\n/in-group/{id}/edit\nSettings | Agents | DIDs tabs"]
+        subgraph EDIT_TABS["Edit Tabs"]
+            T_SET["Settings tab\nall InGroup fields"]
+            T_AGT["Agents tab\nassign / remove / toggle active"]
+            T_DID["DIDs tab\nview linked phone numbers"]
+        end
+        EDIT --> EDIT_TABS
+    end
