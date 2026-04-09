@@ -8,14 +8,18 @@ return new class extends Migration {
   public function up(): void
   {
     Schema::table("conversations", function (Blueprint $table) {
-      $table
-        ->foreignId("in_group_id")
-        ->nullable()
-        ->after("campaign_id")
-        ->constrained("in_groups")
-        ->nullOnDelete();
+      if (!Schema::hasColumn("conversations", "in_group_id")) {
+        $table
+          ->foreignId("in_group_id")
+          ->nullable()
+          ->after("campaign_id")
+          ->constrained("in_groups")
+          ->nullOnDelete();
+      }
 
-      $table->timestamp("ended_at")->nullable()->after("started_at");
+      if (!Schema::hasColumn("conversations", "ended_at")) {
+        $table->timestamp("ended_at")->nullable()->after("started_at");
+      }
     });
   }
 
