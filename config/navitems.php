@@ -21,6 +21,25 @@ return [
   ],
 
   [
+    "label" => "Campaign",
+    "icon" => "heroicon-o-megaphone",
+    "segments" => [
+      "campaigns",
+      "campaign",
+    ],
+    "permission" => null,
+    "bottom" => false,
+    "children" => [
+      [
+        "label" => "All Campaigns",
+        "route" => "campaigns.index",
+        "segment" => "campaigns",
+        "permission" => "campaign.view",
+      ],
+    ],
+  ],
+
+  [
     "label" => "People",
     "icon" => "heroicon-o-users",
     "segments" => [
@@ -98,17 +117,11 @@ return [
 
   [
     "label" => "Operations",
-    "icon" => "heroicon-o-megaphone",
-    "segments" => ["campaigns", "campaign", "leads", "lead", "stores", "store"],
+    "icon" => "heroicon-o-briefcase",
+    "segments" => ["leads", "lead", "stores", "store"],
     "permission" => null,
     "bottom" => false,
     "children" => [
-      [
-        "label" => "Campaigns",
-        "route" => "campaigns.index",
-        "segment" => "campaigns",
-        "permission" => "campaign.view",
-      ],
       [
         "label" => "Leads",
         "route" => "leads.index",
