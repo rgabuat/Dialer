@@ -4,6 +4,7 @@ namespace App\Livewire\Campaign;
 
 use Livewire\Component;
 use App\Models\Campaign;
+use App\Models\InGroup;
 use App\Models\User;
 use App\Events\CampaignDeleted;
 
@@ -24,6 +25,9 @@ class CampaignEdit extends Component
     public int $hopper_level = 50;
     public ?int $max_calls = null;
 
+    /** @var array<int, string> IDs of in-groups currently assigned to this campaign */
+    public array $selectedInGroupIds = [];
+
     public bool $confirmingDelete = false;
 
     public function mount(Campaign $campaign): void
@@ -41,6 +45,12 @@ class CampaignEdit extends Component
         $this->acw_seconds  = (int) ($campaign->acw_seconds ?? 0);
         $this->hopper_level = (int) ($campaign->hopper_level ?? 50);
         $this->max_calls    = $campaign->max_calls ? (int) $campaign->max_calls : null;
+
+        // Load currently assigned in-groups (cast to string so wire:model checkboxes work)
+        $this->selectedInGroupIds = $campaign->inGroups()
+            ->pluck('id')
+            ->map(fn ($id) => (string) $id)
+            ->toArray();
     }
 
     public function save(): void
@@ -58,6 +68,8 @@ class CampaignEdit extends Component
             'acw_seconds'  => ['integer', 'min:0', 'max:3600'],
             'hopper_level' => ['integer', 'min:1', 'max:1000'],
             'max_calls'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'selectedInGroupIds' => ['array'],
+            'selectedInGroupIds.*' => ['integer', 'exists:in_groups,id'],
         ]);
 
         $this->campaign->update([
@@ -74,6 +86,16 @@ class CampaignEdit extends Component
             'hopper_level' => $this->hopper_level,
             'max_calls'    => $this->max_calls,
         ]);
+
+        // Sync in-group assignments via campaign_id FK
+        $selectedIds = array_map('intval', $this->selectedInGroupIds);
+        // Assign selected in-groups to this campaign
+        InGroup::whereIn('id', $selectedIds)
+            ->update(['campaign_id' => $this->campaign->id]);
+        // Detach in-groups that were removed (belonging to this campaign but no longer selected)
+        InGroup::where('campaign_id', $this->campaign->id)
+            ->whereNotIn('id', $selectedIds)
+            ->update(['campaign_id' => null]);
 
         session()->flash('success', 'Campaign updated successfully.');
     }
@@ -103,7 +125,8 @@ class CampaignEdit extends Component
 
     public function render()
     {
-        return view('livewire.campaign.campaign-edit')
-            ->layout('components.layouts.app');
+        return view('livewire.campaign.campaign-edit', [
+            'allInGroups' => InGroup::orderBy('name')->get(),
+        ])->layout('components.layouts.app');
     }
 }

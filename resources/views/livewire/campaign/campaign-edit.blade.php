@@ -228,6 +228,55 @@
                     </div>
                 </div>
 
+                {{-- ── Inbound Groups ── --}}
+                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
+                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500/15 shrink-0">
+                            <x-heroicon-s-funnel class="w-3.5 h-3.5 text-indigo-400" />
+                        </div>
+                        <h2 class="font-semibold text-fg text-sm">Inbound Groups</h2>
+                        <p class="text-fg-muted text-xs ml-auto hidden sm:block">Route inbound calls to this campaign
+                        </p>
+                    </div>
+                    <div class="p-5">
+                        @if ($allInGroups->isEmpty())
+                            <p class="text-fg-muted text-sm">No inbound groups found. <a
+                                    href="{{ route('in-group.create') }}" wire:navigate
+                                    class="text-indigo-400 hover:underline">Create one</a> first.</p>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach ($allInGroups as $inGroup)
+                                    <label
+                                        class="flex items-center gap-3 bg-surface-2 hover:bg-hover border border-surface rounded-lg px-3 py-2.5 cursor-pointer transition group">
+                                        <input type="checkbox" wire:model="selectedInGroupIds"
+                                            value="{{ $inGroup->id }}"
+                                            class="w-4 h-4 rounded text-indigo-600 border-surface focus:ring-indigo-500 focus:ring-offset-0 shrink-0">
+                                        <div class="min-w-0">
+                                            <p class="text-fg text-sm font-medium leading-tight truncate">
+                                                {{ $inGroup->name }}</p>
+                                            @if ($inGroup->description)
+                                                <p class="text-fg-muted text-xs leading-tight truncate mt-0.5">
+                                                    {{ $inGroup->description }}</p>
+                                            @endif
+                                        </div>
+                                        @if (!$inGroup->is_active)
+                                            <span
+                                                class="ml-auto shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface text-fg-muted border border-surface">Inactive</span>
+                                        @endif
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="text-fg-muted/60 text-xs mt-3">
+                                Selected: <span class="text-fg font-medium">{{ count($selectedInGroupIds) }}</span> of
+                                {{ $allInGroups->count() }}
+                            </p>
+                        @endif
+                        @error('selectedInGroupIds')
+                            <p class="text-accent-red text-xs mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 {{-- Agent Script --}}
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">

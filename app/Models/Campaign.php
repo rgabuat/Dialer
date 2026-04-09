@@ -47,4 +47,9 @@ class Campaign extends Model
   {
     return $this->hasMany(\App\Models\CallbackSchedule::class);
   }
+
+  public function inGroups()
+  {
+    return $this->hasMany(\App\Models\InGroup::class);
+  }
 }
