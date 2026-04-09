@@ -161,6 +161,41 @@ return [
   ],
 
   [
+    "label" => "Inbound",
+    "icon" => "heroicon-o-phone-arrow-down-left",
+    "segments" => [
+      "in-groups",
+      "in-group",
+      "dids",
+      "did",
+      "ivr-menus",
+      "ivr-menu",
+    ],
+    "permission" => null,
+    "bottom" => false,
+    "children" => [
+      [
+        "label" => "In-Groups",
+        "route" => "in-groups.index",
+        "segment" => "in-groups",
+        "permission" => null,
+      ],
+      [
+        "label" => "DIDs",
+        "route" => "dids.index",
+        "segment" => "dids",
+        "permission" => null,
+      ],
+      [
+        "label" => "IVR Menus",
+        "route" => "ivr-menus.index",
+        "segment" => "ivr-menus",
+        "permission" => null,
+      ],
+    ],
+  ],
+
+  [
     "label" => "Settings",
     "route" => "settings.profile",
     "icon" => "heroicon-o-cog-6-tooth",

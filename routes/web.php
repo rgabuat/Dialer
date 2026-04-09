@@ -36,6 +36,15 @@ use App\Livewire\Conversations\ConversationShow;
 use App\Livewire\Workforce\RosterIndex;
 use App\Livewire\Workforce\RosterCreate;
 use App\Livewire\Workforce\RosterShow;
+use App\Livewire\InGroups\InGroupsIndex;
+use App\Livewire\InGroups\InGroupCreate;
+use App\Livewire\InGroups\InGroupEdit;
+use App\Livewire\Dids\DidsIndex;
+use App\Livewire\Dids\DidCreate;
+use App\Livewire\Dids\DidEdit;
+use App\Livewire\IvrMenus\IvrMenusIndex;
+use App\Livewire\IvrMenus\IvrMenuCreate;
+use App\Livewire\IvrMenus\IvrMenuEdit;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -176,6 +185,29 @@ Route::middleware(["auth"])->group(function () {
     );
     Route::get("/workforce/roster/{roster}", RosterShow::class)->name(
       "workforce.roster.show"
+    );
+
+    //In-Groups
+    Route::get("/in-groups", InGroupsIndex::class)->name("in-groups.index");
+    Route::get("/in-group/create", InGroupCreate::class)->name(
+      "in-group.create"
+    );
+    Route::get("/in-group/{inGroup}/edit", InGroupEdit::class)->name(
+      "in-group.edit"
+    );
+
+    //DIDs
+    Route::get("/dids", DidsIndex::class)->name("dids.index");
+    Route::get("/did/create", DidCreate::class)->name("did.create");
+    Route::get("/did/{did}/edit", DidEdit::class)->name("did.edit");
+
+    //IVR Menus
+    Route::get("/ivr-menus", IvrMenusIndex::class)->name("ivr-menus.index");
+    Route::get("/ivr-menu/create", IvrMenuCreate::class)->name(
+      "ivr-menu.create"
+    );
+    Route::get("/ivr-menu/{ivrMenu}/edit", IvrMenuEdit::class)->name(
+      "ivr-menu.edit"
     );
 
     //Twilio

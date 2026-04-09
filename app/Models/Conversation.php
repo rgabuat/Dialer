@@ -20,6 +20,7 @@ class Conversation extends Model
     "detail_preview",
     "duration_seconds",
     "campaign_id",
+    "in_group_id",
     "assigned_to",
     "completed_by",
     "ended_at",
@@ -28,12 +29,17 @@ class Conversation extends Model
 
   protected $casts = [
     "started_at" => "datetime",
-    "ended_at"   => "datetime",
+    "ended_at" => "datetime",
   ];
 
   public function campaign()
   {
     return $this->belongsTo(Campaign::class);
+  }
+
+  public function inGroup()
+  {
+    return $this->belongsTo(InGroup::class);
   }
 
   public function assignedAgent()
