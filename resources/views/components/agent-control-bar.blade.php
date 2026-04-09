@@ -3,15 +3,19 @@
      Tokens used: bg-surface, border-surface, text-fg, text-fg-muted
      Dark / light mode handled automatically via CSS custom properties.
      ══════════════════════════════════════════════════════════════════ --}}
+@php
+    $authStatusType = auth()->user()?->agentStatus?->statusType;
+@endphp
 @persist('agent-phone-bar')
     <div x-data="agentPhone()" @make-call.window="makeCall($event.detail)"
+        @hangup-call.window="if (window._twilioActiveCall) { window._twilioActiveCall.disconnect(); }"
         @agent-status-changed.window="
-        const sn = ($event.detail.statusName || '').toLowerCase();
-        const isPhone = sn === 'phones';
-        const isOutbound = sn === 'outbound';
-        canAcceptCalls = ($event.detail.isAvailable ?? canAcceptCalls);
-        canMakeOutbound = isOutbound;
-        if (isPhone || isOutbound) {
+        const d = $event.detail || ($event.detail?.[0] ?? {});
+        const handlesInbound  = d.handles_inbound  ?? false;
+        const handlesOutbound = d.handles_outbound ?? false;
+        canAcceptCalls  = handlesInbound;
+        canMakeOutbound = handlesOutbound;
+        if (handlesInbound || handlesOutbound) {
             if (!deviceReady && !initializing) enableCalling();
         } else {
             disableCalling();
@@ -443,8 +447,8 @@
                 _callTimer: null,
                 isMuted: false,
                 isOnHold: false,
-                canAcceptCalls: @json(auth()->user()?->agentStatus?->statusType?->is_available ?? false),
-                canMakeOutbound: @json(in_array(strtolower(auth()->user()?->agentStatus?->statusType?->slug ?? ''), ['outbound'])),
+                canAcceptCalls: @json((bool) ($authStatusType?->handles_inbound ?? false)),
+                canMakeOutbound: @json((bool) ($authStatusType?->handles_outbound ?? false)),
 
                 // ── restore state after wire:navigate ────────────────────────────────
                 // Alpine may re-initialise this component when Livewire morphs the DOM.
@@ -483,8 +487,9 @@
 
                     // Auto-start device on fresh page load if status is already call-eligible
                     if (!window._twilioDevice) {
-                        const slug = @json(strtolower(auth()->user()?->agentStatus?->statusType?->slug ?? ''));
-                        if (slug === 'phones' || slug === 'outbound') {
+                        const handlesInbound = @json((bool) ($authStatusType->handles_inbound ?? false));
+                        const handlesOutbound = @json((bool) ($authStatusType->handles_outbound ?? false));
+                        if (handlesInbound || handlesOutbound) {
                             this.$nextTick(() => this.enableCalling());
                         }
                     }
@@ -601,7 +606,10 @@
                     window.dispatchEvent(new CustomEvent('open-dialer'));
                 },
 
-                makeCall(number) {
+                makeCall(numberOrObj) {
+                    const number = (typeof numberOrObj === 'object' && numberOrObj !== null) ?
+                        (numberOrObj.phone ?? numberOrObj.To ?? '') :
+                        numberOrObj;
                     if (!window._twilioDevice || !number) return;
                     this.callStatus = 'Dialling…';
                     this.isMuted = false;
@@ -652,6 +660,8 @@
                     this.isOnHold = false;
                     this.callStatus = 'Connecting…';
                     this._stopTimer();
+                    // Notify DialerPanel that call has ended
+                    window.dispatchEvent(new CustomEvent('call-ended'));
                 },
 
                 // ── mute ────────────────────────────────────────────────

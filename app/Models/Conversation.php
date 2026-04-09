@@ -25,11 +25,16 @@ class Conversation extends Model
     "completed_by",
     "ended_at",
     "started_at",
+    "disposition_id",
+    "disposition_notes",
+    "lead_id",
+    "wrapped_at",
   ];
 
   protected $casts = [
-    "started_at" => "datetime",
-    "ended_at" => "datetime",
+    "started_at"  => "datetime",
+    "ended_at"    => "datetime",
+    "wrapped_at"  => "datetime",
   ];
 
   public function campaign()
@@ -55,6 +60,16 @@ class Conversation extends Model
   public function notes()
   {
     return $this->hasMany(ConversationNote::class)->orderBy("created_at");
+  }
+
+  public function disposition()
+  {
+    return $this->belongsTo(Disposition::class);
+  }
+
+  public function lead()
+  {
+    return $this->belongsTo(Lead::class);
   }
 
   public function getDurationLabelAttribute(): ?string

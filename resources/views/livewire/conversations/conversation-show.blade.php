@@ -34,7 +34,8 @@
         window.addEventListener('resize', this._fn);
     },
     destroy() { window.removeEventListener('resize', this._fn); }
-}" class="flex bg-surface border border-surface rounded-xl [overflow:clip]" wire:poll.10s>
+}" class="relative flex bg-surface border border-surface rounded-xl [overflow:clip]"
+    wire:poll.10s>
 
     {{-- ===================== LEFT PANEL ===================== --}}
     <div class="flex flex-col flex-1 border-surface border-r min-w-0 overflow-hidden">
@@ -429,7 +430,10 @@
 
         {{-- Sidebar tabs --}}
         <div class="flex items-center px-1 border-surface border-b shrink-0">
-            @foreach (['details' => 'Details', 'account' => 'Account', 'store' => 'Store'] as $key => $label)
+            @foreach (['details' => 'Details', 'account' => 'Account', 'store' => 'Store', 'script' => 'Script'] as $key => $label)
+                @if ($key === 'script' && !$conversation->campaign?->script)
+                    @continue
+                @endif
                 <button type="button" wire:click="$set('sidebarTab', '{{ $key }}')"
                     class="px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition
                         {{ $sidebarTab === $key ? 'border-fuchsia-500 text-fg' : 'border-transparent text-fg-muted hover:text-fg' }}">
@@ -508,6 +512,14 @@
                     <x-heroicon-o-user class="mb-2 w-8 h-8 text-fg-muted/30" />
                     <p class="text-fg-muted text-xs">No account linked.</p>
                 </div>
+            @elseif ($sidebarTab === 'script' && $conversation->campaign?->script)
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-fg text-sm">Campaign Script</h3>
+                    <p class="text-fg-muted text-xs">{{ $conversation->campaign->name }}</p>
+                    <div
+                        class="bg-surface-2 border border-surface rounded-xl p-3 text-fg text-xs leading-relaxed whitespace-pre-wrap">
+                        {{ $conversation->campaign->script }}</div>
+                </div>
             @else
                 <div class="flex flex-col justify-center items-center py-12 text-center">
                     <x-heroicon-o-building-storefront class="mb-2 w-8 h-8 text-fg-muted/30" />
@@ -516,5 +528,114 @@
             @endif
         </div>
     </div>
+
+    {{-- ===================== ACW / DISPOSITION PANEL ===================== --}}
+    @if ($showDispositionPanel)
+        <div class="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            x-data="{
+                secondsLeft: {{ $acwSecondsLeft }},
+                timer: null,
+                init() {
+                    if (this.secondsLeft > 0) {
+                        this.timer = setInterval(() => {
+                            this.secondsLeft--;
+                            if (this.secondsLeft <= 0) {
+                                clearInterval(this.timer);
+                            }
+                        }, 1000);
+                    }
+                },
+                destroy() { clearInterval(this.timer); }
+            }">
+            <div class="bg-surface border border-surface rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+                {{-- ACW header --}}
+                <div class="flex items-center justify-between px-5 py-4 border-b border-surface bg-surface-2">
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-o-clock class="w-5 h-5 text-fuchsia-400" />
+                        <span class="font-bold text-fg text-sm">After Call Work</span>
+                    </div>
+                    {{-- Countdown timer --}}
+                    @if ($acwSecondsLeft > 0)
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-fg-muted text-xs">Auto-advance in</span>
+                            <span class="font-mono font-bold text-fuchsia-400 text-sm tabular-nums"
+                                x-text="secondsLeft + 's'"></span>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="p-5 space-y-4">
+                    {{-- Disposition select --}}
+                    <div>
+                        <label class="block mb-1.5 font-semibold text-fg text-xs">Disposition</label>
+                        <select wire:model="selectedDispositionId"
+                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                            <option value="">-- Select disposition --</option>
+                            @foreach ($dispositions as $disp)
+                                @php
+                                    $catColors = [
+                                        'SALE' => 'text-accent-green',
+                                        'DNC' => 'text-accent-red',
+                                        'CALLBACK' => 'text-accent-yellow',
+                                        'RETRY' => 'text-blue-400',
+                                        'OTHER' => 'text-fg-muted',
+                                    ];
+                                    $cc = $catColors[$disp->category] ?? 'text-fg-muted';
+                                @endphp
+                                <option value="{{ $disp->id }}" class="{{ $cc }}">
+                                    [{{ $disp->code }}] {{ $disp->name }}
+                                    @if ($disp->is_dnc)
+                                        (DNC)
+                                    @endif
+                                    @if ($disp->requires_callback)
+                                        (Callback)
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div>
+                        <label class="block mb-1.5 font-semibold text-fg text-xs">Notes</label>
+                        <textarea wire:model="dispositionNotes" placeholder="Optional notes about this call..." rows="3"
+                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
+                    </div>
+
+                    {{-- Callback warning --}}
+                    @if ($selectedDispositionId)
+                        @php $selDisp = $dispositions->firstWhere('id', $selectedDispositionId); @endphp
+                        @if ($selDisp?->requires_callback)
+                            <div
+                                class="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2">
+                                <x-heroicon-o-arrow-path class="w-4 h-4 text-accent-yellow shrink-0" />
+                                <p class="text-accent-yellow text-xs">A callback will be scheduled for this lead.</p>
+                            </div>
+                        @endif
+                        @if ($selDisp?->is_dnc)
+                            <div
+                                class="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                                <x-heroicon-o-no-symbol class="w-4 h-4 text-accent-red shrink-0" />
+                                <p class="text-accent-red text-xs">Lead will be marked Do Not Call.</p>
+                            </div>
+                        @endif
+                    @endif
+
+                    {{-- Action buttons --}}
+                    <div class="flex items-center gap-2 pt-1">
+                        <button wire:click="saveDisposition" wire:loading.attr="disabled"
+                            class="flex-1 inline-flex justify-center items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 px-4 py-2 rounded-lg font-semibold text-white text-sm transition">
+                            <span wire:loading.remove wire:target="saveDisposition">Save &amp; Continue</span>
+                            <span wire:loading wire:target="saveDisposition">Saving…</span>
+                        </button>
+                        <button wire:click="skipDisposition"
+                            class="inline-flex items-center gap-1.5 bg-surface-2 hover:bg-surface-3 border border-surface px-4 py-2 rounded-lg font-semibold text-fg-muted text-sm transition">
+                            Skip
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

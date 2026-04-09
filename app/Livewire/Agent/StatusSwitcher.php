@@ -51,7 +51,9 @@ class StatusSwitcher extends Component
       startedAt: $now,
       statusName: $statusType->name,
       statusColor: $statusType->color,
-      isAvailable: (bool) $statusType->is_available
+      isAvailable: (bool) $statusType->is_available,
+      handles_inbound: (bool) $statusType->handles_inbound,
+      handles_outbound: (bool) $statusType->handles_outbound
     );
 
     // Let the agent status index react (same browser tab, self-update)

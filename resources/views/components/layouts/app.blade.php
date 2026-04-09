@@ -203,12 +203,14 @@ x-init="
                     if (e.user_id === currentUserId) {
                         window.dispatchEvent(new CustomEvent('agent-status-changed', {
                             detail: {
-                                startedAt:   e.started_at,
-                                statusName:  e.status_name,
-                                statusColor: e.status_color,
-                                isAvailable: e.is_available,
+                                startedAt:        e.started_at,
+                                statusName:       e.status_name,
+                                statusColor:      e.status_color,
+                                isAvailable:      e.is_available,
+                                handles_inbound:  e.handles_inbound  ?? false,
+                                handles_outbound: e.handles_outbound ?? false,
                             }
-                        })); 
+                        }));
                     }
                 });
         " @endauth

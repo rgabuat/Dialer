@@ -45,6 +45,13 @@ use App\Livewire\Dids\DidEdit;
 use App\Livewire\IvrMenus\IvrMenusIndex;
 use App\Livewire\IvrMenus\IvrMenuCreate;
 use App\Livewire\IvrMenus\IvrMenuEdit;
+use App\Livewire\CallLists\CallListsIndex;
+use App\Livewire\CallLists\CallListCreate;
+use App\Livewire\CallLists\CallListEdit;
+use App\Livewire\Dispositions\DispositionsIndex;
+use App\Livewire\Dispositions\DispositionCreate;
+use App\Livewire\Dispositions\DispositionEdit;
+use App\Livewire\Callbacks\CallbackPanel;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -147,12 +154,21 @@ Route::middleware(["auth"])->group(function () {
 
     //Campaigns
     Route::get("/campaigns", CampaignsIndex::class)->name("campaigns.index");
-    Route::get("/campaign/create", CampaignCreate::class)->name(
-      "campaign.create"
-    );
-    Route::get("/campaign/{campaign}/edit", CampaignEdit::class)->name(
-      "campaign.edit"
-    );
+    Route::get("/campaign/create", CampaignCreate::class)->name("campaign.create");
+    Route::get("/campaign/{campaign}/edit", CampaignEdit::class)->name("campaign.edit");
+
+    // Call Lists
+    Route::get("/campaign/{campaign}/lists", CallListsIndex::class)->name("campaign.lists");
+    Route::get("/campaign/{campaign}/list/create", CallListCreate::class)->name("campaign.list.create");
+    Route::get("/campaign/{campaign}/list/{callList}/edit", CallListEdit::class)->name("campaign.list.edit");
+
+    // Dispositions
+    Route::get("/campaign/{campaign}/dispositions", DispositionsIndex::class)->name("campaign.dispositions");
+    Route::get("/campaign/{campaign}/disposition/create", DispositionCreate::class)->name("campaign.disposition.create");
+    Route::get("/campaign/{campaign}/disposition/{disposition}/edit", DispositionEdit::class)->name("campaign.disposition.edit");
+
+    // Callbacks
+    Route::get("/callbacks", CallbackPanel::class)->name("callbacks.index");
 
     //User Groups
     Route::get("/user-groups", UserGroupsIndex::class)->name(

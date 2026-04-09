@@ -56,3 +56,15 @@ Route::get("/call/forward-twiml", [
   TwilioController::class,
   "forwardTwiml",
 ])->name("twilio.forwardTwiml");
+
+// ── Dialer (auto-dial — auth required) ───────────────────────────────────
+Route::middleware("auth:sanctum")->post("/dialer/autodial", [
+  TwilioController::class,
+  "autodial",
+])->name("dialer.autodial");
+
+// ── Dialer connect-to-agent TwiML webhook (called by Twilio — no auth) ───
+Route::get("/dialer/connect-to-agent", [
+  TwilioController::class,
+  "connectToAgent",
+])->name("dialer.connectToAgent");

@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Fill hopper every minute for active PROGRESSIVE/PREDICTIVE campaigns
+        $schedule->command('dialer:fill-hopper')->everyMinute()->withoutOverlapping();
     }
 
     /**

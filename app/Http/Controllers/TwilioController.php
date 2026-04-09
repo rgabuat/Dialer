@@ -11,6 +11,8 @@ use App\Models\IvrMenu;
 use App\Models\Campaign;
 use App\Models\AgentStatus;
 use App\Models\Conversation;
+use App\Models\DialerHopper;
+use App\Services\HopperService;
 use Twilio\Rest\Client as TwilioClient;
 use Twilio\TwiML\VoiceResponse;
 use Twilio\Jwt\Grants\VoiceGrant;
@@ -329,7 +331,7 @@ class TwilioController extends Controller
   public function availableAgents()
   {
     $agents = AgentStatus::with(["statusType", "user"])
-      ->whereHas("statusType", fn($q) => $q->where("slug", "phones"))
+      ->whereHas("statusType", fn($q) => $q->where("handles_inbound", true))
       ->get()
       ->map(
         fn($s) => [
@@ -340,6 +342,106 @@ class TwilioController extends Controller
       );
 
     return response()->json($agents);
+  }
+
+  /**
+   * POST /api/dialer/autodial
+   * PROGRESSIVE/PREDICTIVE: server pulls next lead from hopper and dials it.
+   * Auth: sanctum
+   */
+  public function autodial(Request $request, HopperService $hopper)
+  {
+    $campaignId = $request->input('campaign_id') ?? session('active_campaign_id');
+
+    $campaign = Campaign::where('id', $campaignId)->where('is_active', true)->firstOrFail();
+
+    // Ensure hopper has leads
+    $hopper->fill($campaign);
+
+    $entry = $hopper->nextLead($campaign);
+    if (!$entry) {
+      return response()->json(['message' => 'No leads available in hopper.'], 404);
+    }
+
+    $hopper->markDialing($entry);
+
+    $agentIdentity = "user_" . auth()->id();
+    $connectUrl    = rtrim(config('app.url'), '/') . route('dialer.connectToAgent', [], false)
+        . '?hopper_id=' . $entry->id . '&agent=' . urlencode($agentIdentity);
+
+    try {
+      $call = $this->twilioClient()->calls->create(
+        $entry->phone_number,
+        $campaign->caller_id ?: config('services.twilio.caller_id'),
+        [
+          'url'    => $connectUrl,
+          'method' => 'GET',
+          'statusCallback'      => rtrim(config('app.url'), '/') . '/api/call/complete',
+          'statusCallbackMethod' => 'POST',
+          'statusCallbackEvent'  => ['completed'],
+        ]
+      );
+    } catch (\Exception $e) {
+      $hopper->skipLead($entry);
+      \Log::error('[Dialer] autodial failed: ' . $e->getMessage());
+      return response()->json(['message' => 'Failed to initiate call.', 'error' => $e->getMessage()], 500);
+    }
+
+    // Create conversation record
+    $conversation = Conversation::create([
+      'call_sid'      => $call->sid,
+      'channel'       => 'voice',
+      'direction'     => 'outbound',
+      'status'        => 'in_progress',
+      'contact_phone' => $entry->phone_number,
+      'contact_name'  => optional($entry->lead)->first_name . ' ' . optional($entry->lead)->last_name,
+      'campaign_id'   => $campaign->id,
+      'lead_id'       => $entry->lead_id,
+      'assigned_to'   => auth()->id(),
+      'started_at'    => now(),
+    ]);
+
+    return response()->json([
+      'call_sid'       => $call->sid,
+      'phone_number'   => $entry->phone_number,
+      'conversation_id' => $conversation->id,
+      'lead_id'        => $entry->lead_id,
+    ]);
+  }
+
+  /**
+   * GET /api/dialer/connect-to-agent
+   * TwiML webhook: bridges the answered lead call to the agent's browser Device.
+   * This endpoint is public (called by Twilio, not by auth users).
+   */
+  public function connectToAgent(Request $request)
+  {
+    $hopperId      = (int) $request->input('hopper_id');
+    $agentIdentity = $request->input('agent', '');
+    $callbackUrl   = rtrim(config('app.url'), '/') . '/api/call/complete';
+
+    $voice = new VoiceResponse();
+
+    if (empty($agentIdentity) || !preg_match('/^user_\d+$/', $agentIdentity)) {
+      $voice->say('Configuration error. Goodbye.');
+      $voice->hangup();
+      return $this->twimlResponse($voice);
+    }
+
+    $dial = $voice->dial('', [
+      'callerId'           => config('services.twilio.caller_id'),
+      'timeout'            => 30,
+      'action'             => $callbackUrl,
+      'method'             => 'POST',
+      'statusCallback'     => $callbackUrl,
+      'statusCallbackEvent' => 'completed',
+    ]);
+
+    $dial->client($agentIdentity);
+
+    // Mark hopper entry as still dialing (already set, no change needed)
+
+    return $this->twimlResponse($voice);
   }
 
   // ──────────────────────────────────────────────────────────────────────────

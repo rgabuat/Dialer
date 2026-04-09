@@ -53,6 +53,8 @@ class AgentStatusService
       "status_name" => $statusType->name,
       "status_color" => $statusType->color,
       "is_available" => (bool) $statusType->is_available,
+      "handles_inbound" => (bool) $statusType->handles_inbound,
+      "handles_outbound" => (bool) $statusType->handles_outbound,
       "started_at" => $now->toIso8601String(),
     ];
 

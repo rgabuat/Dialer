@@ -15,13 +15,32 @@ class Lead extends Model
         'phone',
         'email',
         'store_id',
+        'call_list_id',
+        'status',
+        'last_called_at',
+        'call_count',
+        'timezone',
+        'address',
+        'city',
+        'state',
+        'zip',
+        'country',
         'created_by',
         'last_actioned_by',
+    ];
+
+    protected $casts = [
+        'last_called_at' => 'datetime',
     ];
 
     public function store()
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function callList()
+    {
+        return $this->belongsTo(CallList::class);
     }
 
     public function creator()
