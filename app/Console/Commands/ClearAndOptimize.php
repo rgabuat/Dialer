@@ -7,9 +7,10 @@ use Illuminate\Console\Command;
 class ClearAndOptimize extends Command
 {
     protected $signature = 'app:clear-optimize
-                            {--skip-fpm : Skip restarting PHP-FPM}';
+                            {--skip-fpm : Skip restarting PHP-FPM}
+                            {--skip-npm : Skip running npm run build}';
 
-    protected $description = 'Clear all caches, restart PHP-FPM, then run artisan optimize';
+    protected $description = 'Clear all caches, restart PHP-FPM, run artisan optimize, and build frontend assets';
 
     public function handle(): int
     {
@@ -60,6 +61,25 @@ class ClearAndOptimize extends Command
         $this->newLine();
         $this->info('=== Running artisan optimize ===');
         $this->call('optimize');
+
+        if (!$this->option('skip-npm')) {
+            $this->newLine();
+            $this->info('=== Building frontend assets (npm run build) ===');
+
+            $projectRoot = base_path();
+            exec("cd {$projectRoot} && npm run build 2>&1", $npmOutput, $npmExit);
+
+            if ($npmExit === 0) {
+                $this->line('  npm run build completed successfully.');
+            } else {
+                $this->error('  npm run build failed (exit ' . $npmExit . ').');
+                foreach ($npmOutput as $line) {
+                    $this->line('  ' . $line);
+                }
+            }
+        } else {
+            $this->warn('  npm run build skipped (--skip-npm flag).');
+        }
 
         $this->newLine();
         $this->info('✔ Done.');
