@@ -183,7 +183,7 @@ class InGroupEdit extends Component
       ->users()
       ->withPivot(["priority", "last_call_at", "is_active"])
       ->get();
-    $dids = $this->inGroup->dids()->with("ivrMenu")->get();
+    $dids = $this->inGroup->dids()->with(['cidNumber', 'ivrMenu'])->get();
 
     return view(
       "livewire.in-groups.in-group-edit",

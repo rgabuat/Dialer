@@ -42,28 +42,80 @@
             <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
-                        <th class="px-5 py-3 text-left">Name</th>
-                        <th class="px-5 py-3 text-left">Routing</th>
-                        <th class="px-5 py-3 text-left">Priority</th>
-                        <th class="px-5 py-3 text-left">Status</th>
-                        <th class="px-5 py-3 text-left">DIDs</th>
+                        <th class="px-5 py-3 w-full text-left">Name</th>
+                        <th class="px-5 py-3 text-left whitespace-nowrap">Routing</th>
+                        <th class="px-5 py-3 text-left whitespace-nowrap">Agents / DIDs</th>
+                        <th class="px-5 py-3 text-left whitespace-nowrap">Max Wait</th>
+                        <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($inGroups as $group)
                         <tr class="hover:bg-hover border-surface border-b transition">
-                            <td class="px-5 py-4 font-semibold text-fg">
-                                {{ $group->name }}
+                            {{-- Name + description + campaign --}}
+                            <td class="px-5 py-4">
+                                <div class="font-semibold text-fg leading-snug">{{ $group->name }}</div>
                                 @if ($group->description)
-                                    <p class="font-normal text-fg-muted text-xs">{{ $group->description }}</p>
+                                    <div class="mt-0.5 text-fg-muted text-xs">{{ $group->description }}</div>
+                                @endif
+                                @if ($group->campaign)
+                                    <div class="mt-1">
+                                        <span
+                                            class="inline-flex items-center bg-indigo-500/10 px-2 py-0.5 rounded text-indigo-400 text-xs">
+                                            {{ $group->campaign->name }}
+                                        </span>
+                                    </div>
                                 @endif
                             </td>
-                            <td class="px-5 py-4 text-fg-muted text-sm capitalize">
-                                {{ str_replace('_', ' ', $group->agent_routing) }}
+
+                            {{-- Routing algorithm badge --}}
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                @php
+                                    $routingLabels = [
+                                        'ring_all' => ['Ring All', 'bg-sky-500/10 text-sky-400'],
+                                        'round_robin' => ['Round Robin', 'bg-violet-500/10 text-violet-400'],
+                                        'fewest_calls' => ['Fewest Calls', 'bg-amber-500/10 text-amber-400'],
+                                        'longest_idle' => ['Longest Idle', 'bg-teal-500/10 text-teal-400'],
+                                    ];
+                                    [$routingLabel, $routingClass] = $routingLabels[$group->agent_routing] ?? [
+                                        ucwords(str_replace('_', ' ', $group->agent_routing)),
+                                        'bg-surface-2 text-fg-muted',
+                                    ];
+                                @endphp
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold {{ $routingClass }}">
+                                    {{ $routingLabel }}
+                                </span>
+                                <div class="mt-1 text-fg-muted text-xs">Priority {{ $group->queue_priority }}</div>
                             </td>
-                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $group->queue_priority }}</td>
-                            <td class="px-5 py-4">
+
+                            {{-- Agents / DIDs counts --}}
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center gap-1 text-fg text-sm">
+                                        <x-heroicon-o-user-group class="w-3.5 h-3.5 text-fg-muted" />
+                                        {{ $group->users_count }}
+                                    </span>
+                                    <span class="text-surface-3">|</span>
+                                    <span class="inline-flex items-center gap-1 text-fg text-sm">
+                                        <x-heroicon-o-phone class="w-3.5 h-3.5 text-fg-muted" />
+                                        {{ $group->dids_count }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            {{-- Max wait --}}
+                            <td class="px-5 py-4 text-fg-muted text-sm whitespace-nowrap">
+                                @if ($group->max_wait_seconds)
+                                    {{ $group->max_wait_seconds }}s
+                                @else
+                                    <span class="text-zinc-600 italic">None</span>
+                                @endif
+                            </td>
+
+                            {{-- Status --}}
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 @if ($group->is_active)
                                     <span
                                         class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-xs uppercase tracking-wide text-accent-green">
@@ -76,9 +128,9 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-5 py-4 text-fg-muted text-sm">
-                                {{ $group->dids_count ?? $group->dids()->count() }}</td>
-                            <td class="px-5 py-4 text-right">
+
+                            {{-- Actions --}}
+                            <td class="px-5 py-4 text-right whitespace-nowrap">
                                 <a href="{{ route('in-group.edit', $group) }}" wire:navigate
                                     class="text-fg-muted hover:text-fg text-xs transition">Edit</a>
                             </td>

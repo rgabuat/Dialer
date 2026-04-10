@@ -25,9 +25,9 @@
                 </div>
                 <div class="md:col-span-3 space-y-5">
                     <div>
-                        <label class="text-sm text-fg-muted">Phone Number</label>
+                        <label class="text-fg-muted text-sm">Phone Number</label>
                         <select wire:model.defer="cid_number_id"
-                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600 font-mono">
+                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm font-mono">
                             <option value="">— Select a CID number —</option>
                             @foreach ($availableCids as $cid)
                                 <option value="{{ $cid->id }}" @selected($cid->id == $cid_number_id)>
@@ -36,13 +36,13 @@
                             @endforeach
                         </select>
                         @error('cid_number_id')
-                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-accent-red">{{ $message }}</p>
                         @enderror
                     </div>
                     <div class="flex items-center gap-3">
                         <input wire:model.defer="is_active" type="checkbox" id="is_active"
-                            class="rounded bg-surface border-surface-2 text-blue-500 focus:ring-blue-500" />
-                        <label for="is_active" class="text-sm text-fg-muted">Active</label>
+                            class="bg-surface border-surface-2 rounded focus:ring-blue-500 text-blue-500" />
+                        <label for="is_active" class="text-fg-muted text-sm">Active</label>
                     </div>
                 </div>
             </div>
@@ -68,9 +68,9 @@
 
                     @if ($destination === 'in_group')
                         <div>
-                            <label class="text-sm text-fg-muted">In-Group</label>
+                            <label class="text-fg-muted text-sm">In-Group</label>
                             <select wire:model.defer="in_group_id"
-                                class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
                                 <option value="">Select in-group…</option>
                                 @foreach ($inGroups as $g)
                                     <option value="{{ $g->id }}" @selected($g->id == $in_group_id)>{{ $g->name }}
@@ -78,14 +78,14 @@
                                 @endforeach
                             </select>
                             @error('in_group_id')
-                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-accent-red">{{ $message }}</p>
                             @enderror
                         </div>
                     @else
                         <div>
-                            <label class="text-sm text-fg-muted">IVR Menu</label>
+                            <label class="text-fg-muted text-sm">IVR Menu</label>
                             <select wire:model.defer="ivr_menu_id"
-                                class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
                                 <option value="">Select IVR menu…</option>
                                 @foreach ($ivrMenus as $m)
                                     <option value="{{ $m->id }}" @selected($m->id == $ivr_menu_id)>
@@ -93,7 +93,7 @@
                                 @endforeach
                             </select>
                             @error('ivr_menu_id')
-                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-accent-red">{{ $message }}</p>
                             @enderror
                         </div>
                     @endif

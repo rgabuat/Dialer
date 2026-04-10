@@ -25,11 +25,13 @@ class InGroupsIndex extends Component
 
   public function render()
   {
-    $inGroups = InGroup::when(
-      $this->search,
-      fn($q) => $q->where("name", "like", "%{$this->search}%")
-    )
-      ->orderByDesc("queue_priority")
+    $inGroups = InGroup::with('campaign')
+      ->withCount(['dids', 'users'])
+      ->when(
+        $this->search,
+        fn($q) => $q->where('name', 'like', "%{$this->search}%")
+      )
+      ->orderByDesc('queue_priority')
       ->latest()
       ->paginate($this->perPage);
 

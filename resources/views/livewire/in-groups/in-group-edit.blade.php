@@ -29,7 +29,7 @@
     {{-- Settings Tab --}}
     @if ($activeTab === 'settings')
         <form wire:submit.prevent="save">
-            <div class="space-y-10 max-w-4xl">
+            <div class="space-y-10">
 
                 <div class="gap-6 grid grid-cols-1 md:grid-cols-4 pb-10 border-surface border-b">
                     <div>
@@ -114,18 +114,29 @@
                         <div class="gap-4 grid grid-cols-2">
                             <div>
                                 <label class="text-fg-muted text-sm">Drop Action</label>
-                                <select wire:model.defer="drop_action"
+                                <select wire:model.live="drop_action"
                                     class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
                                     <option value="hangup">Hang Up</option>
                                     <option value="transfer">Transfer to Number</option>
                                     <option value="voicemail">Voicemail</option>
                                 </select>
+                                <p class="mt-1 text-xs text-fg-muted">
+                                    @if ($drop_action === 'hangup')
+                                        Caller will be disconnected when max wait is exceeded.
+                                    @elseif ($drop_action === 'transfer')
+                                        Call will be forwarded to the number below.
+                                    @elseif ($drop_action === 'voicemail')
+                                        Caller will be sent to voicemail.
+                                    @endif
+                                </p>
                             </div>
-                            <div>
-                                <label class="text-fg-muted text-sm">Drop Destination</label>
-                                <input wire:model.defer="drop_destination" type="text" placeholder="+15551234567"
-                                    class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
-                            </div>
+                            @if ($drop_action === 'transfer')
+                                <div>
+                                    <label class="text-fg-muted text-sm">Drop Destination</label>
+                                    <input wire:model.defer="drop_destination" type="text" placeholder="+15551234567"
+                                        class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -177,19 +188,21 @@
                             <div class="gap-4 grid grid-cols-2">
                                 <div>
                                     <label class="text-fg-muted text-sm">After-Hours Action</label>
-                                    <select wire:model.defer="after_hours_action"
+                                    <select wire:model.live="after_hours_action"
                                         class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
                                         <option value="hangup">Hang Up</option>
                                         <option value="transfer">Transfer to Number</option>
                                         <option value="voicemail">Voicemail</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="text-fg-muted text-sm">After-Hours Destination</label>
-                                    <input wire:model.defer="after_hours_destination" type="text"
-                                        placeholder="+15551234567"
-                                        class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
-                                </div>
+                                @if ($after_hours_action === 'transfer')
+                                    <div>
+                                        <label class="text-fg-muted text-sm">After-Hours Destination</label>
+                                        <input wire:model.defer="after_hours_destination" type="text"
+                                            placeholder="+15551234567"
+                                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -227,77 +240,118 @@
 
     {{-- Agents Tab --}}
     @if ($activeTab === 'agents')
-        <div class="space-y-6 max-w-4xl">
+        <div class="space-y-6">
 
-            {{-- Add agent --}}
-            <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl">
-                <h3 class="font-medium text-fg text-sm">Add Agent</h3>
+            {{-- Add agent form --}}
+            <div class="bg-surface border border-surface rounded-xl p-5">
+                <h3 class="font-semibold text-fg text-sm mb-4">Add Agent to Queue</h3>
                 <div class="flex items-end gap-3">
                     <div class="flex-1">
-                        <label class="text-fg-muted text-xs">User</label>
+                        <label class="text-fg-muted text-xs block mb-1">Agent</label>
                         <select wire:model.defer="addUserId"
-                            class="bg-surface-2 mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
-                            <option value="">Select user…</option>
+                            class="bg-surface-2 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
+                            <option value="">Select agent…</option>
                             @foreach ($availableUsers as $u)
-                                <option value="{{ $u->id }}">{{ $u->first_name }} {{ $u->last_name }}
-                                </option>
+                                <option value="{{ $u->id }}">{{ $u->first_name }} {{ $u->last_name }} —
+                                    {{ $u->email }}</option>
                             @endforeach
                         </select>
+                        @error('addUserId')
+                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
-                    <div class="w-24">
-                        <label class="text-fg-muted text-xs">Priority</label>
+                    <div class="w-32">
+                        <label class="text-fg-muted text-xs block mb-1">Priority <span class="text-zinc-600">(1 =
+                                highest)</span></label>
                         <input wire:model.defer="addPriority" type="number" min="1" max="99"
-                            class="bg-surface-2 mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                            class="bg-surface-2 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
                     </div>
                     <button wire:click="addAgent" type="button"
-                        class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition">
-                        Add
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-medium text-white text-sm transition shrink-0">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        Add Agent
                     </button>
                 </div>
-                @error('addUserId')
-                    <p class="text-xs text-accent-red">{{ $message }}</p>
-                @enderror
             </div>
 
-            {{-- Assigned agents --}}
+            {{-- Assigned agents table --}}
             <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
-                <div class="px-5 py-4 border-surface border-b">
-                    <h3 class="font-bold text-fg text-base">Assigned Agents ({{ $assignedAgents->count() }})</h3>
+                <div class="flex items-center justify-between px-5 py-4 border-surface border-b">
+                    <h3 class="font-bold text-fg text-base">Assigned Agents</h3>
+                    <span class="bg-surface-2 px-2.5 py-0.5 rounded-full text-fg-muted text-xs font-medium">
+                        {{ $assignedAgents->count() }}
+                    </span>
                 </div>
                 <table class="min-w-full text-fg text-sm">
                     <thead>
                         <tr
                             class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
-                            <th class="px-5 py-3 text-left">Name</th>
-                            <th class="px-5 py-3 text-left">Priority</th>
-                            <th class="px-5 py-3 text-left">Last Routed</th>
-                            <th class="px-5 py-3 text-left">Active</th>
+                            <th class="px-5 py-3 w-full text-left">Agent</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Priority</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Last Routed</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Active in Queue</th>
                             <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($assignedAgents as $agent)
                             <tr class="hover:bg-hover border-surface border-b transition">
-                                <td class="px-5 py-3 font-medium">{{ $agent->first_name }} {{ $agent->last_name }}
+                                {{-- Agent with initials avatar --}}
+                                <td class="px-5 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs shrink-0">
+                                            {{ strtoupper(substr($agent->first_name, 0, 1) . substr($agent->last_name, 0, 1)) }}
+                                        </div>
+                                        <div>
+                                            <div class="font-medium text-fg leading-tight">{{ $agent->first_name }}
+                                                {{ $agent->last_name }}</div>
+                                            <div class="text-fg-muted text-xs">{{ $agent->email }}</div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-5 py-3 text-fg-muted">{{ $agent->pivot->priority }}</td>
-                                <td class="px-5 py-3 text-fg-muted text-xs">
+                                {{-- Priority badge --}}
+                                <td class="px-5 py-3 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center justify-center bg-surface-2 rounded-md w-8 h-7 text-fg text-sm font-mono font-semibold">
+                                        {{ $agent->pivot->priority }}
+                                    </span>
+                                </td>
+                                {{-- Last routed --}}
+                                <td class="px-5 py-3 text-fg-muted text-xs whitespace-nowrap">
                                     {{ $agent->pivot->last_call_at ? \Carbon\Carbon::parse($agent->pivot->last_call_at)->diffForHumans() : '—' }}
                                 </td>
-                                <td class="px-5 py-3">
-                                    <input type="checkbox" @checked($agent->pivot->is_active)
+                                {{-- Toggle switch --}}
+                                <td class="px-5 py-3 whitespace-nowrap">
+                                    <button type="button"
                                         wire:click="toggleAgent({{ $agent->id }}, {{ $agent->pivot->is_active ? 'false' : 'true' }})"
-                                        class="bg-surface border-surface-2 rounded focus:ring-blue-500 text-blue-500" />
+                                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none {{ $agent->pivot->is_active ? 'bg-blue-600' : 'bg-surface-3' }}"
+                                        title="{{ $agent->pivot->is_active ? 'Active — click to deactivate' : 'Inactive — click to activate' }}">
+                                        <span
+                                            class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 {{ $agent->pivot->is_active ? 'translate-x-4' : 'translate-x-0' }}"></span>
+                                    </button>
                                 </td>
-                                <td class="px-5 py-3 text-right">
-                                    <button wire:click="removeAgent({{ $agent->id }})" type="button"
-                                        class="text-red-400 hover:text-red-300 text-xs transition">Remove</button>
+                                {{-- Remove --}}
+                                <td class="px-5 py-3 text-right whitespace-nowrap">
+                                    <button wire:click="removeAgent({{ $agent->id }})"
+                                        wire:confirm="Remove {{ $agent->first_name }} {{ $agent->last_name }} from this in-group?"
+                                        type="button"
+                                        class="inline-flex items-center gap-1 text-fg-muted hover:text-red-400 text-xs transition">
+                                        <x-heroicon-o-trash class="w-3.5 h-3.5" />
+                                        Remove
+                                    </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-10 text-zinc-500 text-sm text-center italic">No
-                                    agents assigned yet.</td>
+                                <td colspan="5" class="px-5 py-14 text-center">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <x-heroicon-o-user-group class="w-8 h-8 text-zinc-700" />
+                                        <p class="text-zinc-500 text-sm">No agents assigned yet.</p>
+                                        <p class="text-zinc-600 text-xs">Use the form above to add agents to this
+                                            queue.</p>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -308,7 +362,7 @@
 
     {{-- DIDs Tab --}}
     @if ($activeTab === 'dids')
-        <div class="max-w-4xl">
+        <div>
             <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
                 <div class="flex justify-between items-center px-5 py-4 border-surface border-b">
                     <h3 class="font-bold text-fg text-base">Linked DIDs ({{ $dids->count() }})</h3>
@@ -319,22 +373,29 @@
                     <thead>
                         <tr
                             class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
-                            <th class="px-5 py-3 text-left">Phone Number</th>
-                            <th class="px-5 py-3 text-left">Description</th>
-                            <th class="px-5 py-3 text-left">Status</th>
+                            <th class="px-5 py-3 w-full text-left">Phone Number</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Friendly Name</th>
+                            <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
                             <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($dids as $did)
                             <tr class="hover:bg-hover border-surface border-b transition">
-                                <td class="px-5 py-3 font-mono">{{ $did->phone_number }}</td>
-                                <td class="px-5 py-3 text-fg-muted">{{ $did->description ?? '—' }}</td>
-                                <td class="px-5 py-3">
+                                <td class="px-5 py-3 font-mono font-semibold text-fg">{{ $did->phone_number }}</td>
+                                <td class="px-5 py-3 text-fg-muted text-sm">
+                                    {{ $did->cidNumber?->friendly_name ?? '—' }}</td>
+                                <td class="px-5 py-3 whitespace-nowrap">
                                     @if ($did->is_active)
-                                        <span class="text-green-400 text-xs">Active</span>
+                                        <span
+                                            class="inline-flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-md font-bold text-xs uppercase tracking-wide text-accent-green">
+                                            <span class="bg-green-400 rounded-full w-1.5 h-1.5"></span>Active
+                                        </span>
                                     @else
-                                        <span class="text-fg-muted text-xs">Inactive</span>
+                                        <span
+                                            class="inline-flex items-center gap-1.5 bg-surface-2 px-2.5 py-1 rounded-md font-bold text-fg-muted text-xs uppercase tracking-wide">
+                                            <span class="bg-surface-3 rounded-full w-1.5 h-1.5"></span>Inactive
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 text-right">
