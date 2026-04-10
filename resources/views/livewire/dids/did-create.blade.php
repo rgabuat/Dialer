@@ -3,29 +3,35 @@
 
         <div class="mb-8">
             <h1 class="font-semibold text-2xl tracking-tight">New DID</h1>
-            <p class="text-fg-muted text-sm">Register a phone number and route it to an in-group or IVR menu.</p>
+            <p class="text-fg-muted text-sm">Select an imported CID number and route it to an in-group or IVR menu.</p>
         </div>
 
         <div class="space-y-10 max-w-4xl">
 
             <div class="gap-6 grid grid-cols-1 md:grid-cols-4 pb-10 border-surface border-b">
                 <div>
-                    <h2 class="font-medium">Number</h2>
-                    <p class="text-fg-muted text-sm">The inbound phone number (E.164 format).</p>
+                    <h2 class="font-medium">CID Number</h2>
+                    <p class="text-fg-muted text-sm">Select an imported CID number to assign as a DID.</p>
                 </div>
                 <div class="space-y-5 md:col-span-3">
                     <div>
                         <label class="text-fg-muted text-sm">Phone Number</label>
-                        <input wire:model.defer="phone_number" type="text" placeholder="+15551234567"
-                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full font-mono text-sm" />
-                        @error('phone_number')
+                        <select wire:model.defer="cid_number_id"
+                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm font-mono">
+                            <option value="">— Select a CID number —</option>
+                            @foreach ($availableCids as $cid)
+                                <option value="{{ $cid->id }}">
+                                    {{ $cid->phone_number }}{{ $cid->friendly_name ? ' — ' . $cid->friendly_name : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('cid_number_id')
                             <p class="mt-1 text-xs text-accent-red">{{ $message }}</p>
                         @enderror
-                    </div>
-                    <div>
-                        <label class="text-fg-muted text-sm">Description</label>
-                        <input wire:model.defer="description" type="text" placeholder="e.g. Sales line"
-                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                        @if ($availableCids->isEmpty())
+                            <p class="mt-1 text-xs text-fg-muted">All active CID numbers are already assigned as DIDs.
+                            </p>
+                        @endif
                     </div>
                     <div class="flex items-center gap-3">
                         <input wire:model.defer="is_active" type="checkbox" id="is_active"
@@ -83,17 +89,6 @@
                             @enderror
                         </div>
                     @endif
-
-                    <div>
-                        <label class="text-fg-muted text-sm">Campaign (optional — for reporting)</label>
-                        <select wire:model.defer="campaign_id"
-                            class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm">
-                            <option value="">— None —</option>
-                            @foreach ($campaigns as $c)
-                                <option value="{{ $c->id }}">{{ $c->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                 </div>
             </div>
 

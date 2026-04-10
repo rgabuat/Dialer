@@ -13,17 +13,21 @@ class Did extends Model
 
   protected $fillable = [
     "phone_number",
-    "twilio_sid",
-    "description",
+    "cid_number_id",
     "in_group_id",
     "ivr_menu_id",
-    "campaign_id",
     "is_active",
   ];
 
   protected $casts = [
     "is_active" => "boolean",
   ];
+
+  /** The CID Number (Twilio-imported) this DID handles inbound calls for */
+  public function cidNumber()
+  {
+    return $this->belongsTo(CidNumber::class);
+  }
 
   public function inGroup()
   {
@@ -33,16 +37,5 @@ class Did extends Model
   public function ivrMenu()
   {
     return $this->belongsTo(IvrMenu::class);
-  }
-
-  public function campaign()
-  {
-    return $this->belongsTo(Campaign::class);
-  }
-
-  /** Campaigns using this DID in their CID rotation pool */
-  public function rotationCampaigns()
-  {
-    return $this->belongsToMany(Campaign::class, 'campaign_cid_dids')->withPivot('sort_order');
   }
 }

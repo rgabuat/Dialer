@@ -5,7 +5,8 @@
             <h1 class="text-2xl font-semibold tracking-tight font-mono">{{ $did->phone_number }}</h1>
             <p class="text-sm text-fg-muted">Edit DID routing configuration.</p>
         </div>
-        <a href="{{ route('dids.index') }}" wire:navigate class="text-fg-muted hover:text-fg text-sm transition">← Back</a>
+        <a href="{{ route('dids.index') }}" wire:navigate class="text-fg-muted hover:text-fg text-sm transition">←
+            Back</a>
     </div>
 
     @if (session('success'))
@@ -19,20 +20,24 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
                 <div>
-                    <h2 class="font-medium">Number</h2>
-                    <p class="text-sm text-fg-muted">Phone number details.</p>
+                    <h2 class="font-medium">CID Number</h2>
+                    <p class="text-sm text-fg-muted">The imported CID number linked to this DID.</p>
                 </div>
                 <div class="md:col-span-3 space-y-5">
                     <div>
                         <label class="text-sm text-fg-muted">Phone Number</label>
-                        <input wire:model.defer="phone_number" type="text"
-                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600 font-mono" />
-                        @error('phone_number') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="text-sm text-fg-muted">Description</label>
-                        <input wire:model.defer="description" type="text"
-                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
+                        <select wire:model.defer="cid_number_id"
+                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600 font-mono">
+                            <option value="">— Select a CID number —</option>
+                            @foreach ($availableCids as $cid)
+                                <option value="{{ $cid->id }}" @selected($cid->id == $cid_number_id)>
+                                    {{ $cid->phone_number }}{{ $cid->friendly_name ? ' — ' . $cid->friendly_name : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('cid_number_id')
+                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div class="flex items-center gap-3">
                         <input wire:model.defer="is_active" type="checkbox" id="is_active"
@@ -68,10 +73,13 @@
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
                                 <option value="">Select in-group…</option>
                                 @foreach ($inGroups as $g)
-                                    <option value="{{ $g->id }}" @selected($g->id == $in_group_id)>{{ $g->name }}</option>
+                                    <option value="{{ $g->id }}" @selected($g->id == $in_group_id)>{{ $g->name }}
+                                    </option>
                                 @endforeach
                             </select>
-                            @error('in_group_id') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
+                            @error('in_group_id')
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     @else
                         <div>
@@ -80,23 +88,15 @@
                                 class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
                                 <option value="">Select IVR menu…</option>
                                 @foreach ($ivrMenus as $m)
-                                    <option value="{{ $m->id }}" @selected($m->id == $ivr_menu_id)>{{ $m->name }}</option>
+                                    <option value="{{ $m->id }}" @selected($m->id == $ivr_menu_id)>
+                                        {{ $m->name }}</option>
                                 @endforeach
                             </select>
-                            @error('ivr_menu_id') <p class="text-xs text-accent-red mt-1">{{ $message }}</p> @enderror
+                            @error('ivr_menu_id')
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     @endif
-
-                    <div>
-                        <label class="text-sm text-fg-muted">Campaign (optional — for reporting)</label>
-                        <select wire:model.defer="campaign_id"
-                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
-                            <option value="">— None —</option>
-                            @foreach ($campaigns as $c)
-                                <option value="{{ $c->id }}" @selected($c->id == $campaign_id)>{{ $c->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                 </div>
             </div>
 

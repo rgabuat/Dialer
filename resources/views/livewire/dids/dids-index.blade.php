@@ -43,7 +43,7 @@
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Phone Number</th>
-                        <th class="px-5 py-3 text-left">Description</th>
+                        <th class="px-5 py-3 text-left">Friendly Name</th>
                         <th class="px-5 py-3 text-left">Routes To</th>
                         <th class="px-5 py-3 text-left">Status</th>
                         <th class="px-5 py-3"></th>
@@ -53,7 +53,7 @@
                     @forelse ($dids as $did)
                         <tr class="hover:bg-hover border-surface border-b transition">
                             <td class="px-5 py-4 font-mono font-semibold text-fg">{{ $did->phone_number }}</td>
-                            <td class="px-5 py-4 text-fg-muted">{{ $did->description ?? '—' }}</td>
+                            <td class="px-5 py-4 text-fg-muted">{{ $did->cidNumber?->friendly_name ?? '—' }}</td>
                             <td class="px-5 py-4 text-fg-muted text-sm">
                                 @if ($did->inGroup)
                                     <span
