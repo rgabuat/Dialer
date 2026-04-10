@@ -273,6 +273,136 @@ x-init="
     <x-toast />
     @stack('scripts')
 
+    {{-- ── Frontend diagnostic logger ─────────────────────────────────────
+         Captures JS errors, unhandled promise rejections, and Livewire
+         errors and POSTs them to /api/client-log so they appear in
+         storage/logs/laravel.log alongside server-side events.
+    ──────────────────────────────────────────────────────────────────── --}}
+    <script>
+        (function() {
+            var _csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            var _endpoint = '/api/client-log';
+            var _sending = false;
+            var _queue = [];
+            var _MAX_QUEUE = 20; // don't flood on error storms
+            var _FLUSH_MS = 500; // batch within 500 ms
+
+            function sanitize(v) {
+                if (v === null || v === undefined) return null;
+                return String(v).slice(0, 2000);
+            }
+
+            function send(level, message, ctx) {
+                if (_queue.length >= _MAX_QUEUE) return;
+                _queue.push({
+                    level: level,
+                    message: sanitize(message),
+                    context: ctx || {}
+                });
+                if (_sending) return;
+                _sending = true;
+                setTimeout(flush, _FLUSH_MS);
+            }
+
+            function flush() {
+                var batch = _queue.splice(0);
+                _sending = false;
+                batch.forEach(function(entry) {
+                    try {
+                        fetch(_endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': _csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: JSON.stringify({
+                                level: entry.level,
+                                message: entry.message,
+                                url: window.location.href,
+                                context: entry.context,
+                            }),
+                            keepalive: true,
+                        }).catch(function() {
+                            /* silently ignore network failures */ });
+                    } catch (e) {
+                        /* never throw from the logger itself */ }
+                });
+            }
+
+            // ── 1. Uncaught JS errors ─────────────────────────────────────────
+            window.addEventListener('error', function(event) {
+                send('error', event.message || 'Uncaught error', {
+                    source: event.filename,
+                    line: event.lineno,
+                    col: event.colno,
+                    stack: event.error ? String(event.error.stack || '').slice(0, 1000) : null,
+                });
+            });
+
+            // ── 2. Unhandled promise rejections ──────────────────────────────
+            window.addEventListener('unhandledrejection', function(event) {
+                var reason = event.reason;
+                var msg = (reason && reason.message) ? reason.message : String(reason ||
+                    'Unhandled promise rejection');
+                send('error', msg, {
+                    stack: (reason && reason.stack) ? String(reason.stack).slice(0, 1000) : null,
+                });
+            });
+
+            // ── 3. Livewire errors ────────────────────────────────────────────
+            // Livewire v3 dispatches 'livewire:error' on $wire and also emits
+            // a custom event on the document when a component update fails.
+            document.addEventListener('livewire:error', function(event) {
+                var detail = event.detail || {};
+                send('error', '[Livewire] Component error', {
+                    component: detail.component || null,
+                    status: detail.status || null,
+                    message: sanitize(detail.message || detail.response || ''),
+                });
+            });
+
+            // Livewire v3 also hooks via Livewire.hook
+            document.addEventListener('alpine:init', function() {
+                if (window.Livewire && typeof Livewire.hook === 'function') {
+                    try {
+                        Livewire.hook('request.error', function(context) {
+                            send('error', '[Livewire] Request error', {
+                                status: context?.status,
+                                message: sanitize(context?.response || ''),
+                            });
+                        });
+                        Livewire.hook('commit.error', function(context) {
+                            send('error', '[Livewire] Commit error', {
+                                component: context?.component?.name,
+                                message: sanitize(String(context?.error || '')),
+                            });
+                        });
+                    } catch (e) {
+                        /* Livewire hook API may vary */ }
+                }
+            });
+
+            // ── 4. Wrap console.error so explicit app calls are captured too ─
+            var _origConsoleError = console.error;
+            console.error = function() {
+                _origConsoleError.apply(console, arguments);
+                try {
+                    var parts = Array.prototype.slice.call(arguments).map(function(a) {
+                        return typeof a === 'object' ? JSON.stringify(a) : String(a);
+                    });
+                    send('error', '[console.error] ' + parts.join(' '));
+                } catch (e) {
+                    /* ignore */ }
+            };
+
+            // ── 5. Expose a global helper for manual ad-hoc logging ──────────
+            window._clientLog = function(level, message, ctx) {
+                send(level || 'info', message, ctx);
+            };
+        })();
+    </script>
+
 
 </body>
 

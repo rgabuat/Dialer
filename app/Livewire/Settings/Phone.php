@@ -102,6 +102,6 @@ class Phone extends Component
     public function render()
     {
         return view('livewire.settings.phone')
-            ->layout('livewire.app.layout', ['title' => 'Phone Settings']);
+            ->layout('livewire.settings.layout');
     }
 }

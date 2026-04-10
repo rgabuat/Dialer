@@ -12,8 +12,15 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
+        // Twilio webhook endpoints — called server-to-server, no CSRF token
         'api/call-routing',
         'api/call/complete',
+        'api/call/no-answer',
+        'api/call/queue-check',
+        'api/call/ivr-gather',
         'api/call/forward-twiml',
+        'api/dialer/connect-to-agent',
+        // Frontend error logger — no session context when called from JS
+        'api/client-log',
     ];
 }

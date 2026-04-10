@@ -54,22 +54,65 @@ class TwilioController extends Controller
   {
     \Log::info("[Twilio] handleCallRouting", $request->all());
 
+    $callSid = $request->input("CallSid");
+    $callStatus = strtolower((string) $request->input("CallStatus", ""));
+
+    \Log::debug("[Twilio] handleCallRouting: normalized params", [
+      "call_sid" => $callSid,
+      "call_status" => $callStatus,
+      "to" => $request->input("To"),
+      "from" => $request->input("From"),
+      "agent_param" => $request->input("agent"),
+    ]);
+
+    // Twilio may call this webhook with terminal statuses during hangup.
+    // Do not attempt any routing for ended calls.
+    if (in_array($callStatus, ['completed', 'canceled', 'failed', 'busy', 'no-answer'], true)) {
+      $affected = 0;
+      if ($callSid) {
+        $affected = Conversation::where("call_sid", $callSid)
+          ->whereIn("status", ["queued", "in_progress"])
+          ->update([
+            "status" => "abandoned",
+            "ended_at" => now(),
+          ]);
+      }
+
+      \Log::info("[Twilio] handleCallRouting: terminal status early-exit", [
+        "call_sid" => $callSid,
+        "call_status" => $callStatus,
+        "rows_affected" => $affected,
+      ]);
+
+      return response('<?xml version="1.0" encoding="UTF-8"?><Response/>', 200)
+        ->header('Content-Type', 'text/xml');
+    }
+
     // ── Recording status callback — not a routing request, ignore it ──
     // Twilio fires these to the voice webhook URL when recording segments
     // are ready. Return empty TwiML so Twilio does not re-route the call.
     if ($request->filled('RecordingSid')) {
+      \Log::info("[Twilio] handleCallRouting: recording callback ignored", [
+        "call_sid" => $callSid,
+        "recording_sid" => $request->input("RecordingSid"),
+        "recording_status" => $request->input("RecordingStatus"),
+      ]);
       return response('<?xml version="1.0" encoding="UTF-8"?><Response/>', 200)
         ->header('Content-Type', 'text/xml');
     }
 
     $to = $request->input("To", "");
     $from = $request->input("From", "");
-    $callSid = $request->input("CallSid");
     $agentParam = $request->input("agent");
     $callbackUrl = rtrim(config("app.url"), "/") . "/api/call/complete";
     $voice = new VoiceResponse();
 
     if (empty($to)) {
+      \Log::warning("[Twilio] handleCallRouting: missing destination", [
+        "call_sid" => $callSid,
+        "from" => $from,
+        "call_status" => $callStatus,
+      ]);
       $voice->say("Sorry, no destination was provided.");
       return $this->twimlResponse($voice);
     }
@@ -78,6 +121,13 @@ class TwilioController extends Controller
     $did = Did::where("phone_number", $to)->where("is_active", true)->first();
 
     if ($did) {
+      \Log::info("[Twilio] handleCallRouting: matched DID", [
+        "call_sid" => $callSid,
+        "did_id" => $did->id,
+        "to" => $to,
+        "ivr_menu_id" => $did->ivr_menu_id,
+        "in_group_id" => $did->in_group_id,
+      ]);
       return $this->handleInboundDid(
         $did,
         $from,
@@ -91,6 +141,11 @@ class TwilioController extends Controller
     $isTwilioNumber = $to === config("services.twilio.phone_number");
 
     if ($isTwilioNumber) {
+      \Log::info("[Twilio] handleCallRouting: legacy inbound fallback", [
+        "call_sid" => $callSid,
+        "to" => $to,
+        "from" => $from,
+      ]);
       return $this->handleLegacyInbound(
         $to,
         $from,
@@ -101,6 +156,12 @@ class TwilioController extends Controller
     }
 
     // ── 3. Outbound: browser client dialling a number / agent ─────────
+    \Log::info("[Twilio] handleCallRouting: outbound branch", [
+      "call_sid" => $callSid,
+      "to" => $to,
+      "from" => $from,
+      "agent_param" => $agentParam,
+    ]);
     return $this->handleOutbound(
       $to,
       $from,
@@ -199,32 +260,30 @@ class TwilioController extends Controller
       $update["completed_by"] = $agentUserId;
     }
 
-    Conversation::where("call_sid", $callSid)->update($update);
-
-    $campaign    = $this->campaignForCall($callSid);
-    $ttsVoice    = $campaign?->tts_voice    ?: 'alice';
-    $ttsLanguage = $campaign?->tts_language ?: 'en-US';
-    $voice = new VoiceResponse();
-
-    $ttsMap = [
-      "completed" => $campaign?->tts_completed ?: 'Thank you for calling. Goodbye.',
-      "busy"      => $campaign?->tts_busy      ?: 'We are sorry, no agents are currently available. Please call back later. Goodbye.',
-      "no-answer" => $campaign?->tts_no_answer ?: 'We are sorry, no agents are currently available. Please call back later. Goodbye.',
-      "failed"    => $campaign?->tts_failed    ?: 'We are sorry, we encountered an issue. Please call back later. Goodbye.',
-      "canceled"  => $campaign?->tts_canceled  ?: 'The call was ended. Thank you. Goodbye.',
-    ];
-
-    $message = $ttsMap[$dialStatus] ?? $ttsMap['completed'];
-    $voice->say($message, [
-      "voice"    => $ttsVoice,
-      "language" => $ttsLanguage,
+    \Log::info("[Twilio] callComplete: resolving conversation", [
+      "call_sid"       => $callSid,
+      "dial_status"    => $dialStatus,
+      "dial_duration"  => $dialDuration,
+      "dial_to"        => $dialTo,
+      "agent_user_id"  => $agentUserId,
+      "resolved_status"=> $update["status"],
     ]);
-    $voice->hangup();
 
-    return response($voice->__toString(), 200)->header(
-      "Content-Type",
-      "text/xml"
-    );
+    // Do not overwrite 'queued' status — callNoAnswer may have re-queued this
+    // caller while they wait for the next available agent.
+    $affected = Conversation::where("call_sid", $callSid)
+      ->where("status", "!=", "queued")
+      ->update($update);
+
+    \Log::info("[Twilio] callComplete: DB update result", [
+      "call_sid"        => $callSid,
+      "rows_affected"   => $affected,
+      "skipped_if_zero" => $affected === 0 ? "conversation was queued (re-queued caller), skipped intentionally" : null,
+    ]);
+
+    // statusCallback response body is ignored by Twilio — return empty TwiML.
+    return response('<?xml version="1.0" encoding="UTF-8"?><Response/>', 200)
+      ->header("Content-Type", "text/xml");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -237,21 +296,117 @@ class TwilioController extends Controller
   {
     \Log::info("[Twilio] callNoAnswer", $request->all());
 
-    $callSid     = $request->input("CallSid");
-    $inGroupId   = (int) $request->input("in_group_id");
+    $callSid    = $request->input("CallSid");
+    $dialStatus = strtolower($request->input("DialCallStatus", "no-answer"));
+    $inGroupId  = (int) $request->input("in_group_id");
     $callbackUrl = rtrim(config("app.url"), "/") . "/api/call/complete";
     $voice       = new VoiceResponse();
 
-    // Mark conversation as abandoned
+    $inGroup      = InGroup::find($inGroupId);
+    $conversation = Conversation::where("call_sid", $callSid)->first();
+    $campaign     = $this->campaignForCall($callSid, $inGroup);
+
+    \Log::debug("[Twilio] callNoAnswer: resolved context", [
+      "call_sid" => $callSid,
+      "dial_status" => $dialStatus,
+      "in_group_id" => $inGroupId,
+      "in_group_found" => (bool) $inGroup,
+      "conversation_found" => (bool) $conversation,
+      "conversation_status" => $conversation?->status,
+    ]);
+
+    // ── Call connected and ended normally ────────────────────────────────────
+    // DialCallStatus=completed means the agent answered and the call finished.
+    // Say goodbye, hang up. callComplete (statusCallback) handles the DB update.
+    if ($dialStatus === 'completed') {
+      \Log::info("[Twilio] callNoAnswer: call completed normally", [
+        "call_sid"    => $callSid,
+        "dial_status" => $dialStatus,
+      ]);
+      $voice->say(
+        $campaign?->tts_completed ?: 'Thank you for calling. Goodbye.',
+        [
+          'voice'    => $campaign?->tts_voice    ?: 'alice',
+          'language' => $campaign?->tts_language ?: 'en-US',
+        ]
+      );
+      $voice->hangup();
+      return $this->twimlResponse($voice);
+    }
+
+    // ── No-answer / busy / failed — attempt re-queue ─────────────────────────
+    // Re-queue the caller if they are still within their group's max wait time.
+    // Only re-queue for: no-answer (ring timeout), busy, failed, canceled.
+    if ($inGroup && $conversation) {
+      $waitedSeconds = now()->diffInSeconds($conversation->started_at);
+      $maxQueueWait  = $inGroup->queue_max_wait_seconds ?: 300;
+
+      if ($waitedSeconds < $maxQueueWait) {
+        Conversation::where("call_sid", $callSid)->update([
+          "status"   => "queued",
+          "ended_at" => null,
+        ]);
+
+        $holdMusic     = $campaign?->hold_music_url ?: 'https://demo.twilio.com/docs/classic.mp3';
+        $queueCheckUrl = rtrim(config("app.url"), "/")
+                       . "/api/call/queue-check?in_group_id={$inGroup->id}";
+
+        \Log::info("[Twilio] callNoAnswer: re-queuing caller", [
+          "call_sid"       => $callSid,
+          "dial_status"    => $dialStatus,
+          "waited_seconds" => $waitedSeconds,
+          "max_wait"       => $maxQueueWait,
+        ]);
+
+        $voice->say(
+          "All agents are still busy. Please continue to hold.",
+          [
+            "voice"    => $campaign?->tts_voice    ?: 'alice',
+            "language" => $campaign?->tts_language ?: 'en-US',
+          ]
+        );
+        $gather = $voice->gather([
+          "action"      => $queueCheckUrl,
+          "method"      => "POST",
+          "timeout"     => 15,
+          "finishOnKey" => "",
+        ]);
+        $gather->play($holdMusic);
+        $voice->redirect($queueCheckUrl, ["method" => "POST"]);
+        return $this->twimlResponse($voice);
+      }
+
+      \Log::info("[Twilio] callNoAnswer: max queue wait exceeded", [
+        "call_sid" => $callSid,
+        "dial_status" => $dialStatus,
+        "waited_seconds" => $waitedSeconds,
+        "max_wait" => $maxQueueWait,
+      ]);
+    } else {
+      \Log::warning("[Twilio] callNoAnswer: missing in-group context for requeue", [
+        "call_sid" => $callSid,
+        "dial_status" => $dialStatus,
+        "in_group_id" => $inGroupId,
+        "in_group_found" => (bool) $inGroup,
+        "conversation_found" => (bool) $conversation,
+      ]);
+    }
+
+    // ── Time expired or no in-group context — abandon ────────────────────────
     Conversation::where("call_sid", $callSid)->update([
       "status"   => "abandoned",
       "ended_at" => now(),
     ]);
 
-    $inGroup = InGroup::find($inGroupId);
+    \Log::info("[Twilio] callNoAnswer: abandoning call", [
+      "call_sid" => $callSid,
+      "dial_status" => $dialStatus,
+      "in_group_id" => $inGroupId,
+      "drop_action" => $inGroup?->drop_action,
+      "drop_destination" => $inGroup?->drop_destination,
+    ]);
 
     if (!$inGroup) {
-      $campaign = $this->campaignForCall($callSid);
       $voice->say(
         $campaign?->tts_no_answer ?: 'We are sorry, no agents are currently available. Please call back later. Goodbye.',
         [
@@ -273,21 +428,39 @@ class TwilioController extends Controller
 
   // ──────────────────────────────────────────────────────────────────────────
   //  Queue check  POST /api/call/queue-check
-  //  Fired by <Redirect> while caller is holding. Polls for available agents,
-  //  loops with hold music, or executes drop_action when max wait expires.
+  //  Fired by <Gather> action while caller is holding. Polls for available
+  //  agents every 15 s, loops with hold music, or executes drop_action when
+  //  max wait expires. Also handles caller hangup (CallStatus=completed).
   // ──────────────────────────────────────────────────────────────────────────
 
   public function callQueueCheck(Request $request)
   {
     \Log::info("[Twilio] callQueueCheck", $request->only(["CallSid", "CallStatus", "in_group_id"]));
 
-    $callSid     = $request->input("CallSid");
-    $inGroupId   = (int) $request->input("in_group_id");
+    $callSid    = $request->input("CallSid");
+    $callStatus = strtolower((string) $request->input("CallStatus", ""));
+    $inGroupId  = (int) $request->input("in_group_id");
     $callbackUrl = rtrim(config("app.url"), "/") . "/api/call/complete";
     $voice       = new VoiceResponse();
 
+    // ── Caller hung up while holding — clean up and return empty response ──
+    if (in_array($callStatus, ['completed', 'canceled', 'failed', 'busy', 'no-answer'], true)) {
+      Conversation::where("call_sid", $callSid)
+        ->whereIn("status", ["queued", "in_progress"])
+        ->update(["status" => "abandoned", "ended_at" => now()]);
+      \Log::info("[Twilio] callQueueCheck: caller hung up during hold", [
+        "call_sid"    => $callSid,
+        "call_status" => $callStatus,
+      ]);
+      return $this->twimlResponse($voice); // empty <Response/> — Twilio ignores it
+    }
+
     $inGroup = InGroup::find($inGroupId);
     if (!$inGroup) {
+      \Log::error("[Twilio] callQueueCheck: in-group not found", [
+        "call_sid" => $callSid,
+        "in_group_id" => $inGroupId,
+      ]);
       $voice->say("Configuration error. Goodbye.");
       $voice->hangup();
       return $this->twimlResponse($voice);
@@ -305,6 +478,14 @@ class TwilioController extends Controller
         "status"   => "abandoned",
         "ended_at" => now(),
       ]);
+      \Log::info("[Twilio] callQueueCheck: queue wait exceeded, executing drop action", [
+        "call_sid" => $callSid,
+        "in_group_id" => $inGroupId,
+        "waited_s" => $waitedSeconds,
+        "max_wait_s" => $maxQueueWait,
+        "drop_action" => $inGroup->drop_action,
+        "drop_destination" => $inGroup->drop_destination,
+      ]);
       return $this->executeDropAction(
         $inGroup->drop_action,
         $inGroup->drop_destination,
@@ -320,6 +501,17 @@ class TwilioController extends Controller
       // Agent now available — connect the call
       $noAnswerUrl = rtrim(config("app.url"), "/")
         . "/api/call/no-answer?in_group_id={$inGroup->id}";
+
+      \Log::info("[Twilio] callQueueCheck: agent(s) available, connecting call", [
+        "call_sid"     => $callSid,
+        "in_group_id"  => $inGroupId,
+        "waited_s"     => $waitedSeconds,
+        "agent_count"  => $agents->count(),
+        "agent_ids"    => $agents->pluck('user_id')->toArray(),
+      ]);
+
+      // Lift status back to in_progress now that we're dialing
+      Conversation::where("call_sid", $callSid)->update(["status" => "in_progress"]);
 
       $dial = $voice->dial("", [
         "callerId"            => config("services.twilio.caller_id"),
@@ -347,13 +539,34 @@ class TwilioController extends Controller
       return $this->twimlResponse($voice);
     }
 
-    // Still no agents — play hold music and loop back
+    // Still no agents — keep status queued, play 15 s of hold music, then
+    // post back to this endpoint via <Gather> action (fires on timeout AND
+    // on caller hangup, giving us immediate hangup detection).
+    Conversation::where("call_sid", $callSid)->update(["status" => "queued"]);
+
+    \Log::info("[Twilio] callQueueCheck: still no agents, looping hold", [
+      "call_sid"    => $callSid,
+      "in_group_id" => $inGroupId,
+      "waited_s"    => $waitedSeconds,
+      "max_wait_s"  => $maxQueueWait,
+    ]);
+
     $holdMusic     = $campaign?->hold_music_url ?: 'https://demo.twilio.com/docs/classic.mp3';
     $queueCheckUrl = rtrim(config("app.url"), "/")
                    . "/api/call/queue-check?in_group_id={$inGroup->id}";
 
-    $voice->play($holdMusic);
+    // <Gather> action is called after timeout OR on hangup (CallStatus=completed)
+    $gather = $voice->gather([
+      "action"       => $queueCheckUrl,
+      "method"       => "POST",
+      "timeout"      => 15,
+      "finishOnKey"  => "",
+    ]);
+    $gather->play($holdMusic);
+
+    // Fallback redirect in case Gather never fires (should not happen)
     $voice->redirect($queueCheckUrl, ["method" => "POST"]);
+
     return $this->twimlResponse($voice);
   }
 
@@ -546,20 +759,22 @@ class TwilioController extends Controller
       ]
     );
 
-    // Create conversation record
-    $conversation = Conversation::create([
-      'call_sid'      => $call->sid,
-      'channel'       => 'voice',
-      'direction'     => 'outbound',
-      'status'        => 'in_progress',
-      'contact_phone' => $entry->phone_number,
-      'contact_name'  => optional($entry->lead)->first_name . ' ' . optional($entry->lead)->last_name,
-      'campaign_id'   => $campaign->id,
-      'cid_number_id' => $cidModel?->id,
-      'lead_id'       => $entry->lead_id,
-      'assigned_to'   => auth()->id(),
-      'started_at'    => now(),
-    ]);
+    // Create/update conversation record idempotently (Twilio can retry callbacks).
+    $conversation = Conversation::updateOrCreate(
+      ['call_sid' => $call->sid],
+      [
+        'channel'       => 'voice',
+        'direction'     => 'outbound',
+        'status'        => 'in_progress',
+        'contact_phone' => $entry->phone_number,
+        'contact_name'  => optional($entry->lead)->first_name . ' ' . optional($entry->lead)->last_name,
+        'campaign_id'   => $campaign->id,
+        'cid_number_id' => $cidModel?->id,
+        'lead_id'       => $entry->lead_id,
+        'assigned_to'   => auth()->id(),
+        'started_at'    => now(),
+      ]
+    );
 
     return response()->json([
       'call_sid'       => $call->sid,
@@ -618,6 +833,14 @@ class TwilioController extends Controller
     string $callbackUrl,
     VoiceResponse $voice
   ): \Illuminate\Http\Response {
+    \Log::info("[Twilio] handleInboundDid", [
+      "call_sid" => $callSid,
+      "did_id" => $did->id,
+      "ivr_menu_id" => $did->ivr_menu_id,
+      "in_group_id" => $did->in_group_id,
+      "from" => $from,
+    ]);
+
     if ($did->ivr_menu_id) {
       // ── IVR path ──────────────────────────────────────────────────
       $menu = IvrMenu::with("options")->find($did->ivr_menu_id);
@@ -674,6 +897,11 @@ class TwilioController extends Controller
     }
 
     // DID exists but no destination configured
+    \Log::warning("[Twilio] handleInboundDid: DID has no destination", [
+      "call_sid" => $callSid,
+      "did_id" => $did->id,
+      "from" => $from,
+    ]);
     $voice->say(
       "This number is not currently configured. Please try again later."
     );
@@ -705,6 +933,14 @@ class TwilioController extends Controller
         "started_at" => now(),
       ]
     );
+
+    \Log::info("[Twilio] handleLegacyInbound: availability check", [
+      "call_sid" => $callSid,
+      "to" => $to,
+      "from" => $from,
+      "available_agents" => $availableAgents->count(),
+      "agent_ids" => $availableAgents->pluck("user_id")->toArray(),
+    ]);
 
     if ($availableAgents->isEmpty()) {
       $voice->say(
@@ -766,6 +1002,16 @@ class TwilioController extends Controller
     $cidModel = $campaign?->nextCidModel();
     $callerId = $cidModel?->phone_number ?? $campaign?->caller_id ?? config("services.twilio.caller_id");
 
+    \Log::info("[Twilio] handleOutbound: resolved dial context", [
+      "call_sid" => $callSid,
+      "to" => $to,
+      "from" => $from,
+      "resolved_user_id" => $userId,
+      "campaign_id" => $campaign?->id,
+      "cid_number_id" => $cidModel?->id,
+      "caller_id" => $callerId,
+    ]);
+
     Conversation::create([
       "call_sid"       => $callSid,
       "channel"        => "voice",
@@ -826,6 +1072,12 @@ class TwilioController extends Controller
   ): \Illuminate\Http\Response {
     // ── After-hours check ──────────────────────────────────────────────
     if ($inGroup->hours_json && !$this->isWithinHours($inGroup)) {
+      \Log::info("[Twilio] routeToInGroup: after-hours drop action", [
+        "call_sid" => $callSid,
+        "in_group_id" => $inGroup->id,
+        "after_hours_action" => $inGroup->after_hours_action,
+        "after_hours_destination" => $inGroup->after_hours_destination,
+      ]);
       return $this->executeDropAction(
         $inGroup->after_hours_action,
         $inGroup->after_hours_destination,
@@ -836,6 +1088,15 @@ class TwilioController extends Controller
 
     // ── Select agents ──────────────────────────────────────────────────
     $agents = $this->selectAgents($inGroup);
+
+    \Log::info("[Twilio] routeToInGroup: agent selection", [
+      "in_group_id"    => $inGroup->id,
+      "in_group_name"  => $inGroup->name,
+      "call_sid"       => $callSid,
+      "agents_found"   => $agents->count(),
+      "agent_routing"  => $inGroup->agent_routing,
+      "agent_ids"      => $agents->pluck('user_id')->toArray(),
+    ]);
 
     if ($agents->isEmpty()) {
       // queue_max_wait_seconds = 0 → skip queue and drop immediately
@@ -855,6 +1116,16 @@ class TwilioController extends Controller
       $queueCheckUrl = rtrim(config("app.url"), "/")
                      . "/api/call/queue-check?in_group_id={$inGroup->id}";
 
+      // Mark as queued so the AgentBecameAvailable listener can redirect it
+      Conversation::where("call_sid", $callSid)->update(["status" => "queued"]);
+
+      \Log::info("[Twilio] routeToInGroup: no agents, entering hold queue", [
+        "in_group_id"       => $inGroup->id,
+        "call_sid"          => $callSid,
+        "queue_check_url"   => $queueCheckUrl,
+        "queue_max_wait_s"  => $inGroup->queue_max_wait_seconds ?? 300,
+      ]);
+
       $voice->say(
         "All agents are currently busy. Please hold and we will connect you shortly.",
         [
@@ -862,7 +1133,15 @@ class TwilioController extends Controller
           "language" => $campaign?->tts_language ?: 'en-US',
         ]
       );
-      $voice->play($holdMusic);
+      // <Gather> fires on timeout (15 s) AND on caller hangup, giving us
+      // immediate detection without waiting for the full music track.
+      $gather = $voice->gather([
+        "action"      => $queueCheckUrl,
+        "method"      => "POST",
+        "timeout"     => 15,
+        "finishOnKey" => "",
+      ]);
+      $gather->play($holdMusic);
       $voice->redirect($queueCheckUrl, ["method" => "POST"]);
       return $this->twimlResponse($voice);
     }
@@ -884,6 +1163,15 @@ class TwilioController extends Controller
     foreach ($agents as $agent) {
       $dial->client("user_" . $agent["user_id"]);
     }
+
+    \Log::info("[Twilio] routeToInGroup: dialing selected agents", [
+      "call_sid" => $callSid,
+      "in_group_id" => $inGroup->id,
+      "timeout" => $timeout,
+      "no_answer_url" => $noAnswerUrl,
+      "agent_count" => $agents->count(),
+      "agent_ids" => $agents->pluck("user_id")->toArray(),
+    ]);
 
     // Update round-robin pivot for any single-agent algorithms
     if (

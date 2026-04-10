@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TwilioController;
+use App\Http\Controllers\ClientLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,11 @@ use App\Http\Controllers\TwilioController;
 Route::middleware("auth:sanctum")->get("/user", function (Request $request) {
   return $request->user();
 });
+
+// ── Frontend error reporting — throttled, no auth required ───────────────
+Route::post('/client-log', [ClientLogController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('client.log');
 
 Route::post("/call-routing", [
   TwilioController::class,
