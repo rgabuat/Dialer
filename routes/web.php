@@ -42,6 +42,7 @@ use App\Livewire\InGroups\InGroupEdit;
 use App\Livewire\Dids\DidsIndex;
 use App\Livewire\Dids\DidCreate;
 use App\Livewire\Dids\DidEdit;
+use App\Livewire\Dids\CidNumbersIndex;
 use App\Livewire\IvrMenus\IvrMenusIndex;
 use App\Livewire\IvrMenus\IvrMenuCreate;
 use App\Livewire\IvrMenus\IvrMenuEdit;
@@ -216,6 +217,9 @@ Route::middleware(["auth"])->group(function () {
     Route::get("/dids", DidsIndex::class)->name("dids.index");
     Route::get("/did/create", DidCreate::class)->name("did.create");
     Route::get("/did/{did}/edit", DidEdit::class)->name("did.edit");
+
+    // CID Numbers (Twilio provisioned numbers)
+    Route::get("/cid-numbers", CidNumbersIndex::class)->name("cid-numbers.index");
 
     //IVR Menus
     Route::get("/ivr-menus", IvrMenusIndex::class)->name("ivr-menus.index");

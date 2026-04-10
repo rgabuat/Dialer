@@ -13,6 +13,7 @@ class Did extends Model
 
   protected $fillable = [
     "phone_number",
+    "twilio_sid",
     "description",
     "in_group_id",
     "ivr_menu_id",

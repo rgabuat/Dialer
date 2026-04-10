@@ -181,12 +181,19 @@ return [
       "in-group",
       "dids",
       "did",
+      "cid-numbers",
       "ivr-menus",
       "ivr-menu",
     ],
     "permission" => null,
     "bottom" => false,
     "children" => [
+      [
+        "label" => "CID Numbers",
+        "route" => "cid-numbers.index",
+        "segment" => "cid-numbers",
+        "permission" => null,
+      ],
       [
         "label" => "In-Groups",
         "route" => "in-groups.index",
