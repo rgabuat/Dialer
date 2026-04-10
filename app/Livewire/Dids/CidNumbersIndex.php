@@ -38,18 +38,11 @@ class CidNumbersIndex extends Component
 
     private function loadNumbers(): void
     {
-        // Build a map of already-imported DIDs keyed by phone_number
-        $dids = Did::whereNotNull('twilio_sid')
-            ->orWhereIn('phone_number', function ($q) {
-                // also catch DIDs imported before twilio_sid column existed
-            })
-            ->get(['id', 'phone_number', 'twilio_sid']);
-
-        // Rebuild with all DIDs so we can match by phone_number too
-        $allDids = Did::all(['id', 'phone_number', 'twilio_sid']);
+        // Build a map of all DIDs keyed by phone_number for quick lookup
         $this->importedMap    = [];
         $this->importedSidMap = [];
-        foreach ($allDids as $did) {
+
+        foreach (Did::all(['id', 'phone_number', 'twilio_sid']) as $did) {
             $this->importedMap[$did->phone_number]    = $did->id;
             $this->importedSidMap[$did->phone_number] = $did->twilio_sid ?? '';
         }
