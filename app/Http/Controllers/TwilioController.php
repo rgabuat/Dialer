@@ -551,7 +551,7 @@ class TwilioController extends Controller
     VoiceResponse $voice
   ): \Illuminate\Http\Response {
     $availableAgents = AgentStatus::with(["statusType", "user"])
-      ->whereHas("statusType", fn($q) => $q->where("is_available", true))
+      ->whereHas("statusType", fn($q) => $q->where("is_available", true)->where("handles_inbound", true))
       ->get();
 
     Conversation::create([
@@ -943,7 +943,7 @@ class TwilioController extends Controller
     // Base: get agents who are (a) in the group, (b) active in pivot, (c) available
     $availableUserIds = AgentStatus::whereHas(
       "statusType",
-      fn($q) => $q->where("is_available", true)
+      fn($q) => $q->where("is_available", true)->where("handles_inbound", true)
     )->pluck("user_id");
 
     $pivotQuery = $inGroup
