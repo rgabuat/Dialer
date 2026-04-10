@@ -1,0 +1,56 @@
+---
+title: Outbound CID Rotation Flow
+---
+flowchart TD
+    AGENT(["Agent\nInitiates Outbound Call"])
+    OUTBOUND["POST /api/call/outbound\nTwilioController@handleOutbound"]
+
+    AGENT --> OUTBOUND
+
+    CAMP_LOOKUP["Resolve Campaign\nfrom agent session"]
+    OUTBOUND --> CAMP_LOOKUP
+
+    NEXT_CID["Campaign::nextCid()"]
+    CAMP_LOOKUP --> NEXT_CID
+
+    ROT_ON{"cid_rotation\nenabled?"}
+    NEXT_CID --> ROT_ON
+
+    ROT_OFF_CALLER["Use campaign.caller_id\n(or system default)"]
+    ROT_ON -- "no" --> ROT_OFF_CALLER
+
+    POOL_QUERY["Query CidNumber\nWHERE is_active = true\nAND in_rotation = true\nORDER BY phone_number"]
+    ROT_ON -- "yes" --> POOL_QUERY
+
+    POOL_EMPTY{"Pool\nempty?"}
+    POOL_QUERY --> POOL_EMPTY
+
+    FALLBACK["Fallback to\ncampaign.caller_id\n(or system default)"]
+    POOL_EMPTY -- "yes" --> FALLBACK
+
+    REDIS_GET["Redis GET\ncid_rotation:{campaign_id}\n(default 0)"]
+    POOL_EMPTY -- "no" --> REDIS_GET
+
+    PICK["phone_number = pool[index % count]"]
+    REDIS_GET --> PICK
+
+    REDIS_INC["Redis SET\ncid_rotation:{campaign_id}\n= (index + 1) % count\nTTL: 1 day"]
+    PICK --> REDIS_INC
+
+    BUILD_CALL["Build TwiML\n<Dial callerId=selectedNumber>"]
+    ROT_OFF_CALLER & FALLBACK & REDIS_INC --> BUILD_CALL
+
+    TWILIO(["Twilio\nPlaces Call\nwith selected CLI"])
+    BUILD_CALL --> TWILIO
+
+    subgraph CID_MGMT["CID Pool Management (/cid-numbers)"]
+        direction TB
+        TWILIO_LIST["Twilio Phone Numbers\n(live API list)"]
+        IMPORT["Import as CID\nCidNumber::create()\n+ syncVoiceWebhook()"]
+        TOGGLE_ACTIVE["Toggle is_active\nenables/disables number"]
+        TOGGLE_ROT["Toggle in_rotation\nadds/removes from rotation pool"]
+
+        TWILIO_LIST -->|"Import button"| IMPORT
+        IMPORT --> TOGGLE_ACTIVE
+        IMPORT --> TOGGLE_ROT
+    end

@@ -19,13 +19,13 @@
 | Field | Type | Description |
 |---|---|---|
 | `name` | string | Display name |
-| `phone_number` | string | Inbound DID match number |
 | `description` | string (nullable) | Free-text description |
 | `is_active` | boolean | Whether the campaign accepts calls |
 | `type` | enum | `OUTBOUND`, `INBOUND`, `BLENDED` |
 | `dial_mode` | enum | `MANUAL`, `PREVIEW`, `PROGRESSIVE`, `PREDICTIVE` |
 | `dial_level` | decimal | Predictive dial ratio (agents × dial_level = simultaneous dials) |
-| `caller_id` | string (nullable) | Outbound CLI; falls back to system default |
+| `caller_id` | string (nullable) | Fallback outbound CLI when CID rotation is off or pool is empty |
+| `cid_rotation` | boolean | Enable round-robin CID rotation from the global CID pool |
 | `script` | text (nullable) | Agent script shown in conversation Script tab |
 | `acw_seconds` | integer | After-Call Work timer in seconds (0 = disabled) |
 | `hopper_level` | integer | Number of leads to pre-load into the dialer hopper |
@@ -39,6 +39,16 @@
 | `PREVIEW` | Agent reviews the lead record before the call is placed. |
 | `PROGRESSIVE` | Server places one call per available agent automatically. |
 | `PREDICTIVE` | Server dials at `dial_level × available agents` to maximise connect time. |
+
+## CID Rotation
+
+When `cid_rotation` is enabled, `Campaign::nextCid()` selects the outbound caller ID for each call using a round-robin algorithm over the global CID pool:
+
+- Pool: all `CidNumber` records where `is_active = true` AND `in_rotation = true`.
+- Position tracked in Redis: `cid_rotation:{campaign_id}`.
+- Falls back to the campaign's `caller_id` (or system default) if the pool is empty.
+
+The CID pool is managed globally on the **CID Numbers** page (`/cid-numbers`) using per-number toggle switches — not per campaign.
 
 ## Inbound-Group Binding
 
@@ -56,6 +66,7 @@ A campaign may be linked to one or more **InGroups**. The binding is stored via 
 - `InGroup` — `hasMany`; in-groups routed to this campaign.
 - `CallbackSchedule` — `hasMany`; scheduled callbacks from dispositions.
 - `DialerHopper` — pre-queued leads for automated dial modes.
+- `CidNumber` — global pool; `nextCid()` queries `CidNumber` directly (no per-campaign pivot).
 
 ## Navigation
 

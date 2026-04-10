@@ -1,6 +1,8 @@
 ---
 title: Inbound Call Flow — DID → IVR → In-Group → Agent
 ---
+%% This diagram covers INBOUND calls only.
+%% For outbound CID rotation see outbound-cid-flow.mmd
 flowchart TD
     TWILIO(["Twilio\nInbound Call"])
     WEBHOOK["POST /api/call-routing\nTwilioController@handleCallRouting"]
@@ -98,11 +100,9 @@ flowchart TD
     COMPLETE["POST /api/call/complete\ncallComplete\nupdate Conversation"]
     DIAL -->|"call ends"| COMPLETE
 
-    %% ── No DID: legacy fallback ─────────────────────────────────────────
-    LEGACY["handleLegacyInbound\nCampaign.phone_number match"]
-    OUTBOUND["handleOutbound\nbrowser client dial"]
+    %% ── No DID match: outbound leg ──────────────────────────────────────
+    OUTBOUND["handleOutbound\nbrowser client dial\n(see outbound-cid-flow.mmd)"]
 
-    DID_LOOKUP -- "not found\n(campaign phone)" --> LEGACY
     DID_LOOKUP -- "not found\n(To = client:user_N)" --> OUTBOUND
 
-    LEGACY & OUTBOUND --> DIAL
+    OUTBOUND --> DIAL

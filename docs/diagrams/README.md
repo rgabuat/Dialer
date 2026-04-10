@@ -13,10 +13,8 @@ This directory stores Mermaid source files used by the documentation.
 
 - [app-structure.mmd](app-structure.mmd): repository structure overview.
 - [modules.mmd](modules.mmd): high-level feature module map.
-
-## Core Diagrams
-
 - [inbound-call-flow.mmd](inbound-call-flow.mmd): end-to-end inbound call flow (DID → IVR → In-Group → Agent).
+- [outbound-cid-flow.mmd](outbound-cid-flow.mmd): outbound CID rotation (CID pool → round-robin → Twilio caller ID).
 
 ## Module Diagrams
 

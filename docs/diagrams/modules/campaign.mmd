@@ -4,13 +4,14 @@ title: Campaign Module — Data Model & UI Flow
 flowchart TD
     subgraph DATA["Data Model"]
         direction TB
-        CAMP["Campaign\nname, phone_number\ntype, dial_mode, dial_level\ncaller_id, script\nacw_seconds, hopper_level, max_calls"]
+        CAMP["Campaign\nname\ntype, dial_mode, dial_level\ncaller_id, cid_rotation\nscript\nacw_seconds, hopper_level, max_calls"]
         CL["CallList\nname, file_path"]
         DISP["Disposition\nname, code, category\nrequires_callback"]
         IG["InGroup\ncampaign_id FK"]
         DH["DialerHopper\nlead_id, campaign_id"]
         CB["CallbackSchedule\nlead_id, scheduled_at"]
         LEAD["Lead\nphone, first_name..."]
+        CID["CidNumber\n(global pool)\nis_active + in_rotation"]
 
         CAMP -->|"hasMany"| CL
         CAMP -->|"hasMany"| DISP
@@ -18,6 +19,20 @@ flowchart TD
         CAMP -->|"hasMany"| DH
         CAMP -->|"hasMany"| CB
         CL -->|"hasMany"| LEAD
+        CAMP -.->|"nextCid() queries global pool"| CID
+    end
+
+    subgraph CID_LOGIC["CID Rotation Logic"]
+        direction TB
+        ROT_ON{"cid_rotation\nenabled?"}
+        POOL["Query CidNumber\nis_active=true\nin_rotation=true"]
+        RR["Round-robin\nRedis: cid_rotation:{id}"]
+        FB["Fallback:\ncampaign.caller_id"]
+
+        ROT_ON -- "yes" --> POOL
+        POOL -->|"pool empty"| FB
+        POOL -->|"pool has numbers"| RR
+        ROT_ON -- "no" --> FB
     end
 
     subgraph DIALER["Dialer Engine"]
@@ -31,7 +46,7 @@ flowchart TD
         direction TB
         IDX["CampaignsIndex\n/campaigns"]
         CREATE["CampaignCreate\n/campaign/create"]
-        EDIT["CampaignEdit\n/campaign/{id}/edit\nDetails + Dialer + InGroups + Script"]
+        EDIT["CampaignEdit\n/campaign/{id}/edit\nDetails + Dialer + CID Rotation + InGroups + Script"]
         SELECT["CampaignSelect\n/campaign/select"]
         LISTS["CallListsIndex\n/campaign/{id}/lists"]
         DISPS["DispositionsIndex\n/campaign/{id}/dispositions"]
@@ -39,3 +54,4 @@ flowchart TD
 
     CAMP --- UI
     CAMP --- DIALER
+    CAMP --- CID_LOGIC

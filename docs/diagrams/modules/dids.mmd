@@ -7,14 +7,14 @@ flowchart TD
         DID["Did\nphone_number (unique)\ndescription\nis_active"]
         IG["InGroup"]
         IVR["IvrMenu"]
-        CAMP["Campaign"]
 
         DID -->|"belongsTo (nullable)"| IG
         DID -->|"belongsTo (nullable)"| IVR
-        DID -->|"belongsTo (nullable)"| CAMP
+
+        CID["CidNumber\nphone_number (unique)\ntwilio_sid\nfriendly_name\nis_active\nin_rotation"]
     end
 
-    subgraph ROUTING["Call Routing Decision"]
+    subgraph ROUTING["Inbound Call Routing"]
         direction LR
         MATCH["DID matched\nphone_number = Twilio To"]
         HAS_IVR{"ivr_menu_id set?"}
@@ -30,9 +30,20 @@ flowchart TD
         HAS_GROUP -- "no" --> NO_DEST
     end
 
+    subgraph CID_ROTATION["Outbound CID Rotation"]
+        direction LR
+        POOL["CidNumber pool\nis_active=true\nin_rotation=true"]
+        ROUNDROBIN["Round-robin index\nRedis: cid_rotation:{id}"]
+        FALLBACK["Campaign.caller_id\n(fallback)"]
+
+        POOL --> ROUNDROBIN
+        ROUNDROBIN -->|"pool empty"| FALLBACK
+    end
+
     subgraph UI["UI Components"]
         direction TB
-        IDX["DidsIndex\n/dids\nsearch, paginate\nshows In-Group / IVR Menu / Campaign"]
-        CREATE["DidCreate\n/did/create\nphone_number, description\ndestination: in_group | ivr_menu\nis_active"]
-        EDIT["DidEdit\n/did/{id}/edit\nsame form + delete confirm"]
+        IDX["DidsIndex\n/dids\nsearch, paginate\nshows In-Group / IVR Menu"]
+        CREATE["DidCreate\n/did/create"]
+        EDIT["DidEdit\n/did/{id}/edit"]
+        CIDX["CidNumbersIndex\n/cid-numbers\nImported CID: Active + In Rotation toggles\nTwilio list: Import + Sync Webhook"]
     end
