@@ -19,6 +19,7 @@ class CampaignEdit extends Component
     public string $dial_mode = 'MANUAL';
     public string $dial_level = '1.00';
     public string $caller_id = '';
+    public bool $cid_rotation = false;
     public string $script = '';
     public int $acw_seconds = 0;
     public int $hopper_level = 50;
@@ -39,6 +40,7 @@ class CampaignEdit extends Component
         $this->dial_mode    = $campaign->dial_mode ?? 'MANUAL';
         $this->dial_level   = (string) ($campaign->dial_level ?? '1.00');
         $this->caller_id    = $campaign->caller_id ?? '';
+        $this->cid_rotation = (bool) ($campaign->cid_rotation ?? false);
         $this->script       = $campaign->script ?? '';
         $this->acw_seconds  = (int) ($campaign->acw_seconds ?? 0);
         $this->hopper_level = (int) ($campaign->hopper_level ?? 50);
@@ -49,6 +51,7 @@ class CampaignEdit extends Component
             ->pluck('id')
             ->map(fn ($id) => (string) $id)
             ->toArray();
+
     }
 
     public function save(): void
@@ -61,11 +64,12 @@ class CampaignEdit extends Component
             'dial_mode'    => ['required', 'in:MANUAL,PREVIEW,PROGRESSIVE,PREDICTIVE'],
             'dial_level'   => ['numeric', 'min:0.1', 'max:10'],
             'caller_id'    => ['nullable', 'string', 'max:50'],
+            'cid_rotation' => ['boolean'],
             'script'       => ['nullable', 'string'],
             'acw_seconds'  => ['integer', 'min:0', 'max:3600'],
             'hopper_level' => ['integer', 'min:1', 'max:1000'],
             'max_calls'    => ['nullable', 'integer', 'min:1', 'max:100'],
-            'selectedInGroupIds' => ['array'],
+            'selectedInGroupIds'   => ['array'],
             'selectedInGroupIds.*' => ['integer', 'exists:in_groups,id'],
         ]);
 
@@ -77,6 +81,7 @@ class CampaignEdit extends Component
             'dial_mode'    => $this->dial_mode,
             'dial_level'   => $this->dial_level,
             'caller_id'    => $this->caller_id ?: null,
+            'cid_rotation' => $this->cid_rotation,
             'script'       => $this->script ?: null,
             'acw_seconds'  => $this->acw_seconds,
             'hopper_level' => $this->hopper_level,
@@ -85,10 +90,8 @@ class CampaignEdit extends Component
 
         // Sync in-group assignments via campaign_id FK
         $selectedIds = array_map('intval', $this->selectedInGroupIds);
-        // Assign selected in-groups to this campaign
         InGroup::whereIn('id', $selectedIds)
             ->update(['campaign_id' => $this->campaign->id]);
-        // Detach in-groups that were removed (belonging to this campaign but no longer selected)
         InGroup::where('campaign_id', $this->campaign->id)
             ->whereNotIn('id', $selectedIds)
             ->update(['campaign_id' => null]);

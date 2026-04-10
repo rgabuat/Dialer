@@ -4,8 +4,8 @@
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
             <h1 class="font-bold text-fg text-xl">CID Numbers</h1>
-            <p class="mt-0.5 text-zinc-500 text-sm">Phone numbers provisioned on your Twilio account. Import them as DIDs
-                and sync their inbound webhooks.</p>
+            <p class="mt-0.5 text-zinc-500 text-sm">Manage your Twilio phone numbers as CID (Caller ID) numbers. Import
+                numbers, toggle active/rotation status, and sync webhooks.</p>
         </div>
         <button wire:click="refresh" type="button"
             class="inline-flex items-center gap-2 bg-surface-2 hover:bg-surface border border-surface px-3 py-2 rounded-lg text-fg text-sm font-medium transition">
@@ -37,9 +37,76 @@
 
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
             <div>
+                <h2 class="font-bold text-fg text-base">Imported CID Numbers</h2>
+                <p class="text-fg-muted text-xs mt-0.5">Numbers in your CID pool — toggle Active and In Rotation per
+                    number.</p>
+            </div>
+        </div>
+
+        @if ($importedCids->isEmpty())
+            <p class="px-5 py-6 text-fg-muted text-sm italic">No numbers imported yet. Import from the Twilio table
+                below.</p>
+        @else
+            <div class="overflow-auto">
+                <table class="min-w-full text-fg text-sm">
+                    <thead class="top-0 z-10 sticky bg-surface">
+                        <tr
+                            class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                            <th class="px-5 py-3 text-left">Phone Number</th>
+                            <th class="px-5 py-3 text-left">Friendly Name</th>
+                            <th class="px-5 py-3 text-center">Active</th>
+                            <th class="px-5 py-3 text-center">In Rotation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($importedCids as $cid)
+                            <tr class="hover:bg-hover border-surface border-b transition">
+                                <td class="px-5 py-3 font-mono font-semibold text-fg">{{ $cid->phone_number }}</td>
+                                <td class="px-5 py-3 text-fg-muted text-sm">{{ $cid->friendly_name ?? '—' }}</td>
+
+                                {{-- Active toggle --}}
+                                <td class="px-5 py-3 text-center">
+                                    <button wire:click="toggleActive({{ $cid->id }})" type="button"
+                                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none {{ $cid->is_active ? 'bg-emerald-500' : 'bg-zinc-600' }}">
+                                        <span
+                                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform {{ $cid->is_active ? 'translate-x-4' : 'translate-x-1' }}"></span>
+                                    </button>
+                                </td>
+
+                                {{-- In Rotation toggle --}}
+                                <td class="px-5 py-3 text-center">
+                                    <button wire:click="toggleRotation({{ $cid->id }})" type="button"
+                                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none {{ $cid->in_rotation ? 'bg-blue-500' : 'bg-zinc-600' }}">
+                                        <span
+                                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform {{ $cid->in_rotation ? 'translate-x-4' : 'translate-x-1' }}"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div
+                class="px-5 py-3 border-surface border-t bg-surface-2 flex flex-wrap items-center gap-4 text-xs text-fg-muted">
+                <span class="flex items-center gap-1.5"><span
+                        class="inline-block w-4 h-2.5 rounded-full bg-emerald-500"></span> Active — number is available
+                    for use</span>
+                <span class="flex items-center gap-1.5"><span
+                        class="inline-block w-4 h-2.5 rounded-full bg-blue-500"></span> In Rotation — included in
+                    campaign CID round-robin pool</span>
+            </div>
+        @endif
+
+    </div>
+
+    {{-- ── Twilio Phone Numbers ── --}}
+    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
+
+        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
+            <div>
                 <h2 class="font-bold text-fg text-base">Twilio Phone Numbers</h2>
                 <p class="text-fg-muted text-xs mt-0.5">{{ count($numbers) }}
-                    number{{ count($numbers) !== 1 ? 's' : '' }} on account</p>
+                    number{{ count($numbers) !== 1 ? 's' : '' }} on account — import to add to CID pool</p>
             </div>
             <a href="{{ route('dids.index') }}" wire:navigate
                 class="inline-flex items-center gap-2 text-fg-muted hover:text-fg text-sm transition">
@@ -56,7 +123,7 @@
                         <th class="px-5 py-3 text-left">Friendly Name</th>
                         <th class="px-5 py-3 text-left">Capabilities</th>
                         <th class="px-5 py-3 text-left">Webhook</th>
-                        <th class="px-5 py-3 text-left">DID Status</th>
+                        <th class="px-5 py-3 text-left">CID Status</th>
                         <th class="px-5 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -124,14 +191,14 @@
                                 @endif
                             </td>
 
-                            {{-- DID Status --}}
+                            {{-- CID Status --}}
                             <td class="px-5 py-4">
                                 @if ($imported)
-                                    <a href="{{ route('did.edit', $importedMap[$phone]) }}" wire:navigate
-                                        class="inline-flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded text-blue-400 text-xs font-medium transition">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1 rounded text-blue-400 text-xs font-medium">
                                         <x-heroicon-s-check-circle class="w-3.5 h-3.5" />
                                         Imported
-                                    </a>
+                                    </span>
                                 @else
                                     <span
                                         class="inline-flex items-center gap-1.5 bg-surface-2 px-2.5 py-1 rounded text-fg-muted text-xs font-medium">
@@ -158,7 +225,7 @@
                                                 wire:target="import('{{ $sid }}', '{{ $phone }}', '{{ addslashes($num['friendly_name']) }}')">
                                                 <x-heroicon-o-arrow-down-tray class="w-3 h-3" />
                                             </span>
-                                            Import as DID
+                                            Import as CID
                                         </button>
                                     @else
                                         @if (!$webhookOk)
@@ -214,11 +281,13 @@
             class="px-5 py-3 border-surface border-t bg-surface-2 flex flex-wrap items-center gap-4 text-xs text-fg-muted">
             <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400"></span> Webhook
                 points to this app's call router</span>
-            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> Webhook set
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> Webhook
+                set
                 to a different URL</span>
             <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-500"></span> No webhook
                 configured</span>
         </div>
 
     </div>
+
 </div>

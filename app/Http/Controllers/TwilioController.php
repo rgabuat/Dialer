@@ -607,8 +607,11 @@ class TwilioController extends Controller
       "started_at" => now(),
     ]);
 
+    // Resolve caller ID: use campaign CID rotation if enabled, else static config
+    $callerId = $campaign?->nextCid() ?? config("services.twilio.caller_id");
+
     $dial = $voice->dial("", [
-      "callerId" => config("services.twilio.caller_id"),
+      "callerId" => $callerId,
       "action" => $callbackUrl,
       "method" => "POST",
       "statusCallback" => $callbackUrl,

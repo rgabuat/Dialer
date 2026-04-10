@@ -39,4 +39,10 @@ class Did extends Model
   {
     return $this->belongsTo(Campaign::class);
   }
+
+  /** Campaigns using this DID in their CID rotation pool */
+  public function rotationCampaigns()
+  {
+    return $this->belongsToMany(Campaign::class, 'campaign_cid_dids')->withPivot('sort_order');
+  }
 }

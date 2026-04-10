@@ -265,6 +265,41 @@
                     </div>
                 </div>
 
+                {{-- ── CID Rotation ── --}}
+                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
+                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/15 shrink-0">
+                            <x-heroicon-s-arrow-path class="w-3.5 h-3.5 text-emerald-400" />
+                        </div>
+                        <h2 class="font-semibold text-fg text-sm">CID Rotation</h2>
+                        <p class="text-fg-muted text-xs ml-auto hidden sm:block">Rotate caller IDs on outbound calls
+                        </p>
+                    </div>
+                    <div class="p-5 space-y-4">
+
+                        <label class="flex items-center gap-2.5 cursor-pointer w-fit">
+                            <input wire:model.live="cid_rotation" type="checkbox"
+                                class="w-4 h-4 rounded text-emerald-600 border-surface-2 focus:ring-emerald-500 focus:ring-offset-0">
+                            <span class="text-fg text-sm font-medium">Enable CID Rotation</span>
+                            <span class="text-fg-muted text-xs">(overrides fixed Outbound Caller ID)</span>
+                        </label>
+
+                        @if ($cid_rotation)
+                            <p class="text-fg-muted text-xs">
+                                When enabled, outbound calls will rotate through all CID numbers marked
+                                <span class="text-emerald-400 font-medium">In Rotation</span> on the
+                                <a href="{{ route('cid-numbers.index') }}" wire:navigate
+                                    class="text-emerald-400 hover:underline font-medium">CID Numbers</a> page.
+                                The fixed Outbound Caller ID above is used as fallback when the pool is empty.
+                            </p>
+                        @else
+                            <p class="text-fg-muted/60 text-xs">When disabled, the <span class="text-fg">Outbound
+                                    Caller ID</span> field above is used for all calls.</p>
+                        @endif
+
+                    </div>
+                </div>
+
                 {{-- Agent Script --}}
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
