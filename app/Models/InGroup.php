@@ -16,10 +16,10 @@ class InGroup extends Model
     "queue_priority",
     "agent_routing",
     "max_wait_seconds",
+    "queue_max_wait_seconds",
     "drop_action",
     "drop_destination",
     "web_form_url",
-    "hold_music_url",
     "after_hours_action",
     "after_hours_destination",
     "hours_json",
@@ -28,8 +28,10 @@ class InGroup extends Model
   ];
 
   protected $casts = [
-    "is_active" => "boolean",
-    "hours_json" => "array",
+    "is_active"              => "boolean",
+    "hours_json"             => "array",
+    "max_wait_seconds"       => "integer",
+    "queue_max_wait_seconds" => "integer",
   ];
 
   public function users()

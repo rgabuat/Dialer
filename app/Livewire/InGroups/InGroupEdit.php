@@ -18,10 +18,10 @@ class InGroupEdit extends Component
   public int $queue_priority = 1;
   public string $agent_routing = "ring_all";
   public string $max_wait_seconds = "";
+  public string $queue_max_wait_seconds = "300";
   public string $drop_action = "hangup";
   public string $drop_destination = "";
   public string $web_form_url = "";
-  public string $hold_music_url = "";
   public string $after_hours_action = "hangup";
   public string $after_hours_destination = "";
   public string $timezone = "UTC";
@@ -53,10 +53,10 @@ class InGroupEdit extends Component
     $this->queue_priority = $inGroup->queue_priority;
     $this->agent_routing = $inGroup->agent_routing;
     $this->max_wait_seconds = (string) ($inGroup->max_wait_seconds ?? "");
+    $this->queue_max_wait_seconds = (string) ($inGroup->queue_max_wait_seconds ?? "300");
     $this->drop_action = $inGroup->drop_action;
     $this->drop_destination = $inGroup->drop_destination ?? "";
     $this->web_form_url = $inGroup->web_form_url ?? "";
-    $this->hold_music_url = $inGroup->hold_music_url ?? "";
     $this->after_hours_action = $inGroup->after_hours_action;
     $this->after_hours_destination = $inGroup->after_hours_destination ?? "";
     $this->timezone = $inGroup->timezone ?? "UTC";
@@ -86,10 +86,10 @@ class InGroupEdit extends Component
         "in:ring_all,round_robin,fewest_calls,longest_idle",
       ],
       "max_wait_seconds" => ["nullable", "integer", "min:1", "max:3600"],
+      "queue_max_wait_seconds" => ["nullable", "integer", "min:0", "max:86400"],
       "drop_action" => ["required", "in:hangup,transfer,voicemail"],
       "drop_destination" => ["nullable", "string", "max:255"],
       "web_form_url" => ["nullable", "url", "max:1000"],
-      "hold_music_url" => ["nullable", "url", "max:1000"],
       "after_hours_action" => ["required", "in:hangup,transfer,voicemail"],
       "after_hours_destination" => ["nullable", "string", "max:255"],
       "timezone" => ["required", "string", "max:100"],
@@ -113,10 +113,10 @@ class InGroupEdit extends Component
       "queue_priority" => $this->queue_priority,
       "agent_routing" => $this->agent_routing,
       "max_wait_seconds" => $this->max_wait_seconds ?: null,
+      "queue_max_wait_seconds" => $this->queue_max_wait_seconds !== "" ? (int) $this->queue_max_wait_seconds : 300,
       "drop_action" => $this->drop_action,
       "drop_destination" => $this->drop_destination ?: null,
       "web_form_url" => $this->web_form_url ?: null,
-      "hold_music_url" => $this->hold_music_url ?: null,
       "after_hours_action" => $this->after_hours_action,
       "after_hours_destination" => $this->after_hours_destination ?: null,
       "hours_json" => $hoursJson,

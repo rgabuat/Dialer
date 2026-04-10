@@ -141,6 +141,93 @@
                 </div>
             </div>
 
+            {{-- Voice & Recording --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-surface pb-10">
+                <div>
+                    <h2 class="font-medium">Voice & Recording</h2>
+                    <p class="text-sm text-fg-muted">TTS messages, hold music, and call recording settings for this
+                        campaign.</p>
+                </div>
+                <div class="md:col-span-3 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-fg">TTS Voice</label>
+                            <select wire:model.defer="tts_voice"
+                                class="w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                <option value="alice">Alice (neural)</option>
+                                <option value="man">Man</option>
+                                <option value="woman">Woman</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-fg">Language</label>
+                            <select wire:model.defer="tts_language"
+                                class="w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                <option value="en-US">English (US)</option>
+                                <option value="en-GB">English (UK)</option>
+                                <option value="es-US">Spanish (US)</option>
+                                <option value="es-ES">Spanish (ES)</option>
+                                <option value="fr-FR">French</option>
+                                <option value="de-DE">German</option>
+                                <option value="pt-BR">Portuguese (BR)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-fg">Greeting Message <span
+                                    class="font-normal text-fg-muted">(optional)</span></label>
+                            <input wire:model.defer="greeting_message" type="text"
+                                placeholder="Welcome to Acme support..."
+                                class="w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                            <p class="text-xs text-fg-muted mt-1">Played when caller first connects.</p>
+                            @error('greeting_message')
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-fg">Hold Music URL <span
+                                    class="font-normal text-fg-muted">(blank = Twilio default)</span></label>
+                            <input wire:model.defer="hold_music_url" type="url" placeholder="https://..."
+                                class="w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                            @error('hold_music_url')
+                                <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-fg mb-2">End-of-Call Messages</p>
+                        <div class="space-y-2">
+                            @foreach ([['key' => 'tts_completed', 'label' => 'Completed'], ['key' => 'tts_busy', 'label' => 'Busy'], ['key' => 'tts_no_answer', 'label' => 'No Answer'], ['key' => 'tts_failed', 'label' => 'Failed'], ['key' => 'tts_canceled', 'label' => 'Canceled']] as $tts)
+                                <div class="flex items-center gap-3">
+                                    <span class="text-fg-muted text-xs w-24 shrink-0">{{ $tts['label'] }}</span>
+                                    <input wire:model.defer="{{ $tts['key'] }}" type="text"
+                                        class="flex-1 rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                    @error($tts['key'])
+                                        <p class="text-xs text-accent-red mt-0.5">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4 border-t border-surface pt-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input wire:model.live="recording_enabled" type="checkbox"
+                                class="w-4 h-4 rounded text-blue-600 border-surface focus:ring-zinc-600 focus:ring-offset-0">
+                            <span class="text-sm font-medium text-fg">Enable Call Recording</span>
+                        </label>
+                        @if ($recording_enabled)
+                            <select wire:model.defer="recording_channels"
+                                class="rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600">
+                                <option value="both">Both channels</option>
+                                <option value="inbound">Inbound only</option>
+                                <option value="outbound">Outbound only</option>
+                            </select>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             {{-- Actions --}}
             <div class="flex items-center gap-4">
                 <button type="submit"

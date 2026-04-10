@@ -13,15 +13,21 @@ class Campaign extends Model
     "name", "description", "is_active",
     "type", "dial_mode", "dial_level", "caller_id", "cid_rotation",
     "script", "acw_seconds", "hopper_level", "max_calls",
+    // Voice & recording
+    "tts_voice", "tts_language",
+    "tts_completed", "tts_busy", "tts_no_answer", "tts_failed", "tts_canceled",
+    "greeting_message", "hold_music_url",
+    "recording_enabled", "recording_channels",
   ];
 
   protected $casts = [
-    "is_active"    => "boolean",
-    "cid_rotation" => "boolean",
-    "dial_level"   => "decimal:2",
-    "acw_seconds"  => "integer",
-    "hopper_level" => "integer",
-    "max_calls"    => "integer",
+    "is_active"          => "boolean",
+    "cid_rotation"       => "boolean",
+    "dial_level"         => "decimal:2",
+    "acw_seconds"        => "integer",
+    "hopper_level"       => "integer",
+    "max_calls"          => "integer",
+    "recording_enabled"  => "boolean",
   ];
 
   public function userGroups()

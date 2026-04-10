@@ -5,7 +5,7 @@
             <nav class="flex items-center gap-1.5 text-fg-muted text-xs mb-1">
                 <a href="{{ route('campaigns.index') }}" wire:navigate class="hover:text-fg transition">Campaigns</a>
                 <span>/</span>
-                <a href="{{ route('campaigns.edit', $campaign) }}" wire:navigate
+                <a href="{{ route('campaign.edit', $campaign) }}" wire:navigate
                     class="hover:text-fg transition">{{ $campaign->name }}</a>
                 <span>/</span>
                 <span class="text-fg">Dispositions</span>

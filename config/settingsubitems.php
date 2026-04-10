@@ -15,11 +15,6 @@ return [
                 'key'   => 'phone',
                 'icon'  => 'heroicon-o-phone',
             ],
-            [
-                'label' => 'Voice',
-                'key'   => 'voice',
-                'icon'  => 'heroicon-o-speaker-wave',
-            ],
         ],
     ],
 

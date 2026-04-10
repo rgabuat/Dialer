@@ -49,6 +49,12 @@ Route::middleware("auth:sanctum")->group(function () {
 Route::post("/call/complete", [TwilioController::class, "callComplete"])->name(
   "twilio.callComplete"
 );
+Route::post("/call/no-answer", [TwilioController::class, "callNoAnswer"])->name(
+  "twilio.callNoAnswer"
+);
+Route::post("/call/queue-check", [TwilioController::class, "callQueueCheck"])->name(
+  "twilio.callQueueCheck"
+);
 Route::post("/call/ivr-gather", [TwilioController::class, "ivrGather"])->name(
   "twilio.ivrGather"
 );

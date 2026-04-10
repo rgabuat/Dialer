@@ -37,6 +37,8 @@ class TwilioService
 
     /**
      * Point a Twilio phone number's inbound voice webhook at our call-routing endpoint.
+     * Clears the recording status callback so Twilio does not re-fire recording
+     * events to the voice webhook URL.
      */
     public function syncVoiceWebhook(string $twilioSid): void
     {
@@ -45,8 +47,10 @@ class TwilioService
         $this->client()
             ->incomingPhoneNumbers($twilioSid)
             ->update([
-                'voiceUrl'    => $voiceUrl,
-                'voiceMethod' => 'POST',
+                'voiceUrl'                    => $voiceUrl,
+                'voiceMethod'                 => 'POST',
+                'voiceStatusCallbackUrl'       => '',
+                'voiceStatusCallbackMethod'    => 'POST',
             ]);
     }
 }

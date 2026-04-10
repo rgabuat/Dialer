@@ -94,15 +94,19 @@
                         </div>
                         <div class="gap-4 grid grid-cols-2">
                             <div>
-                                <label class="text-fg-muted text-sm">Max Wait (seconds, blank = unlimited)</label>
+                                <label class="text-fg-muted text-sm">Ring Timeout (seconds)</label>
                                 <input wire:model.defer="max_wait_seconds" type="number" min="1" max="3600"
                                     placeholder="20"
                                     class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                                <p class="mt-1 text-xs text-fg-muted">How long to ring agents per attempt.</p>
                             </div>
                             <div>
-                                <label class="text-fg-muted text-sm">Hold Music URL</label>
-                                <input wire:model.defer="hold_music_url" type="url" placeholder="https://..."
+                                <label class="text-fg-muted text-sm">Queue Max Wait (seconds)</label>
+                                <input wire:model.defer="queue_max_wait_seconds" type="number" min="0"
+                                    max="86400" placeholder="300"
                                     class="bg-surface mt-1 px-3 py-2 border border-surface rounded-md focus:ring-1 focus:ring-zinc-600 w-full text-sm" />
+                                <p class="mt-1 text-xs text-fg-muted">Total hold time before drop action. 0 = skip
+                                    queue.</p>
                             </div>
                         </div>
                         <div>
