@@ -92,25 +92,13 @@
                             @enderror
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Inbound Phone Number</label>
-                                <input wire:model.defer="phone_number" type="text" placeholder="+10000000000"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                <p class="text-fg-muted/60 text-xs mt-1">The number callers dial to reach this campaign
-                                    (inbound DID matching).</p>
-                                @error('phone_number')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Description</label>
-                                <textarea wire:model.defer="description" rows="3" placeholder="Optional description..."
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
-                                @error('description')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        <div>
+                            <label class="block mb-1.5 font-semibold text-fg text-xs">Description</label>
+                            <textarea wire:model.defer="description" rows="3" placeholder="Optional description..."
+                                class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
+                            @error('description')
+                                <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <label class="flex items-center gap-2.5 cursor-pointer w-fit">

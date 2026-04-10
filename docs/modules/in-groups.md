@@ -18,6 +18,7 @@
 - `InGroup`: core queue record.
 - `in_group_user` pivot: links users to in-groups with `priority`, `last_call_at`, `is_active`.
 - `Conversation`: stores `in_group_id` once a call is routed.
+- `Campaign`: `in_groups.campaign_id` (nullable FK) — an in-group is assigned to at most one campaign. The assignment is managed from the campaign edit page.
 
 ## Agent Routing Algorithms
 

@@ -8,7 +8,6 @@ use App\Models\Campaign;
 class CampaignCreate extends Component
 {
     public string $name = '';
-    public string $phone_number = '';
     public string $description = '';
     public bool $is_active = true;
     public string $type = 'OUTBOUND';
@@ -24,7 +23,6 @@ class CampaignCreate extends Component
     {
         $this->validate([
             'name'         => ['required', 'string', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:50'],
             'description'  => ['nullable', 'string'],
             'is_active'    => ['boolean'],
             'type'         => ['required', 'in:OUTBOUND,INBOUND,BLENDED'],
@@ -39,7 +37,6 @@ class CampaignCreate extends Component
 
         Campaign::create([
             'name'         => $this->name,
-            'phone_number' => $this->phone_number,
             'description'  => $this->description ?: null,
             'is_active'    => $this->is_active,
             'type'         => $this->type,

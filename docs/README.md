@@ -14,10 +14,16 @@ This directory centralizes application documentation so operational guides, modu
 - [app-structure.md](app-structure.md): repository and `app/` layout.
 - [tech-stack.md](tech-stack.md): frameworks, libraries, and tooling.
 
+## Campaign System
+
+- [modules/campaign.md](modules/campaign.md): campaign configuration, Vicidial-style dial modes, and inbound-group binding.
+- [modules/call-lists.md](modules/call-lists.md): call list management and CSV lead import.
+- [modules/dispositions.md](modules/dispositions.md): disposition codes, ACW timer, and callback scheduling.
+
 ## Inbound Call System
 
 - [diagrams/inbound-call-flow.mmd](diagrams/inbound-call-flow.mmd): end-to-end call flow diagram (DID → IVR → In-Group → Agent).
-- [modules/in-groups.md](modules/in-groups.md): in-group queue configuration and routing algorithms.
+- [modules/in-groups.md](modules/in-groups.md): in-group queue configuration, routing algorithms, and campaign binding.
 - [modules/dids.md](modules/dids.md): DID phone number management.
 - [modules/ivr-menus.md](modules/ivr-menus.md): IVR menu and digit-option configuration.
 

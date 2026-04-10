@@ -11,15 +11,20 @@ Module guides are split by domain so feature documentation stays small and easy 
 
 ## Inbound
 
-- [in-groups.md](in-groups.md): inbound call queues, agent routing algorithms, and operating hours.
+- [in-groups.md](in-groups.md): inbound call queues, agent routing algorithms, operating hours, and campaign binding.
 - [dids.md](dids.md): DID phone numbers and inbound routing targets.
 - [ivr-menus.md](ivr-menus.md): IVR menu configuration and digit-option routing.
+
+## Campaign
+
+- [campaign.md](campaign.md): campaign creation, dialer settings, Vicidial-style dial modes, and inbound-group binding.
+- [call-lists.md](call-lists.md): call list management and CSV lead import per campaign.
+- [dispositions.md](dispositions.md): call disposition codes, ACW timer, and callback scheduling.
 
 ## Operations
 
 - [activitylogs.md](activitylogs.md): activity history and audit visibility.
-- [agent.md](agent.md): agent status management.
-- [campaign.md](campaign.md): campaign creation and selection.
+- [agent.md](agent.md): agent status management, calling capability flags, and Twilio device lifecycle.
 - [leads.md](leads.md): lead management.
 - [stores.md](stores.md): store management.
 

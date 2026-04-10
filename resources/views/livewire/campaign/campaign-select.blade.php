@@ -34,7 +34,6 @@
                                     @if ($selected->description)
                                         <div class="text-fg-muted text-xs">{{ $selected->description }}</div>
                                     @endif
-                                    <div class="text-zinc-500 text-xs">{{ $selected->phone_number }}</div>
                                 </div>
                             @endif
                         @endif

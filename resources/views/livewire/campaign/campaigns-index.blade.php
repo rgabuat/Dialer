@@ -43,7 +43,6 @@
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Name</th>
-                        <th class="px-5 py-3 text-left">Phone Number</th>
                         <th class="px-5 py-3 text-left">Description</th>
                         <th class="px-5 py-3 text-left">Status</th>
                         <th class="px-5 py-3"></th>
@@ -53,7 +52,6 @@
                     @forelse ($campaigns as $campaign)
                         <tr class="hover:bg-hover border-surface border-b transition">
                             <td class="px-5 py-4 font-semibold text-fg">{{ $campaign->name }}</td>
-                            <td class="px-5 py-4 font-mono text-fg-muted text-sm">{{ $campaign->phone_number }}</td>
                             <td class="px-5 py-4 text-fg-muted text-sm">{{ $campaign->description ?? '—' }}</td>
                             <td class="px-5 py-4">
                                 @if ($campaign->is_active)

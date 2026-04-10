@@ -13,7 +13,6 @@ class CampaignEdit extends Component
     public Campaign $campaign;
 
     public string $name = '';
-    public string $phone_number = '';
     public string $description = '';
     public bool $is_active = true;
     public string $type = 'OUTBOUND';
@@ -34,7 +33,6 @@ class CampaignEdit extends Component
     {
         $this->campaign     = $campaign;
         $this->name         = $campaign->name;
-        $this->phone_number = $campaign->phone_number;
         $this->description  = $campaign->description ?? '';
         $this->is_active    = $campaign->is_active;
         $this->type         = $campaign->type ?? 'OUTBOUND';
@@ -57,7 +55,6 @@ class CampaignEdit extends Component
     {
         $this->validate([
             'name'         => ['required', 'string', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:50'],
             'description'  => ['nullable', 'string'],
             'is_active'    => ['boolean'],
             'type'         => ['required', 'in:OUTBOUND,INBOUND,BLENDED'],
@@ -74,7 +71,6 @@ class CampaignEdit extends Component
 
         $this->campaign->update([
             'name'         => $this->name,
-            'phone_number' => $this->phone_number,
             'description'  => $this->description ?: null,
             'is_active'    => $this->is_active,
             'type'         => $this->type,

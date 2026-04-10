@@ -1,7 +1,41 @@
+---
+title: Campaign Module — Data Model & UI Flow
+---
 flowchart TD
-    Campaign["Campaign Module"]
-    Campaign --> CampaignsIndex["CampaignsIndex"]
-    Campaign --> CampaignCreate["CampaignCreate"]
-    Campaign --> CampaignEdit["CampaignEdit"]
-    Campaign --> CampaignSelect["CampaignSelect"]
-    Campaign --> CampaignModel["Campaign"]
+    subgraph DATA["Data Model"]
+        direction TB
+        CAMP["Campaign\nname, phone_number\ntype, dial_mode, dial_level\ncaller_id, script\nacw_seconds, hopper_level, max_calls"]
+        CL["CallList\nname, file_path"]
+        DISP["Disposition\nname, code, category\nrequires_callback"]
+        IG["InGroup\ncampaign_id FK"]
+        DH["DialerHopper\nlead_id, campaign_id"]
+        CB["CallbackSchedule\nlead_id, scheduled_at"]
+        LEAD["Lead\nphone, first_name..."]
+
+        CAMP -->|"hasMany"| CL
+        CAMP -->|"hasMany"| DISP
+        CAMP -->|"hasMany"| IG
+        CAMP -->|"hasMany"| DH
+        CAMP -->|"hasMany"| CB
+        CL -->|"hasMany"| LEAD
+    end
+
+    subgraph DIALER["Dialer Engine"]
+        direction TB
+        HOPPER["FillDialerHopper\n(scheduled: every minute)"]
+        HOPPER_ACTION["Pulls un-called leads\ninto dialer_hopper\nup to hopper_level"]
+        HOPPER --> HOPPER_ACTION
+    end
+
+    subgraph UI["UI Components"]
+        direction TB
+        IDX["CampaignsIndex\n/campaigns"]
+        CREATE["CampaignCreate\n/campaign/create"]
+        EDIT["CampaignEdit\n/campaign/{id}/edit\nDetails + Dialer + InGroups + Script"]
+        SELECT["CampaignSelect\n/campaign/select"]
+        LISTS["CallListsIndex\n/campaign/{id}/lists"]
+        DISPS["DispositionsIndex\n/campaign/{id}/dispositions"]
+    end
+
+    CAMP --- UI
+    CAMP --- DIALER

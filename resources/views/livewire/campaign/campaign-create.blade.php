@@ -24,16 +24,6 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="text-sm text-fg-muted">Inbound Phone Number</label>
-                        <input wire:model.defer="phone_number" type="text" placeholder="+1234567890"
-                            class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600" />
-                        <p class="text-xs text-fg-muted mt-1">The number callers dial to reach this campaign (inbound
-                            DID matching).</p>
-                        @error('phone_number')
-                            <p class="text-xs text-accent-red mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
                         <label class="text-sm text-fg-muted">Description</label>
                         <textarea wire:model.defer="description" rows="3"
                             class="mt-1 w-full rounded-md bg-surface border border-surface px-3 py-2 text-sm focus:ring-1 focus:ring-zinc-600"></textarea>

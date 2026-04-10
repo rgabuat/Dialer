@@ -56,7 +56,10 @@ The `app/` directory contains the core business logic:
 
 Feature-facing UI modules are grouped in `app/Livewire/` by business area:
 
-- Operations: `Activitylogs/`, `Agent/`, `Campaign/`, `Leads/`, `Stores/`
+- Campaign: `Campaign/`, `CallLists/`, `Conversations/`
+- Inbound: `Dids/`, `InGroups/`, `IvrMenus/`
+- Operations: `Activitylogs/`, `Agent/`, `Leads/`, `Stores/`
+- Workforce: `Workforce/`
 - Access Control: `Auth/`, `Permissions/`, `Roles/`
 - Administration: `Settings/`, `UserGroups/`, `Users/`
 

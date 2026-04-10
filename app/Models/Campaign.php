@@ -10,7 +10,7 @@ class Campaign extends Model
   use HasFactory;
 
   protected $fillable = [
-    "name", "description", "phone_number", "is_active",
+    "name", "description", "is_active",
     "type", "dial_mode", "dial_level", "caller_id",
     "script", "acw_seconds", "hopper_level", "max_calls",
   ];
