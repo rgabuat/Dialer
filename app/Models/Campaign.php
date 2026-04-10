@@ -55,32 +55,41 @@ class Campaign extends Model
   }
 
   /**
+   * Pick the next CID model for this campaign using round-robin from the global CID rotation pool.
+   * Returns a CidNumber model, or null if rotation is disabled / pool is empty.
+   */
+  public function nextCidModel(): ?\App\Models\CidNumber
+  {
+    if (!$this->cid_rotation) {
+        return null;
+    }
+
+    $pool = \App\Models\CidNumber::where('is_active', true)
+        ->where('in_rotation', true)
+        ->orderBy('phone_number')
+        ->get();
+
+    if ($pool->isEmpty()) {
+        return null;
+    }
+
+    $cacheKey = "cid_rotation:{$this->id}";
+    $count    = $pool->count();
+    $index    = (int) \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+    $model    = $pool[$index % $count];
+
+    \Illuminate\Support\Facades\Cache::put($cacheKey, ($index + 1) % $count, now()->addDay());
+
+    return $model;
+  }
+
+  /**
    * Pick the next CID for this campaign using round-robin from the global CID rotation pool.
    * The pool is all CidNumbers where in_rotation=true and is_active=true.
    * Returns a phone_number string, or the fixed caller_id if rotation is disabled / pool is empty.
    */
   public function nextCid(): ?string
   {
-    if (!$this->cid_rotation) {
-        return $this->caller_id ?: null;
-    }
-
-    $pool = \App\Models\CidNumber::where('is_active', true)
-        ->where('in_rotation', true)
-        ->orderBy('phone_number')
-        ->pluck('phone_number')
-        ->toArray();
-
-    if (empty($pool)) {
-        return $this->caller_id ?: null;
-    }
-
-    $cacheKey = "cid_rotation:{$this->id}";
-    $index    = (int) \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
-    $number   = $pool[$index % count($pool)];
-
-    \Illuminate\Support\Facades\Cache::put($cacheKey, ($index + 1) % count($pool), now()->addDay());
-
-    return $number;
+    return $this->nextCidModel()?->phone_number ?? ($this->caller_id ?: null);
   }
 }

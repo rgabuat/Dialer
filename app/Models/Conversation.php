@@ -20,6 +20,7 @@ class Conversation extends Model
     "detail_preview",
     "duration_seconds",
     "campaign_id",
+    "cid_number_id",
     "in_group_id",
     "assigned_to",
     "completed_by",
@@ -40,6 +41,11 @@ class Conversation extends Model
   public function campaign()
   {
     return $this->belongsTo(Campaign::class);
+  }
+
+  public function cidNumber()
+  {
+    return $this->belongsTo(\App\Models\CidNumber::class);
   }
 
   public function inGroup()

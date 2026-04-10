@@ -17,6 +17,7 @@ use Twilio\Rest\Client as TwilioClient;
 use Twilio\TwiML\VoiceResponse;
 use Twilio\Jwt\Grants\VoiceGrant;
 use App\Models\VoiceSetting;
+use App\Services\ActivityLogger;
 
 class TwilioController extends Controller
 {
@@ -79,10 +80,8 @@ class TwilioController extends Controller
       );
     }
 
-    // ── 2. Legacy fallback: campaign phone_number match ───────────────
-    $isTwilioNumber =
-      $to === config("services.twilio.phone_number") ||
-      Campaign::where("phone_number", $to)->where("is_active", true)->exists();
+    // ── 2. Legacy fallback: global Twilio number (pre-DID inbound) ───────
+    $isTwilioNumber = $to === config("services.twilio.phone_number");
 
     if ($isTwilioNumber) {
       return $this->handleLegacyInbound(
@@ -369,10 +368,13 @@ class TwilioController extends Controller
     $connectUrl    = rtrim(config('app.url'), '/') . route('dialer.connectToAgent', [], false)
         . '?hopper_id=' . $entry->id . '&agent=' . urlencode($agentIdentity);
 
+    $cidModel  = $campaign->nextCidModel();
+    $callerId  = $cidModel?->phone_number ?? $campaign->caller_id ?: config('services.twilio.caller_id');
+
     try {
       $call = $this->twilioClient()->calls->create(
         $entry->phone_number,
-        $campaign->caller_id ?: config('services.twilio.caller_id'),
+        $callerId,
         [
           'url'    => $connectUrl,
           'method' => 'GET',
@@ -387,6 +389,24 @@ class TwilioController extends Controller
       return response()->json(['message' => 'Failed to initiate call.', 'error' => $e->getMessage()], 500);
     }
 
+    ActivityLogger::info(
+      'call',
+      'cid_rotation',
+      'Autodial CID selected: ' . $callerId,
+      auth()->user(),
+      $campaign,
+      [
+        'cid'         => $callerId,
+        'cid_id'      => $cidModel?->id,
+        'rotation_on' => (bool) $campaign->cid_rotation,
+        'to'          => $entry->phone_number,
+        'lead_id'     => $entry->lead_id,
+        'hopper_id'   => $entry->id,
+        'call_sid'    => $call->sid,
+        'source'      => 'autodial',
+      ]
+    );
+
     // Create conversation record
     $conversation = Conversation::create([
       'call_sid'      => $call->sid,
@@ -396,6 +416,7 @@ class TwilioController extends Controller
       'contact_phone' => $entry->phone_number,
       'contact_name'  => optional($entry->lead)->first_name . ' ' . optional($entry->lead)->last_name,
       'campaign_id'   => $campaign->id,
+      'cid_number_id' => $cidModel?->id,
       'lead_id'       => $entry->lead_id,
       'assigned_to'   => auth()->id(),
       'started_at'    => now(),
@@ -520,7 +541,7 @@ class TwilioController extends Controller
   }
 
   /**
-   * Legacy inbound: no DID record, falls back to campaign phone_number match.
+   * Legacy inbound: no DID record, falls back to global Twilio number.
    */
   private function handleLegacyInbound(
     string $to,
@@ -529,7 +550,6 @@ class TwilioController extends Controller
     string $callbackUrl,
     VoiceResponse $voice
   ): \Illuminate\Http\Response {
-    $campaign = Campaign::where("phone_number", $to)->first();
     $availableAgents = AgentStatus::with(["statusType", "user"])
       ->whereHas("statusType", fn($q) => $q->where("is_available", true))
       ->get();
@@ -540,7 +560,6 @@ class TwilioController extends Controller
       "direction" => "inbound",
       "status" => "in_progress",
       "contact_phone" => $from,
-      "campaign_id" => $campaign?->id,
       "started_at" => now(),
     ]);
 
@@ -588,27 +607,49 @@ class TwilioController extends Controller
 
     $campaign = null;
     if ($userId) {
-      $campaign = Campaign::whereHas(
-        "users",
-        fn($q) => $q->where("users.id", $userId)
-      )
-        ->where("is_active", true)
+      $userGroupId = \App\Models\User::where("id", $userId)->value("user_group_id");
+
+      $campaign = Campaign::where("is_active", true)
+        ->where(function ($q) use ($userId, $userGroupId) {
+          $q->whereHas("users", fn($inner) => $inner->where("users.id", $userId));
+          if ($userGroupId) {
+            $q->orWhereHas("userGroups", fn($inner) => $inner->where("user_groups.id", $userGroupId));
+          }
+        })
         ->first();
     }
 
+    // Resolve caller ID: use campaign CID rotation if enabled, else static config
+    $cidModel = $campaign?->nextCidModel();
+    $callerId = $cidModel?->phone_number ?? $campaign?->caller_id ?? config("services.twilio.caller_id");
+
     Conversation::create([
-      "call_sid" => $callSid,
-      "channel" => "voice",
-      "direction" => "outbound",
-      "status" => "in_progress",
-      "contact_phone" => $to,
-      "campaign_id" => $campaign?->id,
-      "assigned_to" => $userId,
-      "started_at" => now(),
+      "call_sid"       => $callSid,
+      "channel"        => "voice",
+      "direction"      => "outbound",
+      "status"         => "in_progress",
+      "contact_phone"  => $to,
+      "campaign_id"    => $campaign?->id,
+      "cid_number_id"  => $cidModel?->id,
+      "assigned_to"    => $userId,
+      "started_at"     => now(),
     ]);
 
-    // Resolve caller ID: use campaign CID rotation if enabled, else static config
-    $callerId = $campaign?->nextCid() ?? config("services.twilio.caller_id");
+    ActivityLogger::info(
+      'call',
+      'cid_rotation',
+      'Outbound CID selected: ' . $callerId,
+      auth()->user(),
+      $campaign,
+      [
+        'cid'         => $callerId,
+        'cid_id'      => $cidModel?->id,
+        'rotation_on' => (bool) $campaign?->cid_rotation,
+        'to'          => $to,
+        'call_sid'    => $callSid,
+        'source'      => 'browser_dial',
+      ]
+    );
 
     $dial = $voice->dial("", [
       "callerId" => $callerId,
