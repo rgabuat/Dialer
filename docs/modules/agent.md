@@ -34,10 +34,26 @@ The device is managed in `resources/views/components/agent-control-bar.blade.php
 
 ## Status Change Flow
 
-1. Agent selects a status → `StatusSwitcher.setStatus()` → `AgentStatusService.change()`.
-2. Service updates `agent_statuses`, logs to `agent_status_logs`, broadcasts `AgentStatusUpdated` event.
+1. Agent selects a status → `StatusSwitcher.setStatus()` validates the status type and auth, then calls `AgentStatusService.change()`.
+2. Service updates `agent_statuses`, closes the open `agent_status_logs` row, creates a new log entry, then dispatches `AgentStatusUpdated` via `dispatch()->afterResponse()` so the Livewire response returns before the event fires.
 3. Livewire dispatches `agent-status-changed` immediately (includes `handles_inbound`/`handles_outbound`).
 4. Echo listener in `app.blade.php` also re-dispatches `agent-status-changed` on the broadcast channel (also includes the flags to prevent race-condition device teardown).
+
+## AgentBecameAvailable Listener
+
+`app/Listeners/AgentBecameAvailable.php` handles `AgentStatusUpdated` events.
+
+**Flow:**
+
+1. Checks `handles_inbound` on the new status — skips the rest if false.
+2. Queries `in_group_user` pivot to find in-groups where the agent is active.
+3. Fetches up to 10 oldest `queued` conversations (`started_at ASC`, `ended_at IS NULL`) across those groups — FIFO order.
+4. For each candidate, fetches the live Twilio call status via REST API:
+   - If Twilio reports the call as non-active (`completed`, `canceled`, etc.), marks the conversation `completed` and moves to the next candidate.
+   - If the call is live (`in-progress`, `ringing`, `queued`), redirects it to `POST /api/call/queue-check?in_group_id={id}` and stops — one redirect per event.
+5. If no active candidate is found after scanning all candidates, logs the outcome and exits.
+
+**Why 10 candidates instead of 1:** A single stale queued row (Twilio already completed the call, DB not yet updated) used to block the listener entirely. Scanning a small batch lets it skip stale rows and reach the first genuinely waiting caller.
 
 ## Related Types
 
@@ -46,6 +62,7 @@ The device is managed in `resources/views/components/agent-control-bar.blade.php
 - `AgentStatusType` (with `handles_inbound`, `handles_outbound`)
 - `AgentStatusService`
 - `AgentStatusUpdated` event
+- `AgentBecameAvailable` listener
 
 ## Navigation
 

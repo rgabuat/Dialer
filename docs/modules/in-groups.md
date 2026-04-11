@@ -24,10 +24,33 @@
 
 | Value | Behaviour |
 |---|---|
-| `ring_all` | Dial every available agent simultaneously. |
-| `round_robin` | Dial the agent with the oldest `last_call_at` in the pivot. |
-| `fewest_calls` | Dial the agent with fewest conversations assigned today in this group. |
-| `longest_idle` | Dial the agent with the earliest `agent_statuses.started_at`. |
+| `ring_all` | Dial every available agent simultaneously. First to answer gets the call. |
+| `round_robin` | Dial the single agent with the oldest `last_call_at` in the pivot. |
+| `fewest_calls` | Dial the single agent with fewest conversations assigned today in this group. |
+| `longest_idle` | Dial the single agent with the earliest `agent_statuses.started_at`. |
+
+`ring_all` is best for small teams where fastest pickup matters. All other modes dial exactly one agent per attempt; if that agent doesn't answer the caller is re-queued.
+
+## Queue Hold Flow
+
+When `routeToInGroup()` finds no available agents and `queue_max_wait_seconds > 0`, the caller enters a hold queue:
+
+1. **Enter queue** — conversation row is set to `status = queued`. Caller hears the hold announcement and music.
+2. **Hold loop** — TwiML uses `<Gather timeout="15" finishOnKey="">` wrapping `<Play>`. Gather fires every 15 seconds to `POST /api/call/queue-check?in_group_id={id}`.
+3. **Hangup detection** — if the caller hangs up during hold, Twilio posts `CallStatus=completed` to the same `callQueueCheck` endpoint. The controller marks the conversation `abandoned` and returns empty TwiML immediately.
+4. **Agent becomes available** — `AgentBecameAvailable` listener redirects the live queued call directly to `callQueueCheck` via the Twilio REST API, bypassing the 15-second wait.
+5. **Agent check** — `callQueueCheck` calls `selectAgents()`. If agents are found, it sets conversation to `in_progress` and returns `<Dial>` TwiML. An idempotency guard prevents duplicate `<Dial>` responses if the webhook fires twice.
+6. **No answer** — if the dialled agent doesn't answer, `POST /api/call/no-answer` fires. If the caller is still within `queue_max_wait_seconds`, the conversation is re-queued and hold music resumes. Otherwise the conversation is marked `abandoned` and `drop_action` executes.
+7. **Max wait exceeded** — once `now - started_at >= queue_max_wait_seconds`, `callQueueCheck` marks the conversation `abandoned` and executes `drop_action`.
+
+### Key Queue Fields
+
+| Field | Default | Description |
+|---|---|---|
+| `queue_max_wait_seconds` | 300 | Maximum seconds a caller waits before drop action fires. `0` = skip queue, drop immediately. |
+| `max_wait_seconds` | 20 | Dial timeout (ring duration) per agent attempt. |
+| `drop_action` | — | `hangup`, `transfer`, or `voicemail`. Executed on queue expiry or no-agent. |
+| `drop_destination` | — | Transfer target when `drop_action = transfer`. |
 
 ## Operating Hours
 
@@ -36,7 +59,7 @@ After-hours calls execute `after_hours_action` (`hangup`, `transfer`, or `voicem
 
 ## Drop Actions
 
-When no agent is available, `drop_action` is executed: `hangup`, `transfer` to `drop_destination`, or `voicemail`.
+When no agent is available and queueing is disabled (or max wait is exceeded), `drop_action` executes: `hangup`, `transfer` to `drop_destination`, or `voicemail`.
 
 ## Navigation
 

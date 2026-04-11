@@ -12,6 +12,7 @@ Module guides are split by domain so feature documentation stays small and easy 
 ## Inbound
 
 - [in-groups.md](in-groups.md): inbound call queues, agent routing algorithms, operating hours, and campaign binding.
+- [call-routing.md](call-routing.md): webhook endpoints, CSRF exceptions, queue hold-loop mechanics, frontend error logging, and bug-fix history.
 - [dids.md](dids.md): DID inbound routing numbers and CID Numbers outbound caller-ID pool.
 - [ivr-menus.md](ivr-menus.md): IVR menu configuration and digit-option routing.
 

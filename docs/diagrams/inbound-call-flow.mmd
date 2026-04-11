@@ -1,5 +1,5 @@
 ---
-title: Inbound Call Flow — DID → IVR → In-Group → Agent
+title: Inbound Call Flow — DID → IVR → In-Group → Agent → Queue
 ---
 %% This diagram covers INBOUND calls only.
 %% For outbound CID rotation see outbound-cid-flow.mmd
@@ -9,9 +9,18 @@ flowchart TD
 
     TWILIO --> WEBHOOK
 
-    DID_LOOKUP{"DID lookup\nphone_number = To"}
+    TERMINAL_CHECK{"CallStatus\nterminal?"}
+    MARK_ABANDONED_T["Mark conversation abandoned\nreturn empty TwiML"]
+    RECORDING_CB{"RecordingSid\npresent?"}
+    IGNORE_CB["return empty TwiML\n(recording callback, ignore)"]
 
-    WEBHOOK --> DID_LOOKUP
+    WEBHOOK --> TERMINAL_CHECK
+    TERMINAL_CHECK -- "completed/canceled/\nfailed/busy/no-answer" --> MARK_ABANDONED_T
+    TERMINAL_CHECK -- "ringing / in-progress" --> RECORDING_CB
+    RECORDING_CB -- "yes" --> IGNORE_CB
+    RECORDING_CB -- "no" --> DID_LOOKUP
+
+    DID_LOOKUP{"DID lookup\nphone_number = To"}
 
     %% ── DID found paths ───────────────────────────────────────────────────
     DID_FOUND["DID record\nis_active = true"]
@@ -77,9 +86,9 @@ flowchart TD
     SELECT_AGENTS --> ROUTING_ALG
 
     RING_ALL["All available\nagents"]
-    ROUND_ROBIN["Oldest\nlast_call_at"]
-    FEWEST["Fewest calls\ntoday"]
-    LONGEST_IDLE["Earliest\nagent_statuses.started_at"]
+    ROUND_ROBIN["Single agent\noldest last_call_at"]
+    FEWEST["Single agent\nfewest calls today"]
+    LONGEST_IDLE["Single agent\nearliest started_at"]
 
     ROUTING_ALG -- "ring_all" --> RING_ALL
     ROUTING_ALG -- "round_robin" --> ROUND_ROBIN
@@ -88,17 +97,77 @@ flowchart TD
 
     AGENTS_EMPTY{"agents\nfound?"}
     DROP_ACTION["executeDropAction\ndrop_action"]
-    DIAL["<Dial>\n<Client user_N>"]
+    DIAL["<Dial timeout=max_wait_seconds>\n<Client user_N>"]
 
     RING_ALL & ROUND_ROBIN & FEWEST & LONGEST_IDLE --> AGENTS_EMPTY
-    AGENTS_EMPTY -- "none" --> DROP_ACTION
     AGENTS_EMPTY -- "yes" --> DIAL
+
+    %% ── No agents: hold queue ─────────────────────────────────────────────
+    MAX_WAIT_ZERO{"queue_max_wait\n= 0?"}
+    AGENTS_EMPTY -- "none" --> MAX_WAIT_ZERO
+    MAX_WAIT_ZERO -- "yes" --> DROP_ACTION
+    MAX_WAIT_ZERO -- "no" --> ENTER_QUEUE
+
+    ENTER_QUEUE["status = queued\n<Say> announcement\n<Gather timeout=15 finishOnKey=''>\n  <Play> hold music\n</Gather>"]
+
+    QUEUE_CHECK["POST /api/call/queue-check\ncallQueueCheck"]
+    ENTER_QUEUE -->|"Gather fires (15 s timeout\nOR caller hangup)"| QUEUE_CHECK
+
+    HANGUP_DURING_HOLD{"CallStatus\ncompleted?"}
+    MARK_ABANDONED_Q["status = abandoned\nreturn empty TwiML"]
+    ALREADY_DIALING{"conversation\nstatus = in_progress?"}
+    IGNORE_DUP["return empty TwiML\n(duplicate ignored)"]
+
+    QUEUE_CHECK --> HANGUP_DURING_HOLD
+    HANGUP_DURING_HOLD -- "yes" --> MARK_ABANDONED_Q
+    HANGUP_DURING_HOLD -- "no" --> ALREADY_DIALING
+    ALREADY_DIALING -- "yes" --> IGNORE_DUP
+    ALREADY_DIALING -- "no" --> MAX_WAIT_CHECK
+
+    MAX_WAIT_CHECK{"waited ≥\nqueue_max_wait_seconds?"}
+    MAX_WAIT_CHECK -- "yes" --> DROP_ACTION
+    MAX_WAIT_CHECK -- "no" --> CHECK_AGENTS_Q
+
+    CHECK_AGENTS_Q["selectAgents()"]
+    AGENTS_NOW{"agents\navailable?"}
+    CHECK_AGENTS_Q --> AGENTS_NOW
+
+    AGENTS_NOW -- "yes" --> DIAL
+    AGENTS_NOW -- "no" --> LOOP_HOLD["status = queued\n<Gather timeout=15>\n  <Play> hold music\n</Gather>\n(loop back)"]
+    LOOP_HOLD --> QUEUE_CHECK
+
+    %% ── AgentBecameAvailable shortcut ─────────────────────────────────────
+    AGENT_AVAILABLE["Agent switches to\nhandles_inbound status\nAgentBecameAvailable listener"]
+    SCAN_QUEUE["Scan up to 10 oldest\nqueued conversations (FIFO)\nVerify live with Twilio REST API"]
+    REDIRECT_CALL["Redirect call to\n/api/call/queue-check\n(skips 15-second wait)"]
+
+    AGENT_AVAILABLE --> SCAN_QUEUE
+    SCAN_QUEUE -->|"first live call found"| REDIRECT_CALL
+    REDIRECT_CALL --> QUEUE_CHECK
+
+    %% ── Dial outcome ───────────────────────────────────────────────────────
+    NO_ANSWER["POST /api/call/no-answer\ncallNoAnswer"]
+    DIAL -->|"<Dial> action\n(ring timeout or agent hangup)"| NO_ANSWER
+
+    DIAL_COMPLETED{"DialCallStatus\n= completed?"}
+    SAY_GOODBYE["<Say> goodbye\n<Hangup>\n(callComplete updates DB)"]
+    WITHIN_WAIT{"waited <\nqueue_max_wait?"}
+    RE_QUEUE["status = queued\n<Gather> hold music\n(back to queue loop)"]
+    ABANDON_REQUEUE["status = abandoned\nexecute drop_action"]
+
+    NO_ANSWER --> DIAL_COMPLETED
+    DIAL_COMPLETED -- "yes (call ended normally)" --> SAY_GOODBYE
+    DIAL_COMPLETED -- "no (no-answer/busy/failed)" --> WITHIN_WAIT
+    WITHIN_WAIT -- "yes" --> RE_QUEUE
+    RE_QUEUE --> QUEUE_CHECK
+    WITHIN_WAIT -- "no" --> ABANDON_REQUEUE
+
+    %% ── statusCallback ─────────────────────────────────────────────────────
+    COMPLETE["POST /api/call/complete\ncallComplete\nupdate Conversation (skip if queued)"]
+    DIAL -->|"statusCallback\n(always fires)"| COMPLETE
 
     DROP_OPTIONS["hangup | transfer\n| voicemail"]
     DROP_ACTION --> DROP_OPTIONS
-
-    COMPLETE["POST /api/call/complete\ncallComplete\nupdate Conversation"]
-    DIAL -->|"call ends"| COMPLETE
 
     %% ── No DID match: outbound leg ──────────────────────────────────────
     OUTBOUND["handleOutbound\nbrowser client dial\n(see outbound-cid-flow.mmd)"]

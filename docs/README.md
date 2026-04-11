@@ -22,8 +22,9 @@ This directory centralizes application documentation so operational guides, modu
 
 ## Inbound Call System
 
-- [diagrams/inbound-call-flow.mmd](diagrams/inbound-call-flow.mmd): end-to-end inbound call flow (DID → IVR → In-Group → Agent).
+- [diagrams/inbound-call-flow.mmd](diagrams/inbound-call-flow.mmd): end-to-end inbound call flow (DID → IVR → In-Group → hold queue → Agent).
 - [modules/in-groups.md](modules/in-groups.md): in-group queue configuration, routing algorithms, and campaign binding.
+- [modules/call-routing.md](modules/call-routing.md): webhook endpoint reference, CSRF exception requirement, queue hold-loop mechanics, frontend error logging, and bug-fix history.
 - [modules/dids.md](modules/dids.md): DID (inbound routing) and CID Numbers (outbound caller-ID pool) management.
 - [modules/ivr-menus.md](modules/ivr-menus.md): IVR menu and digit-option configuration.
 
