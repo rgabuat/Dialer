@@ -32,6 +32,9 @@ Route::post("/call-routing", [
 
 // ── Call actions (auth required) ──────────────────────────────────────────
 Route::middleware("auth:sanctum")->group(function () {
+  Route::get("/call/conversation", [TwilioController::class, "conversationBySid"])->name(
+    "twilio.conversationBySid"
+  );
   Route::post("/call/hold", [TwilioController::class, "holdCall"])->name(
     "twilio.holdCall"
   );

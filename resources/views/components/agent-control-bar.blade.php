@@ -596,8 +596,10 @@
 
                 // ── inbound ─────────────────────────────────────────────
 
-                acceptIncoming() {
+                async acceptIncoming() {
                     if (!window._twilioIncomingCall) return;
+                    const callSid = window._twilioIncomingCall.parameters?.CallSid;
+                    const fromNumber = window._twilioIncomingCall.parameters?.From;
                     window._twilioIncomingCall.accept();
                     window._twilioActiveCall = window._twilioIncomingCall;
                     window._twilioIncomingCall = null;
@@ -607,6 +609,45 @@
                     this.isOnHold = false;
                     this.callStatus = 'In call…';
                     this.attachCallEvents(window._twilioActiveCall);
+                    // Navigate to the conversation page.
+                    // Pass both CallSid and From so the server can find the record
+                    // even when the agent receives a child call SID.
+                    // Retry up to 6 times (delays: 0, 500, 1000, 1500, 2000, 2500 ms)
+                    // to handle any webhook processing lag.
+                    const params = new URLSearchParams();
+                    if (callSid) params.set('call_sid', callSid);
+                    if (fromNumber) params.set('from', fromNumber);
+                    if (params.toString()) {
+                        const delay = ms => new Promise(r => setTimeout(r, ms));
+                        for (let attempt = 0; attempt < 6; attempt++) {
+                            if (attempt > 0) await delay(500 * attempt);
+                            try {
+                                const res = await fetch(
+                                    `/api/call/conversation?${params}`, {
+                                        credentials: 'same-origin'
+                                    }
+                                );
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    if (data.url) {
+                                        if (window.Livewire?.navigate) {
+                                            window.Livewire.navigate(data.url);
+                                        } else {
+                                            window.location.href = data.url;
+                                        }
+                                        return;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('[acceptIncoming] fetch error on attempt', attempt, e);
+                            }
+                        }
+                        console.error('[acceptIncoming] conversation not found after retries', {
+                            callSid,
+                            fromNumber
+                        });
+                        window.Toast?.show('Call connected — conversation could not be located.', 'warning');
+                    }
                 },
 
                 rejectIncoming() {

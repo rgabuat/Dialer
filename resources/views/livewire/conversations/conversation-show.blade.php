@@ -190,13 +190,47 @@
                                 <div class="divide-y divide-surface">
                                     @if ($conversation->contact_phone)
                                         <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-24 text-fg-muted text-xs shrink-0">From</span>
+                                            <span class="w-28 text-fg-muted text-xs shrink-0">From</span>
                                             <span
                                                 class="font-mono text-fg text-sm">{{ $conversation->contact_phone }}</span>
                                         </div>
                                     @endif
+                                    @if ($conversation->caller_name)
+                                        <div class="flex items-center gap-4 px-4 py-2.5">
+                                            <span class="w-28 text-fg-muted text-xs shrink-0">Caller Name</span>
+                                            <span class="text-fg text-sm">{{ $conversation->caller_name }}</span>
+                                        </div>
+                                    @endif
+                                    @php
+                                        $callerLocation = array_filter([
+                                            $conversation->caller_city,
+                                            $conversation->caller_state,
+                                            $conversation->caller_zip,
+                                            $conversation->caller_country,
+                                        ]);
+                                    @endphp
+                                    @if ($callerLocation)
+                                        <div class="flex items-center gap-4 px-4 py-2.5">
+                                            <span class="w-28 text-fg-muted text-xs shrink-0">Caller Location</span>
+                                            <span class="text-fg text-sm">{{ implode(', ', $callerLocation) }}</span>
+                                        </div>
+                                    @endif
+                                    @if ($conversation->to_number)
+                                        <div class="flex items-center gap-4 px-4 py-2.5">
+                                            <span class="w-28 text-fg-muted text-xs shrink-0">DID Called</span>
+                                            <span
+                                                class="font-mono text-fg text-sm">{{ $conversation->to_number }}</span>
+                                        </div>
+                                    @endif
+                                    @if ($conversation->forwarded_from)
+                                        <div class="flex items-center gap-4 px-4 py-2.5">
+                                            <span class="w-28 text-fg-muted text-xs shrink-0">Forwarded From</span>
+                                            <span
+                                                class="font-mono text-fg text-sm">{{ $conversation->forwarded_from }}</span>
+                                        </div>
+                                    @endif
                                     <div class="flex items-center gap-4 px-4 py-2.5">
-                                        <span class="w-24 text-fg-muted text-xs shrink-0">Status</span>
+                                        <span class="w-28 text-fg-muted text-xs shrink-0">Status</span>
                                         <span
                                             class="inline-flex items-center px-2 py-0.5 rounded-full font-semibold text-xs {{ $s['class'] }}">
                                             {{ $s['label'] }}
@@ -396,6 +430,25 @@
                     <span class="font-mono text-fg text-xs">{{ $conversation->contact_phone }}</span>
                 </div>
             @endif
+            @php
+                $sidebarLocation = array_filter([
+                    $conversation->caller_city,
+                    $conversation->caller_state,
+                    $conversation->caller_country,
+                ]);
+            @endphp
+            @if ($sidebarLocation)
+                <div class="flex items-start gap-2 mt-1.5">
+                    <span class="w-16 text-fg-muted text-xs shrink-0">Location</span>
+                    <span class="text-fg-muted text-xs">{{ implode(', ', $sidebarLocation) }}</span>
+                </div>
+            @endif
+            @if ($conversation->caller_name && $conversation->caller_name !== ($conversation->contact_name ?? ''))
+                <div class="flex items-center gap-2 mt-1.5">
+                    <span class="w-16 text-fg-muted text-xs shrink-0">CNAM</span>
+                    <span class="text-fg text-xs">{{ $conversation->caller_name }}</span>
+                </div>
+            @endif
         </div>
 
         {{-- Capabilities / tags --}}
@@ -450,30 +503,37 @@
                 <dl class="space-y-3">
                     @if ($conversation->campaign)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Brand</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Brand</dt>
                             <dd class="font-medium text-fg text-xs text-right">{{ $conversation->campaign->name }}
                             </dd>
                         </div>
                     @endif
                     @if ($conversation->queue)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Queue</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Queue</dt>
                             <dd class="font-medium text-fg text-xs text-right">{{ $conversation->queue }}</dd>
                         </div>
                     @endif
                     <div class="flex justify-between items-start gap-2">
-                        <dt class="w-24 text-fg-muted text-xs shrink-0">Channel</dt>
+                        <dt class="w-28 text-fg-muted text-xs shrink-0">Channel</dt>
                         <dd class="font-medium text-fg text-xs text-right capitalize">{{ $conversation->channel }}
                         </dd>
                     </div>
                     <div class="flex justify-between items-start gap-2">
-                        <dt class="w-24 text-fg-muted text-xs shrink-0">Direction</dt>
+                        <dt class="w-28 text-fg-muted text-xs shrink-0">Direction</dt>
                         <dd class="font-medium text-fg text-xs text-right capitalize">{{ $conversation->direction }}
                         </dd>
                     </div>
+                    @if ($conversation->call_sid)
+                        <div class="flex justify-between items-start gap-2">
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Call SID</dt>
+                            <dd class="font-mono text-fg-muted text-[10px] text-right break-all">
+                                {{ $conversation->call_sid }}</dd>
+                        </div>
+                    @endif
                     @if ($conversation->assignedAgent)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Assigned To</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Assigned To</dt>
                             <dd class="font-medium text-fg text-xs text-right">
                                 {{ $conversation->assignedAgent->first_name }}
                                 {{ $conversation->assignedAgent->last_name }}</dd>
@@ -481,7 +541,7 @@
                     @endif
                     @if ($conversation->completedByAgent)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Completed By</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Completed By</dt>
                             <dd class="font-medium text-fg text-xs text-right">
                                 {{ $conversation->completedByAgent->first_name }}
                                 {{ $conversation->completedByAgent->last_name }}</dd>
@@ -489,19 +549,90 @@
                     @endif
                     @if ($conversation->duration_label)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Duration</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Duration</dt>
                             <dd class="font-mono font-medium text-fg text-xs text-right">
                                 {{ $conversation->duration_label }}</dd>
                         </div>
                     @endif
+
+                    {{-- Twilio caller details --}}
+                    @if (
+                        $conversation->caller_name ||
+                            $conversation->caller_city ||
+                            $conversation->caller_state ||
+                            $conversation->caller_country ||
+                            $conversation->caller_zip ||
+                            $conversation->to_number ||
+                            $conversation->forwarded_from)
+                        <div class="space-y-3 pt-3 border-surface border-t">
+                            <dt class="text-fg-muted text-xs font-semibold uppercase tracking-wide">Caller Info</dt>
+                            @if ($conversation->caller_name)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Name</dt>
+                                    <dd class="font-medium text-fg text-xs text-right">
+                                        {{ $conversation->caller_name }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->contact_phone)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Number</dt>
+                                    <dd class="font-mono font-medium text-fg text-xs text-right">
+                                        {{ $conversation->contact_phone }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->caller_city)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">City</dt>
+                                    <dd class="font-medium text-fg text-xs text-right">
+                                        {{ $conversation->caller_city }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->caller_state)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">State</dt>
+                                    <dd class="font-medium text-fg text-xs text-right">
+                                        {{ $conversation->caller_state }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->caller_zip)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">ZIP</dt>
+                                    <dd class="font-mono font-medium text-fg text-xs text-right">
+                                        {{ $conversation->caller_zip }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->caller_country)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Country</dt>
+                                    <dd class="font-medium text-fg text-xs text-right">
+                                        {{ $conversation->caller_country }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->to_number)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">DID Called</dt>
+                                    <dd class="font-mono font-medium text-fg text-xs text-right">
+                                        {{ $conversation->to_number }}</dd>
+                                </div>
+                            @endif
+                            @if ($conversation->forwarded_from)
+                                <div class="flex justify-between items-start gap-2">
+                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Forwarded From</dt>
+                                    <dd class="font-mono font-medium text-fg text-xs text-right">
+                                        {{ $conversation->forwarded_from }}</dd>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="space-y-3 pt-3 border-surface border-t">
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Created At</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Created At</dt>
                             <dd class="text-fg text-xs text-right">
                                 {{ $conversation->created_at->format('j M Y g:ia') }}</dd>
                         </div>
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-24 text-fg-muted text-xs shrink-0">Updated At</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Updated At</dt>
                             <dd class="text-fg text-xs text-right">
                                 {{ $conversation->updated_at->format('j M Y g:ia') }}</dd>
                         </div>
@@ -529,113 +660,5 @@
         </div>
     </div>
 
-    {{-- ===================== ACW / DISPOSITION PANEL ===================== --}}
-    @if ($showDispositionPanel)
-        <div class="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-            x-data="{
-                secondsLeft: {{ $acwSecondsLeft }},
-                timer: null,
-                init() {
-                    if (this.secondsLeft > 0) {
-                        this.timer = setInterval(() => {
-                            this.secondsLeft--;
-                            if (this.secondsLeft <= 0) {
-                                clearInterval(this.timer);
-                            }
-                        }, 1000);
-                    }
-                },
-                destroy() { clearInterval(this.timer); }
-            }">
-            <div class="bg-surface border border-surface rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-                {{-- ACW header --}}
-                <div class="flex items-center justify-between px-5 py-4 border-b border-surface bg-surface-2">
-                    <div class="flex items-center gap-2">
-                        <x-heroicon-o-clock class="w-5 h-5 text-fuchsia-400" />
-                        <span class="font-bold text-fg text-sm">After Call Work</span>
-                    </div>
-                    {{-- Countdown timer --}}
-                    @if ($acwSecondsLeft > 0)
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-fg-muted text-xs">Auto-advance in</span>
-                            <span class="font-mono font-bold text-fuchsia-400 text-sm tabular-nums"
-                                x-text="secondsLeft + 's'"></span>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="p-5 space-y-4">
-                    {{-- Disposition select --}}
-                    <div>
-                        <label class="block mb-1.5 font-semibold text-fg text-xs">Disposition</label>
-                        <select wire:model="selectedDispositionId"
-                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                            <option value="">-- Select disposition --</option>
-                            @foreach ($dispositions as $disp)
-                                @php
-                                    $catColors = [
-                                        'SALE' => 'text-accent-green',
-                                        'DNC' => 'text-accent-red',
-                                        'CALLBACK' => 'text-accent-yellow',
-                                        'RETRY' => 'text-blue-400',
-                                        'OTHER' => 'text-fg-muted',
-                                    ];
-                                    $cc = $catColors[$disp->category] ?? 'text-fg-muted';
-                                @endphp
-                                <option value="{{ $disp->id }}" class="{{ $cc }}">
-                                    [{{ $disp->code }}] {{ $disp->name }}
-                                    @if ($disp->is_dnc)
-                                        (DNC)
-                                    @endif
-                                    @if ($disp->requires_callback)
-                                        (Callback)
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Notes --}}
-                    <div>
-                        <label class="block mb-1.5 font-semibold text-fg text-xs">Notes</label>
-                        <textarea wire:model="dispositionNotes" placeholder="Optional notes about this call..." rows="3"
-                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
-                    </div>
-
-                    {{-- Callback warning --}}
-                    @if ($selectedDispositionId)
-                        @php $selDisp = $dispositions->firstWhere('id', $selectedDispositionId); @endphp
-                        @if ($selDisp?->requires_callback)
-                            <div
-                                class="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2">
-                                <x-heroicon-o-arrow-path class="w-4 h-4 text-accent-yellow shrink-0" />
-                                <p class="text-accent-yellow text-xs">A callback will be scheduled for this lead.</p>
-                            </div>
-                        @endif
-                        @if ($selDisp?->is_dnc)
-                            <div
-                                class="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
-                                <x-heroicon-o-no-symbol class="w-4 h-4 text-accent-red shrink-0" />
-                                <p class="text-accent-red text-xs">Lead will be marked Do Not Call.</p>
-                            </div>
-                        @endif
-                    @endif
-
-                    {{-- Action buttons --}}
-                    <div class="flex items-center gap-2 pt-1">
-                        <button wire:click="saveDisposition" wire:loading.attr="disabled"
-                            class="flex-1 inline-flex justify-center items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 px-4 py-2 rounded-lg font-semibold text-white text-sm transition">
-                            <span wire:loading.remove wire:target="saveDisposition">Save &amp; Continue</span>
-                            <span wire:loading wire:target="saveDisposition">Saving…</span>
-                        </button>
-                        <button wire:click="skipDisposition"
-                            class="inline-flex items-center gap-1.5 bg-surface-2 hover:bg-surface-3 border border-surface px-4 py-2 rounded-lg font-semibold text-fg-muted text-sm transition">
-                            Skip
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 
 </div>

@@ -107,6 +107,17 @@ class TwilioController extends Controller
     $callbackUrl = rtrim(config("app.url"), "/") . "/api/call/complete";
     $voice = new VoiceResponse();
 
+    // Twilio geo / caller metadata — captured once and passed to conversation create
+    $twilioMeta = [
+      'caller_name'    => $request->input('CallerName') ?: null,
+      'caller_city'    => $request->input('CallerCity') ?: $request->input('FromCity') ?: null,
+      'caller_state'   => $request->input('CallerState') ?: $request->input('FromState') ?: null,
+      'caller_country' => $request->input('CallerCountry') ?: $request->input('FromCountry') ?: null,
+      'caller_zip'     => $request->input('CallerZip') ?: $request->input('FromZip') ?: null,
+      'to_number'      => $to ?: null,
+      'forwarded_from' => $request->input('ForwardedFrom') ?: null,
+    ];
+
     if (empty($to)) {
       \Log::warning("[Twilio] handleCallRouting: missing destination", [
         "call_sid" => $callSid,
@@ -133,7 +144,8 @@ class TwilioController extends Controller
         $from,
         $callSid,
         $callbackUrl,
-        $voice
+        $voice,
+        $twilioMeta
       );
     }
 
@@ -151,7 +163,8 @@ class TwilioController extends Controller
         $from,
         $callSid,
         $callbackUrl,
-        $voice
+        $voice,
+        $twilioMeta
       );
     }
 
@@ -221,6 +234,48 @@ class TwilioController extends Controller
       $callbackUrl,
       $voice
     );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Conversation lookup  GET /api/call/conversation?call_sid=CA...
+  //  Returns the web URL to the conversation page for a given CallSid.
+  //  Used by the browser to navigate the agent to the conversation on accept.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  public function conversationBySid(Request $request)
+  {
+    $callSid = $request->input('call_sid');
+    $from    = $request->input('from');
+
+    if (!$callSid && !$from) {
+      return response()->json(['url' => null], 422);
+    }
+
+    // Primary lookup: by the exact call SID stored when the webhook ran.
+    // For in-group queue calls, the SDK's CallSid IS the parent SID.
+    $conversation = $callSid
+      ? Conversation::where('call_sid', $callSid)->first()
+      : null;
+
+    // Fallback lookup: find the most recent in-progress or queued conversation
+    // matching the caller's phone number.  This handles the case where the
+    // agent's SDK leg carries a child CallSid that differs from the parent SID
+    // stored in the DB (can happen with certain <Dial> leg configurations).
+    if (!$conversation && $from) {
+      $conversation = Conversation::where('contact_phone', $from)
+        ->whereIn('status', ['in_progress', 'queued'])
+        ->latest('started_at')
+        ->first();
+    }
+
+    if (!$conversation) {
+      // Return 200 {url: null} — the JS retry loop checks for a truthy url.
+      return response()->json(['url' => null]);
+    }
+
+    return response()->json([
+      'url' => route('conversations.show', $conversation),
+    ]);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -840,7 +895,8 @@ class TwilioController extends Controller
     string $from,
     ?string $callSid,
     string $callbackUrl,
-    VoiceResponse $voice
+    VoiceResponse $voice,
+    array $twilioMeta = []
   ): \Illuminate\Http\Response {
     \Log::info("[Twilio] handleInboundDid", [
       "call_sid" => $callSid,
@@ -856,13 +912,13 @@ class TwilioController extends Controller
 
       Conversation::firstOrCreate(
         ["call_sid" => $callSid],
-        [
+        array_merge([
           "channel" => "voice",
           "direction" => "inbound",
           "status" => "in_progress",
           "contact_phone" => $from,
           "started_at" => now(),
-        ]
+        ], $twilioMeta)
       );
 
       if (!$menu || !$menu->is_active) {
@@ -880,14 +936,14 @@ class TwilioController extends Controller
 
       $conversation = Conversation::firstOrCreate(
         ["call_sid" => $callSid],
-        [
+        array_merge([
           "channel" => "voice",
           "direction" => "inbound",
           "status" => "in_progress",
           "contact_phone" => $from,
           "in_group_id" => $inGroup?->id,
           "started_at" => now(),
-        ]
+        ], $twilioMeta)
       );
 
       if (!$inGroup || !$inGroup->is_active) {
@@ -926,7 +982,8 @@ class TwilioController extends Controller
     string $from,
     ?string $callSid,
     string $callbackUrl,
-    VoiceResponse $voice
+    VoiceResponse $voice,
+    array $twilioMeta = []
   ): \Illuminate\Http\Response {
     $availableAgents = AgentStatus::with(["statusType", "user"])
       ->whereHas("statusType", fn($q) => $q->where("is_available", true)->where("handles_inbound", true))
@@ -934,13 +991,13 @@ class TwilioController extends Controller
 
     Conversation::firstOrCreate(
       ["call_sid" => $callSid],
-      [
+      array_merge([
         "channel" => "voice",
         "direction" => "inbound",
         "status" => "in_progress",
         "contact_phone" => $from,
         "started_at" => now(),
-      ]
+      ], $twilioMeta)
     );
 
     \Log::info("[Twilio] handleLegacyInbound: availability check", [
