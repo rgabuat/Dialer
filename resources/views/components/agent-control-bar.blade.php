@@ -477,6 +477,16 @@
                     if (window._twilioIncomingCall) {
                         this.hasIncomingCall = true;
                         this.incomingCallerNumber = window._twilioIncomingCall.parameters?.From || '';
+                        // Caller hung up (or <Dial> timed out) before agent answered
+                        const onPreAcceptEnd = () => {
+                            if (this.hasIncomingCall) {
+                                window._twilioIncomingCall = null;
+                                this.hasIncomingCall = false;
+                                this.incomingCallerNumber = '';
+                            }
+                        };
+                        window._twilioIncomingCall.on('cancel', onPreAcceptEnd);
+                        window._twilioIncomingCall.on('disconnect', onPreAcceptEnd);
                         window.addEventListener('accept-call', () => this.acceptIncoming(), {
                             once: true
                         });
@@ -565,6 +575,16 @@
                         window._twilioIncomingCall = call;
                         this.hasIncomingCall = true;
                         this.incomingCallerNumber = call.parameters.From || '';
+                        // Caller hung up (or <Dial> timed out) before agent answered
+                        const onPreAcceptEnd = () => {
+                            if (this.hasIncomingCall) {
+                                window._twilioIncomingCall = null;
+                                this.hasIncomingCall = false;
+                                this.incomingCallerNumber = '';
+                            }
+                        };
+                        call.on('cancel', onPreAcceptEnd);
+                        call.on('disconnect', onPreAcceptEnd);
                         window.addEventListener('accept-call', () => this.acceptIncoming(), {
                             once: true
                         });
