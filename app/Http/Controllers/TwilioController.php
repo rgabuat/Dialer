@@ -494,6 +494,16 @@ class TwilioController extends Controller
       );
     }
 
+    // Guard: if the call is already in_progress (being dialed), a duplicate
+    // callQueueCheck request (Gather + Redirect race) has arrived — ignore it.
+    if ($conversation && $conversation->status === 'in_progress') {
+      \Log::info("[Twilio] callQueueCheck: duplicate request ignored (call already in_progress)", [
+        "call_sid"    => $callSid,
+        "in_group_id" => $inGroupId,
+      ]);
+      return $this->twimlResponse($voice);
+    }
+
     // Check for newly available agents
     $agents = $this->selectAgents($inGroup);
 
@@ -555,7 +565,9 @@ class TwilioController extends Controller
     $queueCheckUrl = rtrim(config("app.url"), "/")
                    . "/api/call/queue-check?in_group_id={$inGroup->id}";
 
-    // <Gather> action is called after timeout OR on hangup (CallStatus=completed)
+    // <Gather> fires on timeout (15 s) OR on caller hangup (CallStatus=completed).
+    // No <Redirect> fallback — it caused simultaneous double-POSTs which created
+    // two competing <Dial> responses and a re-queue race condition.
     $gather = $voice->gather([
       "action"       => $queueCheckUrl,
       "method"       => "POST",
@@ -563,9 +575,6 @@ class TwilioController extends Controller
       "finishOnKey"  => "",
     ]);
     $gather->play($holdMusic);
-
-    // Fallback redirect in case Gather never fires (should not happen)
-    $voice->redirect($queueCheckUrl, ["method" => "POST"]);
 
     return $this->twimlResponse($voice);
   }
@@ -1142,7 +1151,8 @@ class TwilioController extends Controller
         "finishOnKey" => "",
       ]);
       $gather->play($holdMusic);
-      $voice->redirect($queueCheckUrl, ["method" => "POST"]);
+      // No <Redirect> fallback — it caused double-fires alongside <Gather>
+      // creating duplicate simultaneous <Dial> responses.
       return $this->twimlResponse($voice);
     }
 
