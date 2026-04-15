@@ -13,6 +13,24 @@ class Store extends Model
         'name',
         'address',
         'brand',
+        'type',
+        'occupancy',
+        'city',
+        'state',
+        'zip',
+        'country',
+        'featured',
+        'pricing',
+    ];
+
+    protected $casts = [
+        'occupancy' => 'float',
+        'featured'  => 'boolean',
+        'pricing'   => 'array',
     ];
     
+    public function units()
+    {
+        return $this->hasMany(StoreUnit::class);
+    }
 }

@@ -2,71 +2,73 @@
 
 namespace App\Livewire\Leads;
 
+use App\Models\ActivityLog;
 use App\Models\Lead;
-use App\Models\Store;
 use Livewire\Component;
 
 class LeadEdit extends Component
 {
-    public ?Lead $lead = null;
-    public bool $confirmingDelete = false;
-    public $first_name;
-    public $last_name;
-    public $phone;
-    public $email;
-    public $store_id;
-    
-    protected $rules = [
-        'first_name' => 'required',
-        'last_name'  => 'required',
-        'store_id'   => 'required|exists:stores,id',
-    ];
+    public Lead $lead;
 
-    public function mount(Lead $lead)
+    public function mount(Lead $lead): void
     {
         $this->lead = $lead;
-
-        // ✅ MANUAL HYDRATION (THIS IS THE KEY)
-        $this->first_name = $lead->first_name;
-        $this->last_name  = $lead->last_name;
-        $this->phone      = $lead->phone;
-        $this->email      = $lead->email;
-        $this->store_id   = $lead->store_id;
     }
 
-    public function save()
+    public function setPipelineStage(string $stage): void
     {
-        $this->validate();
+        $allowed = ['interested', 'converted', 'expired', 'no_longer_interested'];
+        if (!in_array($stage, $allowed, true)) {
+            return;
+        }
 
-        $this->lead->update([
-            'first_name'        => $this->first_name,
-            'last_name'         => $this->last_name,
-            'phone'             => $this->phone,
-            'email'             => $this->email,
-            'store_id'          => $this->store_id,
-            'last_actioned_by'  => auth()->id(),
+        $old = $this->lead->pipeline_stage;
+
+        if ($old === $stage) {
+            return;
+        }
+
+        $this->lead->update(['pipeline_stage' => $stage]);
+
+        $stageLabels = [
+            'interested'           => 'Interested',
+            'converted'            => 'Converted',
+            'expired'              => 'Expired',
+            'no_longer_interested' => 'No Longer Interested',
+        ];
+
+        ActivityLog::create([
+            'actor_type'   => 'App\\Models\\User',
+            'actor_id'     => auth()->id(),
+            'subject_type' => 'App\\Models\\Lead',
+            'subject_id'   => $this->lead->id,
+            'type'         => 'activity',
+            'severity'     => 'info',
+            'event'        => 'pipeline_stage_updated',
+            'action'       => 'Updated pipeline stage from ' . ($stageLabels[$old] ?? ucfirst($old ?? 'None')) . ' to ' . ($stageLabels[$stage] ?? ucfirst($stage)),
+            'properties'   => ['from' => $old, 'to' => $stage],
+            'performed_at' => now(),
         ]);
 
-        session()->flash('success', 'Lead updated.');
-    }
-
-
-    public function confirmDelete()
-    {
-        $this->confirmingDelete = true;
-    }
-
-
-    public function delete()
-    {
-        $this->lead->delete();
-        return redirect()->route('leads.index');
+        $this->lead->refresh();
     }
 
     public function render()
     {
+        $this->lead->loadMissing(['store', 'creator', 'lastActionedBy', 'conversation']);
+
+        $notes = $this->lead->conversation
+            ? $this->lead->conversation->notes()->with('author')->orderBy('created_at')->get()
+            : collect();
+
+        $activityLogs = ActivityLog::where('subject_type', 'App\\Models\\Lead')
+            ->where('subject_id', $this->lead->id)
+            ->orderBy('performed_at')
+            ->get();
+
         return view('livewire.leads.lead-edit', [
-            'stores' => Store::all(),
+            'notes'        => $notes,
+            'activityLogs' => $activityLogs,
         ])->layout('components.layouts.app');
     }
 }

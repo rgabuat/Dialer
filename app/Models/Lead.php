@@ -15,6 +15,7 @@ class Lead extends Model
         'phone',
         'email',
         'store_id',
+        'conversation_id',
         'call_list_id',
         'status',
         'last_called_at',
@@ -27,15 +28,42 @@ class Lead extends Model
         'country',
         'created_by',
         'last_actioned_by',
+        'lead_type',
+        'move_in_date',
+        'reason_for_storage',
+        'types_of_items',
+        'duration',
+        'property_protection',
+        'promo',
+        'admin_fee_credit',
+        'unit_size',
+        'notify_sms',
+        'notify_email',
+        'notify_email_address',
+        'selected_units',
+        'pipeline_stage',
+        'source',
+        'expires_at',
     ];
 
     protected $casts = [
-        'last_called_at' => 'datetime',
+        'last_called_at'   => 'datetime',
+        'move_in_date'     => 'date',
+        'expires_at'       => 'date',
+        'admin_fee_credit' => 'boolean',
+        'notify_sms'       => 'boolean',
+        'notify_email'     => 'boolean',
+        'selected_units'   => 'array',
     ];
 
     public function store()
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function conversation()
+    {
+        return $this->belongsTo(Conversation::class);
     }
 
     public function callList()
