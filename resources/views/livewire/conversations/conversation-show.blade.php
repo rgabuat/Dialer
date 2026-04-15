@@ -1030,11 +1030,13 @@
                                                     <select x-model="lead.reason_for_storage"
                                                         class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm outline-none focus:border-fuchsia-500 transition appearance-none">
                                                         <option value=""></option>
-                                                        <option value="moving">Moving</option>
-                                                        <option value="decluttering">Decluttering</option>
-                                                        <option value="renovation">Renovation</option>
-                                                        <option value="business">Business Use</option>
-                                                        <option value="other">Other</option>
+                                                        <option value="Moving">Moving</option>
+                                                        <option value="Relocating">Relocating</option>
+                                                        <option value="Need Space">Need Space</option>
+                                                        <option value="Vehicle">Vehicle</option>
+                                                        <option value="Business">Business</option>
+                                                        <option value="Between Semesters">Between Semesters</option>
+                                                        <option value="Military">Military</option>
                                                     </select>
                                                 </div>
                                                 <div>
@@ -1048,11 +1050,12 @@
                                                     <select x-model="lead.duration"
                                                         class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm outline-none focus:border-fuchsia-500 transition appearance-none">
                                                         <option value=""></option>
-                                                        <option value="1_3_months">1–3 months</option>
-                                                        <option value="3_6_months">3–6 months</option>
-                                                        <option value="6_12_months">6–12 months</option>
-                                                        <option value="over_1_year">Over 1 year</option>
-                                                        <option value="unsure">Unsure</option>
+                                                        <option value="1 Month Or Less">1 Month Or Less</option>
+                                                        <option value="2-3 Months">2-3 Months</option>
+                                                        <option value="4-6 Months">4-6 Months</option>
+                                                        <option value="7-12 Months">7-12 Months</option>
+                                                        <option value="Longer Than 1 Year">Longer Than 1 Year</option>
+                                                        <option value="Unsure">Unsure</option>
                                                     </select>
                                                     <p class="mt-1 text-fuchsia-400 text-xs">Script: How long do you expect to be storing with us?</p>
                                                 </div>
