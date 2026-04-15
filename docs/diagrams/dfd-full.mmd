@@ -1,0 +1,281 @@
+flowchart TD
+
+    AGENT(["Agent / User Browser"])
+    ADMIN(["Admin / Supervisor Browser"])
+    CALLER(["PSTN Caller"])
+    TWILIO(["Twilio API"])
+    PUSHER(["Pusher Broadcast Bus"])
+
+    DS_USERS[("Users and Roles")]
+    DS_CAMPAIGNS[("Campaigns")]
+    DS_CALLLISTS[("Call Lists and Leads")]
+    DS_HOPPER[("Dialer Hopper")]
+    DS_DISPOSITIONS[("Dispositions and Callbacks")]
+    DS_CONVERSATIONS[("Conversations and Notes")]
+    DS_DIDS[("DIDs and CID Numbers")]
+    DS_INGROUPS[("In-Groups")]
+    DS_IVR[("IVR Menus and Options")]
+    DS_AGENT_STATUS[("Agent Status and Logs")]
+    DS_ACTIVITY[("Activity Logs and Audit Logs")]
+    DS_GROUPS[("User Groups")]
+    DS_STORES[("Stores and Units")]
+    DS_WORKFORCE[("Rosters and Shifts")]
+    DS_SETTINGS[("Voice Settings and Meta")]
+    DS_REDIS[("Redis Cache CID rotation index")]
+
+    subgraph AUTH["1 - Authentication"]
+        P_LOGIN("1.1 Login LoginController")
+        P_LOGOUT("1.2 Logout")
+    end
+    AGENT -- "credentials" --> P_LOGIN
+    P_LOGIN -- "validate user" --> DS_USERS
+    DS_USERS -- "user and roles" --> P_LOGIN
+    P_LOGIN -- "session token Sanctum" --> AGENT
+    AGENT -- "logout request" --> P_LOGOUT
+    P_LOGOUT -- "invalidate session" --> DS_USERS
+
+    subgraph CAMP_MGMT["2 - Campaign Management"]
+        P_CAMP("2.1 CRUD Campaign CampaignCreate/Edit")
+        P_LISTS("2.2 Manage Call Lists CallListCreate/Edit")
+        P_IMPORT("2.3 CSV Lead Import")
+        P_DISP("2.4 CRUD Dispositions")
+    end
+    ADMIN -- "campaign settings" --> P_CAMP
+    P_CAMP -- "read/write" --> DS_CAMPAIGNS
+    ADMIN -- "call list config" --> P_LISTS
+    P_LISTS -- "read/write" --> DS_CALLLISTS
+    P_LISTS -- "link list to campaign" --> DS_CAMPAIGNS
+    ADMIN -- "CSV file" --> P_IMPORT
+    P_IMPORT -- "bulk insert leads" --> DS_CALLLISTS
+    ADMIN -- "disposition codes" --> P_DISP
+    P_DISP -- "read/write" --> DS_DISPOSITIONS
+
+    subgraph INBOUND["3 - Inbound Call Routing"]
+        P_WEBHOOK("3.1 Call Routing Webhook POST /api/call-routing")
+        P_DID_LOOKUP("3.2 DID Lookup")
+        P_IVR("3.3 Serve IVR Menu Gather digit")
+        P_IVR_GATHER("3.4 IVR Gather POST /api/call/ivr-gather")
+        P_INGROUP_ROUTE("3.5 Route to In-Group queue/hold loop")
+        P_QUEUE_CHECK("3.6 Queue Check POST /api/call/queue-check")
+        P_CONV_CREATE("3.7 Create/Update Conversation record")
+        P_ABANDON("3.8 Mark Abandoned")
+    end
+    CALLER -- "inbound PSTN call" --> TWILIO
+    TWILIO -- "POST webhook" --> P_WEBHOOK
+    P_WEBHOOK -- "terminal status" --> P_ABANDON
+    P_ABANDON -- "update status" --> DS_CONVERSATIONS
+    P_WEBHOOK -- "lookup DID by To" --> P_DID_LOOKUP
+    P_DID_LOOKUP -- "read DID record" --> DS_DIDS
+    DS_DIDS -- "ivr_menu_id or in_group_id" --> P_DID_LOOKUP
+    P_DID_LOOKUP -- "has IVR" --> P_IVR
+    P_IVR -- "read menu tree" --> DS_IVR
+    DS_IVR -- "menu config" --> P_IVR
+    P_IVR -- "TwiML Gather" --> TWILIO
+    TWILIO -- "digit pressed" --> P_IVR_GATHER
+    P_IVR_GATHER -- "read option" --> DS_IVR
+    P_IVR_GATHER -- "matched in_group" --> P_INGROUP_ROUTE
+    P_DID_LOOKUP -- "direct in_group" --> P_INGROUP_ROUTE
+    P_INGROUP_ROUTE -- "read group" --> DS_INGROUPS
+    DS_INGROUPS -- "routing rules" --> P_INGROUP_ROUTE
+    P_INGROUP_ROUTE -- "create conversation" --> P_CONV_CREATE
+    P_CONV_CREATE -- "write" --> DS_CONVERSATIONS
+    P_INGROUP_ROUTE -- "TwiML Enqueue" --> TWILIO
+    TWILIO -- "periodic queue poll" --> P_QUEUE_CHECK
+    P_QUEUE_CHECK -- "find available agent" --> DS_AGENT_STATUS
+    DS_AGENT_STATUS -- "agent id" --> P_QUEUE_CHECK
+    P_QUEUE_CHECK -- "dequeue and connect TwiML" --> TWILIO
+    TWILIO -- "call connected" --> AGENT
+
+    subgraph OUTBOUND["4 - Outbound Auto-Dial"]
+        P_HOPPER("4.1 Fill Hopper HopperService fill")
+        P_AUTODIAL("4.2 Autodial POST /api/dialer/autodial")
+        P_CONNECT("4.3 Connect-to-Agent GET /api/dialer/connect-to-agent")
+        P_NO_ANSWER("4.4 No-Answer Webhook POST /api/call/no-answer")
+        P_COMPLETE("4.5 Call Complete POST /api/call/complete")
+        P_CID_ROTATE("4.6 CID Rotation Campaign nextCid")
+    end
+    AGENT -- "Start dialing" --> P_AUTODIAL
+    P_AUTODIAL -- "pop lead from hopper" --> DS_HOPPER
+    DS_HOPPER -- "lead record" --> P_AUTODIAL
+    P_AUTODIAL -- "resolve CID" --> P_CID_ROTATE
+    P_CID_ROTATE -- "read active pool" --> DS_DIDS
+    DS_DIDS -- "CID numbers" --> P_CID_ROTATE
+    P_CID_ROTATE -- "read/increment index" --> DS_REDIS
+    DS_REDIS -- "current index" --> P_CID_ROTATE
+    P_CID_ROTATE -- "selected CLI" --> P_AUTODIAL
+    P_AUTODIAL -- "place call via TwiML" --> TWILIO
+    TWILIO -- "GET connect-to-agent" --> P_CONNECT
+    P_CONNECT -- "read agent device" --> DS_SETTINGS
+    DS_SETTINGS -- "Voice settings" --> P_CONNECT
+    P_CONNECT -- "TwiML Dial Client" --> TWILIO
+    TWILIO -- "ring agent browser" --> AGENT
+    TWILIO -- "no-answer event" --> P_NO_ANSWER
+    P_NO_ANSWER -- "update lead status" --> DS_CALLLISTS
+    P_NO_ANSWER -- "update hopper entry" --> DS_HOPPER
+    TWILIO -- "call-complete event" --> P_COMPLETE
+    P_COMPLETE -- "update conversation" --> DS_CONVERSATIONS
+    P_COMPLETE -- "update hopper entry" --> DS_HOPPER
+    P_HOPPER -- "query callbacks due" --> DS_DISPOSITIONS
+    DS_DISPOSITIONS -- "pending callbacks" --> P_HOPPER
+    P_HOPPER -- "query NEW leads" --> DS_CALLLISTS
+    DS_CALLLISTS -- "leads" --> P_HOPPER
+    P_HOPPER -- "insert entries" --> DS_HOPPER
+
+    subgraph CALL_ACTIONS["5 - Live Call Actions"]
+        P_HOLD("5.1 Hold POST /api/call/hold")
+        P_RESUME("5.2 Resume POST /api/call/resume")
+        P_TRANSFER("5.3 Transfer POST /api/call/transfer")
+        P_MUTE("5.4 Mute POST /api/call/mute")
+    end
+    AGENT -- "hold request" --> P_HOLD
+    P_HOLD -- "Twilio Calls API update" --> TWILIO
+    AGENT -- "resume request" --> P_RESUME
+    P_RESUME -- "Twilio Calls API update" --> TWILIO
+    AGENT -- "transfer request" --> P_TRANSFER
+    P_TRANSFER -- "read available agents" --> DS_AGENT_STATUS
+    P_TRANSFER -- "Twilio Calls API update" --> TWILIO
+    AGENT -- "mute request" --> P_MUTE
+    P_MUTE -- "Twilio Calls API update" --> TWILIO
+
+    subgraph DISPOSITION["6 - Disposition and Callbacks"]
+        P_DISP_SUBMIT("6.1 Submit Disposition Disposer Livewire")
+        P_CB_SCHEDULE("6.2 Schedule Callback CallbackSchedule create")
+        P_CB_PANEL("6.3 Callback Panel /callbacks")
+    end
+    AGENT -- "select disposition code" --> P_DISP_SUBMIT
+    P_DISP_SUBMIT -- "write ACW record" --> DS_CONVERSATIONS
+    P_DISP_SUBMIT -- "update lead status" --> DS_CALLLISTS
+    P_DISP_SUBMIT -- "schedule callback" --> P_CB_SCHEDULE
+    P_CB_SCHEDULE -- "write callback" --> DS_DISPOSITIONS
+    AGENT -- "view callbacks" --> P_CB_PANEL
+    P_CB_PANEL -- "read pending callbacks" --> DS_DISPOSITIONS
+    DS_DISPOSITIONS -- "callback list" --> P_CB_PANEL
+    P_CB_PANEL -- "callback due to hopper" --> P_HOPPER
+
+    subgraph AGENT_STATUS["7 - Agent Status"]
+        P_STATUS_CHANGE("7.1 Status Change AgentStatusService change")
+        P_STATUS_BROADCAST("7.2 Broadcast Status AgentStatusUpdated event")
+    end
+    AGENT -- "change status" --> P_STATUS_CHANGE
+    P_STATUS_CHANGE -- "upsert current status" --> DS_AGENT_STATUS
+    P_STATUS_CHANGE -- "append status log" --> DS_AGENT_STATUS
+    P_STATUS_CHANGE -- "fire event" --> P_STATUS_BROADCAST
+    P_STATUS_BROADCAST -- "broadcast channel" --> PUSHER
+    PUSHER -- "realtime update" --> ADMIN
+
+    subgraph CONVERSATIONS["8 - Conversations"]
+        P_CONV_LIST("8.1 List Conversations ConversationsIndex")
+        P_CONV_SHOW("8.2 View Conversation ConversationShow")
+        P_CONV_NOTE("8.3 Add Note")
+    end
+    AGENT -- "browse conversations" --> P_CONV_LIST
+    P_CONV_LIST -- "query by campaign/agent" --> DS_CONVERSATIONS
+    DS_CONVERSATIONS -- "conversation list" --> P_CONV_LIST
+    AGENT -- "open conversation" --> P_CONV_SHOW
+    P_CONV_SHOW -- "read record and notes" --> DS_CONVERSATIONS
+    DS_CONVERSATIONS -- "full detail" --> P_CONV_SHOW
+    AGENT -- "add note" --> P_CONV_NOTE
+    P_CONV_NOTE -- "insert ConversationNote" --> DS_CONVERSATIONS
+
+    subgraph DID_IVR_MGMT["9 - DID and IVR Management"]
+        P_DID_MGMT("9.1 DID CRUD DidsIndex/DidCreate/Edit")
+        P_CID_MGMT("9.2 CID Numbers Import from Twilio")
+        P_IVR_MGMT("9.3 IVR Menu CRUD IvrMenuCreate/Edit")
+        P_SYNC_WEBHOOK("9.4 Sync Voice Webhook TwilioService syncVoiceWebhook")
+    end
+    ADMIN -- "manage DIDs" --> P_DID_MGMT
+    P_DID_MGMT -- "read/write DID" --> DS_DIDS
+    ADMIN -- "import CID from Twilio" --> P_CID_MGMT
+    P_CID_MGMT -- "list numbers" --> TWILIO
+    TWILIO -- "phone number list" --> P_CID_MGMT
+    P_CID_MGMT -- "write CidNumber record" --> DS_DIDS
+    P_CID_MGMT -- "set voice webhook" --> P_SYNC_WEBHOOK
+    P_SYNC_WEBHOOK -- "update webhook URL" --> TWILIO
+    ADMIN -- "manage IVR menus" --> P_IVR_MGMT
+    P_IVR_MGMT -- "read/write IvrMenu and Options" --> DS_IVR
+
+    subgraph INGROUP_MGMT["10 - In-Group Management"]
+        P_IG_MGMT("10.1 In-Group CRUD InGroupCreate/Edit")
+    end
+    ADMIN -- "configure in-groups" --> P_IG_MGMT
+    P_IG_MGMT -- "read/write" --> DS_INGROUPS
+    P_IG_MGMT -- "bind to campaign" --> DS_CAMPAIGNS
+
+    subgraph LEADS_MGMT["11 - Lead Management"]
+        P_LEAD_MGMT("11.1 Lead CRUD LeadsIndex/Create/Edit")
+    end
+    ADMIN -- "manage leads" --> P_LEAD_MGMT
+    P_LEAD_MGMT -- "read/write Lead" --> DS_CALLLISTS
+
+    subgraph USER_ACCESS["12 - User and Access Control"]
+        P_USER_MGMT("12.1 User CRUD UsersIndex/Create/Edit")
+        P_ROLE_MGMT("12.2 Role CRUD RolesIndex/Create/Edit")
+        P_PERM_MGMT("12.3 Permission Admin PermissionsIndex")
+        P_GROUP_MGMT("12.4 User Group CRUD UserGroupsIndex")
+    end
+    ADMIN -- "manage users" --> P_USER_MGMT
+    P_USER_MGMT -- "read/write User" --> DS_USERS
+    P_USER_MGMT -- "assign groups" --> DS_GROUPS
+    ADMIN -- "manage roles" --> P_ROLE_MGMT
+    P_ROLE_MGMT -- "read/write Role via Spatie" --> DS_USERS
+    ADMIN -- "manage permissions" --> P_PERM_MGMT
+    P_PERM_MGMT -- "read/write Permission via Spatie" --> DS_USERS
+    ADMIN -- "manage user groups" --> P_GROUP_MGMT
+    P_GROUP_MGMT -- "read/write" --> DS_GROUPS
+
+    subgraph MONITORING["13 - Activity Logs and Monitoring"]
+        P_ACTLOG("13.1 Activity Logger ActivityLogger service")
+        P_ACTLOG_VIEW("13.2 Activity Logs View ActivitylogsIndex")
+        P_OVERVIEW("13.3 Activity Overview OverviewIndex")
+        P_SHIFT_MON("13.4 Shift Monitoring ShiftMonitoring")
+    end
+    P_STATUS_CHANGE -- "log status event" --> P_ACTLOG
+    P_DISP_SUBMIT -- "log call disposition" --> P_ACTLOG
+    P_CONV_CREATE -- "log call created" --> P_ACTLOG
+    P_ACTLOG -- "write ActivityLog and AuditLog" --> DS_ACTIVITY
+    ADMIN -- "view logs" --> P_ACTLOG_VIEW
+    P_ACTLOG_VIEW -- "query" --> DS_ACTIVITY
+    DS_ACTIVITY -- "log entries" --> P_ACTLOG_VIEW
+    ADMIN -- "activity overview" --> P_OVERVIEW
+    P_OVERVIEW -- "query agent status and call stats" --> DS_AGENT_STATUS
+    P_OVERVIEW -- "query conversations" --> DS_CONVERSATIONS
+    ADMIN -- "shift monitoring" --> P_SHIFT_MON
+    P_SHIFT_MON -- "read roster/shifts" --> DS_WORKFORCE
+    P_SHIFT_MON -- "read agent status" --> DS_AGENT_STATUS
+
+    subgraph WORKFORCE["14 - Workforce"]
+        P_ROSTER("14.1 Roster CRUD RosterIndex/Create/Show")
+    end
+    ADMIN -- "manage rosters and shifts" --> P_ROSTER
+    P_ROSTER -- "read/write Roster RosterShift ShiftActivity" --> DS_WORKFORCE
+
+    subgraph STORES["15 - Stores"]
+        P_STORE("15.1 Store CRUD StoresIndex/Edit")
+    end
+    ADMIN -- "manage stores" --> P_STORE
+    P_STORE -- "read/write Store and StoreUnit" --> DS_STORES
+
+    subgraph SETTINGS["16 - Settings"]
+        P_PROFILE("16.1 Profile / Password Profile Livewire")
+        P_PHONE_SETTINGS("16.2 Phone Settings Phone Livewire")
+        P_PREFS("16.3 Preferences")
+    end
+    AGENT -- "update profile" --> P_PROFILE
+    P_PROFILE -- "read/write User and UsersMeta" --> DS_USERS
+    AGENT -- "configure Twilio device" --> P_PHONE_SETTINGS
+    P_PHONE_SETTINGS -- "read/write VoiceSetting" --> DS_SETTINGS
+    AGENT -- "update preferences" --> P_PREFS
+    P_PREFS -- "write UsersMeta" --> DS_USERS
+
+    subgraph REALTIME["17 - Realtime Push"]
+        P_BROADCAST("17.1 Event Broadcaster Laravel Echo / Pusher")
+    end
+    P_STATUS_BROADCAST --> P_BROADCAST
+    P_BROADCAST -- "agent-status channel" --> PUSHER
+    PUSHER -- "live update to agent" --> AGENT
+    PUSHER -- "live update to admin" --> ADMIN
+
+    classDef external fill:#dce8f5,stroke:#3a7ec4,color:#000
+    classDef datastore fill:#fff3cd,stroke:#e0a800,color:#000
+    class AGENT,ADMIN,CALLER,TWILIO,PUSHER external
+    class DS_USERS,DS_CAMPAIGNS,DS_CALLLISTS,DS_HOPPER,DS_DISPOSITIONS,DS_CONVERSATIONS,DS_DIDS,DS_INGROUPS,DS_IVR,DS_AGENT_STATUS,DS_ACTIVITY,DS_GROUPS,DS_STORES,DS_WORKFORCE,DS_SETTINGS,DS_REDIS datastore

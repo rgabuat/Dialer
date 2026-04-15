@@ -11,6 +11,7 @@ This directory stores Mermaid source files used by the documentation.
 
 ## Core Diagrams
 
+- [dfd-full.mmd](dfd-full.mmd): **full Level-1 Data Flow Diagram** — all 17 subsystems, every external entity, data store, and data flow.
 - [app-structure.mmd](app-structure.mmd): repository structure overview.
 - [modules.mmd](modules.mmd): high-level feature module map.
 - [inbound-call-flow.mmd](inbound-call-flow.mmd): end-to-end inbound call flow (DID → IVR → In-Group → Agent).
