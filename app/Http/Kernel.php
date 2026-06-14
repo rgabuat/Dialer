@@ -46,6 +46,18 @@ class Kernel extends HttpKernel
     ];
 
     /**
+     * Route middleware aliases (legacy property for compatibility).
+     *
+     * @var array<string, class-string|string>
+     */
+    protected $routeMiddleware = [
+        'campaign.selected' => \App\Http\Middleware\EnsureCampaignSelected::class,
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+    ];
+
+    /**
      * The application's middleware aliases.
      *
      * Aliases may be used instead of class names to conveniently assign middleware to routes and groups.

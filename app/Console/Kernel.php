@@ -14,6 +14,12 @@ class Kernel extends ConsoleKernel
     {
         // Fill hopper every minute for active PROGRESSIVE/PREDICTIVE campaigns
         $schedule->command('dialer:fill-hopper')->everyMinute()->withoutOverlapping();
+
+        // Clear caches for all sites on the server every day at 03:00.
+        $schedule->exec('bash /var/www/clear-all-caches.sh')
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/clear-all-caches.log'));
     }
 
     /**
