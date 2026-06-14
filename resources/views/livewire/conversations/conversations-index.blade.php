@@ -22,7 +22,7 @@
     {{-- Main panel --}}
     <div class="flex flex-col flex-1 bg-surface border border-surface rounded-xl min-h-0 [overflow:clip]">
 
-        {{-- Filter bar + search (single row) --}}
+        {{-- Filter bar + search --}}
         <div class="flex flex-wrap items-center gap-2 px-5 py-2.5 border-surface border-b shrink-0">
             {{-- Date filter --}}
             <x-date-picker wire-model="filterDate" :value="$filterDate" placeholder="Date" />
@@ -54,51 +54,17 @@
                 </button>
             @endif
 
-            {{-- Search + pagination (right side) --}}
-            <div class="flex items-center gap-2 ml-auto">
-                <div class="relative flex items-center w-48">
-                    <x-heroicon-o-magnifying-glass
-                        class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
-                    <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search"
-                        class="pl-8 w-full" />
-                    @if ($search)
-                        <button wire:click="$set('search','')" type="button"
-                            class="right-2.5 absolute text-fg-muted hover:text-fg transition">
-                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
-                        </button>
-                    @endif
-                </div>
-                @if ($conversations->hasPages())
-                    <span>
-                        {{ number_format($conversations->firstItem()) }} –
-                        {{ number_format($conversations->lastItem()) }}
-                        of
-                        <span class="font-medium text-fg">{{ number_format($conversations->total()) }}</span>
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        @if ($conversations->onFirstPage())
-                            <span
-                                class="flex justify-center items-center opacity-30 rounded-md w-6 h-6 text-fg-muted cursor-not-allowed">
-                                <x-heroicon-o-chevron-left class="w-3.5 h-3.5" />
-                            </span>
-                        @else
-                            <button wire:click="previousPage" type="button"
-                                class="flex justify-center items-center hover:bg-surface-2 rounded-md w-6 h-6 text-fg-muted hover:text-fg transition">
-                                <x-heroicon-o-chevron-left class="w-3.5 h-3.5" />
-                            </button>
-                        @endif
-                        @if ($conversations->hasMorePages())
-                            <button wire:click="nextPage" type="button"
-                                class="flex justify-center items-center hover:bg-surface-2 rounded-md w-6 h-6 text-fg-muted hover:text-fg transition">
-                                <x-heroicon-o-chevron-right class="w-3.5 h-3.5" />
-                            </button>
-                        @else
-                            <span
-                                class="flex justify-center items-center opacity-30 rounded-md w-6 h-6 text-fg-muted cursor-not-allowed">
-                                <x-heroicon-o-chevron-right class="w-3.5 h-3.5" />
-                            </span>
-                        @endif
-                    </div>
+            {{-- Search (right side) --}}
+            <div class="relative flex items-center ml-auto w-56">
+                <x-heroicon-o-magnifying-glass
+                    class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
+                <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search name or phone…"
+                    class="pl-8 w-full" />
+                @if ($search)
+                    <button wire:click="$set('search','')" type="button"
+                        class="right-2.5 absolute text-fg-muted hover:text-fg transition">
+                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                    </button>
                 @endif
             </div>
         </div>

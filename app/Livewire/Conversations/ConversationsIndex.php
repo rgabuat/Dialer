@@ -70,6 +70,8 @@ class ConversationsIndex extends Component
       "completedByAgent",
       "campaign",
     ])
+      ->select('conversations.*')
+      ->distinct()
       ->when(
         $this->tab === "assigned",
         fn($q) => $q->where("assigned_to", auth()->id())
