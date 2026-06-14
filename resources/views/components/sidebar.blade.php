@@ -39,7 +39,9 @@
         if (!empty($children)) {
             foreach ($children as $child) {
                 $cp = $child['permission'] ?? null;
-                $canViewChild = !$cp || (auth()->check() && auth()->user()->can($cp));
+                $cr = $child['role'] ?? null;
+                $canViewChild = (!$cp || (auth()->check() && auth()->user()->can($cp)))
+                    && (!$cr || (auth()->check() && auth()->user()->hasRole($cr)));
                 if ($canViewChild && !empty($child['route']) && Route::has($child['route'])) {
                     return route($child['route']);
                 }
@@ -57,12 +59,19 @@
         if ($permission && !(auth()->check() && auth()->user()->can($permission))) {
             return false;
         }
+        $role = $item['role'] ?? null;
+        if ($role && !(auth()->check() && auth()->user()->hasRole($role))) {
+            return false;
+        }
         // If item has children, show it only when at least one child is accessible
         $children = $item['children'] ?? [];
         if (!empty($children)) {
             foreach ($children as $child) {
                 $cp = $child['permission'] ?? null;
-                if (!$cp || (auth()->check() && auth()->user()->can($cp))) {
+                $cr = $child['role'] ?? null;
+                $canPerm = !$cp || (auth()->check() && auth()->user()->can($cp));
+                $canRole = !$cr || (auth()->check() && auth()->user()->hasRole($cr));
+                if ($canPerm && $canRole) {
                     return true;
                 }
             }

@@ -142,6 +142,7 @@ return [
     "icon" => "heroicon-o-chart-bar",
     "segments" => ["reports"],
     "permission" => null,
+    "role" => "Super Admin",
     "bottom" => false,
     "children" => [
       [
@@ -149,6 +150,7 @@ return [
         "route" => "reports.index",
         "segment" => "reports",
         "permission" => null,
+        "role" => "Super Admin",
       ],
     ],
   ],

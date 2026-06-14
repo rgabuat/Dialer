@@ -230,7 +230,7 @@ Route::middleware(["auth"])->group(function () {
     );
 
     //Reports
-    Route::get("/reports", ReportsOverview::class)->name("reports.index");
+    Route::get("/reports", ReportsOverview::class)->name("reports.index")->middleware("role:Super Admin");
 
     //Twilio
     Route::get("/phone/access-token", [
