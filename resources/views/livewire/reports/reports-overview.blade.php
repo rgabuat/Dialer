@@ -133,6 +133,15 @@
             $ltData   = json_encode($leadsByType->pluck('total')->values()->all());
             $ltBg     = json_encode(['rgba(59,130,246,0.8)','rgba(168,85,247,0.8)','rgba(250,204,21,0.8)','rgba(74,222,128,0.8)']);
         @endphp
+        @if ($totalConversations === 0 && $totalLeads === 0)
+        <div class="flex flex-col justify-center items-center py-24 text-center">
+            <div class="flex justify-center items-center bg-surface-2 mb-5 rounded-2xl w-16 h-16">
+                <x-heroicon-o-chart-bar class="w-8 h-8 text-fg-muted/40" />
+            </div>
+            <p class="font-semibold text-fg text-sm">No data for this period</p>
+            <p class="mt-1 text-fg-muted text-xs">Try a different date range to see results.</p>
+        </div>
+        @else
         <div class="space-y-6 p-6">
 
             {{-- KPI cards --}}
@@ -364,6 +373,7 @@
 
         </div>
         @endif
+        @endif
 
         {{-- ═══════════════════════════════════════════════════════════════════
              CONVERSATIONS TAB
@@ -389,6 +399,15 @@
             $dispLabels = json_encode($byDisposition->map(fn($r) => $r->disposition?->name ?? 'Unknown')->values()->all());
             $dispData   = json_encode($byDisposition->pluck('total')->values()->all());
         @endphp
+        @if ($totalConversations === 0)
+        <div class="flex flex-col justify-center items-center py-24 text-center">
+            <div class="flex justify-center items-center bg-surface-2 mb-5 rounded-2xl w-16 h-16">
+                <x-heroicon-o-chat-bubble-left-right class="w-8 h-8 text-fg-muted/40" />
+            </div>
+            <p class="font-semibold text-fg text-sm">No conversations for this period</p>
+            <p class="mt-1 text-fg-muted text-xs">Try a different date range to see results.</p>
+        </div>
+        @else
         <div class="space-y-6 p-6">
 
             {{-- KPIs --}}
@@ -534,6 +553,7 @@
 
         </div>
         @endif
+        @endif
 
         {{-- ═══════════════════════════════════════════════════════════════════
              LEADS TAB
@@ -554,6 +574,15 @@
             $ldAgentLbls = json_encode($leadsByAgent->map(fn($r) => $r->creator?->name ?? 'Unknown')->values()->all());
             $ldAgentData = json_encode($leadsByAgent->pluck('total')->values()->all());
         @endphp
+        @if ($totalLeads === 0)
+        <div class="flex flex-col justify-center items-center py-24 text-center">
+            <div class="flex justify-center items-center bg-surface-2 mb-5 rounded-2xl w-16 h-16">
+                <x-heroicon-o-user-group class="w-8 h-8 text-fg-muted/40" />
+            </div>
+            <p class="font-semibold text-fg text-sm">No leads for this period</p>
+            <p class="mt-1 text-fg-muted text-xs">Try a different date range to see results.</p>
+        </div>
+        @else
         <div class="space-y-6 p-6">
 
             {{-- KPIs --}}
@@ -686,6 +715,7 @@
 
         </div>
         @endif
+        @endif
 
         {{-- ═══════════════════════════════════════════════════════════════════
              AGENTS TAB
@@ -696,6 +726,15 @@
             $agTotal = json_encode($byAgent->pluck('total')->values()->all());
             $agComp  = json_encode($byAgent->pluck('completed')->values()->all());
         @endphp
+        @if ($byAgent->isEmpty())
+        <div class="flex flex-col justify-center items-center py-24 text-center">
+            <div class="flex justify-center items-center bg-surface-2 mb-5 rounded-2xl w-16 h-16">
+                <x-heroicon-o-users class="w-8 h-8 text-fg-muted/40" />
+            </div>
+            <p class="font-semibold text-fg text-sm">No agent activity for this period</p>
+            <p class="mt-1 text-fg-muted text-xs">Try a different date range to see results.</p>
+        </div>
+        @else
         <div class="space-y-6 p-6">
 
             {{-- KPIs --}}
@@ -807,6 +846,7 @@
 
         </div>
         @endif
+        @endif
 
         {{-- ═══════════════════════════════════════════════════════════════════
              CAMPAIGNS TAB
@@ -817,6 +857,15 @@
             $cpTotal = json_encode($byCampaign->pluck('total')->values()->all());
             $cpComp  = json_encode($byCampaign->pluck('completed')->values()->all());
         @endphp
+        @if ($byCampaign->isEmpty())
+        <div class="flex flex-col justify-center items-center py-24 text-center">
+            <div class="flex justify-center items-center bg-surface-2 mb-5 rounded-2xl w-16 h-16">
+                <x-heroicon-o-megaphone class="w-8 h-8 text-fg-muted/40" />
+            </div>
+            <p class="font-semibold text-fg text-sm">No campaign data for this period</p>
+            <p class="mt-1 text-fg-muted text-xs">Try a different date range to see results.</p>
+        </div>
+        @else
         <div class="space-y-6 p-6">
 
             {{-- Campaign grouped bar chart --}}
@@ -897,6 +946,7 @@
             </div>
 
         </div>
+        @endif
         @endif
 
     </div>{{-- /content --}}
