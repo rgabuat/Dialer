@@ -257,10 +257,14 @@ x-init="
             <x-subnav />
 
             <!-- Page content -->
-            <main class="flex-1 bg-base p-2 md:p-4 lg:p-6 overflow-y-auto transition-colors duration-300"
-                style="scrollbar-gutter: stable" x-data
-                x-on:livewire:navigated.document="$el.classList.remove('animate-fade-up'); void $el.offsetWidth; $el.classList.add('animate-fade-up')">
-                <div class="animate-fade-up">
+            <main class="flex flex-col flex-1 bg-base min-h-0 overflow-hidden transition-colors duration-300" x-data
+                x-on:livewire:navigated.document="
+                    const d = $el.firstElementChild;
+                    d.classList.remove('animate-fade-up');
+                    void d.offsetWidth;
+                    d.classList.add('animate-fade-up');
+                ">
+                <div class="flex-1 p-2 md:p-4 lg:p-6 min-h-0 overflow-y-auto animate-fade-up" style="scrollbar-gutter: stable">
                     {{ $slot }}
                 </div>
             </main>

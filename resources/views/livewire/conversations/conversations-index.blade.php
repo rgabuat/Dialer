@@ -70,15 +70,7 @@
         </div>
 
         {{-- Table --}}
-        <div class="flex-1 overflow-auto" x-data="{
-            _fn: null,
-            init() {
-                this._fn = () => { this.$el.style.maxHeight = (window.innerHeight - this.$el.getBoundingClientRect().top - 8) + 'px'; };
-                this._fn();
-                window.addEventListener('resize', this._fn);
-            },
-            destroy() { window.removeEventListener('resize', this._fn); }
-        }">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="min-w-full text-fg text-sm stagger-rows">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-fg-muted text-xs uppercase tracking-wider">
