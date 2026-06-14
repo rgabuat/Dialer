@@ -1,4 +1,4 @@
-<div class="flex flex-col space-y-4 p-6 h-full stagger-children">
+<div class="flex flex-col space-y-4 p-6 h-full">
 
     {{-- Page header --}}
     <div class="flex flex-wrap justify-between items-start gap-4 shrink-0">
@@ -71,7 +71,7 @@
 
         {{-- Table --}}
         <div class="flex-1 min-h-0 overflow-auto">
-            <table class="min-w-full text-fg text-sm stagger-rows">
+            <table class="min-w-full text-fg text-sm">
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-fg-muted text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Contact</th>
