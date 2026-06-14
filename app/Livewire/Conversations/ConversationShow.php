@@ -35,6 +35,8 @@ class ConversationShow extends Component
       "content" => $content,
       "type" => "note",
     ]);
+
+    $this->dispatch('note-added');
   }
 
   public function selectLead(int $id): void

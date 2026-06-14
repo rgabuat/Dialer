@@ -1,29 +1,23 @@
 <div id="toast"
-     class="fixed top-6 right-6 z-[9999] w-full max-w-sm hidden"
+     class="hidden top-6 right-6 z-[9999] fixed w-full max-w-sm"
      role="alert">
 
-    <div class="flex items-center p-4
-                bg-white
-                border border-neutral-200
-                rounded-xl shadow-sm">
+    <div class="flex items-center bg-surface shadow-2xl p-4 border border-surface rounded-xl">
 
         {{-- Icon --}}
         <div id="toast-icon"
-             class="inline-flex items-center justify-center shrink-0
-                    w-7 h-7 rounded">
+             class="inline-flex justify-center items-center rounded w-7 h-7 shrink-0">
         </div>
 
         {{-- Message --}}
         <div id="toast-message"
-             class="ms-3 text-sm font-normal text-neutral-700">
+             class="ms-3 font-normal text-fg text-sm">
         </div>
 
         {{-- Close --}}
         <button id="toast-close"
             type="button"
-            class="ms-auto flex items-center justify-center
-                   text-neutral-400 hover:text-neutral-600
-                   rounded h-8 w-8">
+            class="flex justify-center items-center ms-auto rounded w-8 h-8 text-fg-muted hover:text-fg transition">
             <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
     </div>
@@ -32,19 +26,19 @@
 {{-- ICON TEMPLATES --}}
 <div class="hidden">
     <span id="icon-success">
-        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-600">
+        <span class="flex justify-center items-center bg-green-500/20 rounded-full w-7 h-7 text-accent-green">
             <x-heroicon-o-check class="w-4 h-4" />
         </span>
     </span>
 
     <span id="icon-error">
-        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-red-100 text-red-600">
+        <span class="flex justify-center items-center bg-red-500/20 rounded-full w-7 h-7 text-accent-red">
             <x-heroicon-o-x-mark class="w-4 h-4" />
         </span>
     </span>
 
     <span id="icon-warning">
-        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-orange-600">
+        <span class="flex justify-center items-center bg-yellow-500/20 rounded-full w-7 h-7 text-accent-yellow">
             <x-heroicon-o-exclamation-circle class="w-4 h-4" />
         </span>
     </span>

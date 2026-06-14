@@ -6,6 +6,17 @@
             <h1 class="font-bold text-fg text-xl">Conversations</h1>
             <p class="mt-0.5 text-fg-muted text-sm">A live-updating list of all conversations.</p>
         </div>
+        {{-- Assigned / All tab switcher --}}
+        <div class="flex items-center gap-0.5 bg-surface-2 p-0.5 border border-surface rounded-lg">
+            <button wire:click="setTab('assigned')"
+                class="px-4 py-1.5 rounded-md text-sm font-semibold transition {{ $tab === 'assigned' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg hover:bg-surface-3/50' }}">
+                Assigned
+            </button>
+            <button wire:click="setTab('all')"
+                class="px-4 py-1.5 rounded-md text-sm font-semibold transition {{ $tab === 'all' ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-muted hover:text-fg hover:bg-surface-3/50' }}">
+                All Conversations
+            </button>
+        </div>
     </div>
 
     {{-- Main panel --}}
@@ -106,10 +117,10 @@
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-fg-muted text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Contact</th>
+                        <th class="px-4 py-3 text-left">Channel</th>
                         <th class="px-5 py-3 text-left">Detail</th>
                         <th class="px-4 py-3 text-left">Status</th>
                         <th class="px-4 py-3 text-left">Duration</th>
-                        <th class="px-4 py-3 text-left">Assigned</th>
                         <th class="px-4 py-3 text-left">Completed By</th>
                         <th class="px-4 py-3 text-right">Created</th>
                     </tr>
@@ -145,31 +156,54 @@
                                     <div class="min-w-0">
                                         <div class="font-semibold text-fg truncate">
                                             {{ $conv->contact_name ?? 'Unknown' }}</div>
-                                        @if ($conv->campaign)
-                                            <div class="text-fg-muted text-xs truncate">{{ $conv->campaign->name }}
-                                            </div>
+                                        @if ($conv->contact_phone)
+                                            <div class="font-mono text-fg-muted text-xs truncate">{{ $conv->contact_phone }}</div>
                                         @endif
                                     </div>
                                 </div>
                             </td>
 
+                            {{-- Channel --}}
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    @if ($conv->channel === 'voice')
+                                        <div class="flex justify-center items-center bg-blue-500/15 rounded-full w-6 h-6 shrink-0">
+                                            <x-heroicon-s-phone class="w-3 h-3 text-blue-400" />
+                                        </div>
+                                        <span class="font-medium text-fg text-xs capitalize">Voice</span>
+                                    @elseif ($conv->channel === 'sms')
+                                        <div class="flex justify-center items-center bg-fuchsia-500/15 rounded-full w-6 h-6 shrink-0">
+                                            <x-heroicon-s-chat-bubble-left-ellipsis class="w-3 h-3 text-fuchsia-400" />
+                                        </div>
+                                        <span class="font-medium text-fg text-xs capitalize">SMS</span>
+                                    @elseif ($conv->channel === 'email')
+                                        <div class="flex justify-center items-center bg-orange-500/15 rounded-full w-6 h-6 shrink-0">
+                                            <x-heroicon-s-envelope class="w-3 h-3 text-orange-400" />
+                                        </div>
+                                        <span class="font-medium text-fg text-xs capitalize">Email</span>
+                                    @else
+                                        <div class="flex justify-center items-center bg-teal-500/15 rounded-full w-6 h-6 shrink-0">
+                                            <x-heroicon-s-chat-bubble-oval-left class="w-3 h-3 text-teal-400" />
+                                        </div>
+                                        <span class="font-medium text-fg text-xs capitalize">{{ $conv->channel }}</span>
+                                    @endif
+                                </div>
+                            </td>
                             {{-- Detail --}}
                             <td class="px-5 py-3">
-                                <div class="flex items-center gap-2 min-w-[120px]">
-                                    @if ($conv->channel === 'voice')
-                                        <x-heroicon-o-phone class="w-4 h-4 text-fg-muted shrink-0" />
-                                    @elseif ($conv->channel === 'sms')
-                                        <x-heroicon-o-chat-bubble-left-ellipsis
-                                            class="w-4 h-4 text-fg-muted shrink-0" />
-                                    @elseif ($conv->channel === 'email')
-                                        <x-heroicon-o-envelope class="w-4 h-4 text-fg-muted shrink-0" />
-                                    @else
-                                        <x-heroicon-o-chat-bubble-oval-left class="w-4 h-4 text-fg-muted shrink-0" />
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-0.5 text-fg-muted text-xs">
+                                        <span class="capitalize">{{ $conv->direction === 'inbound' ? 'Inbound' : 'Outbound' }}</span>
+                                        @if ($conv->campaign)
+                                            <span class="text-fg-muted/40">·</span>
+                                            <span class="max-w-[100px] text-fg-muted/60 truncate">{{ $conv->campaign->name }}</span>
+                                        @endif
+                                    </div>
+                                    @if ($conv->detail_preview)
+                                        <div class="max-w-[160px] text-fg text-xs truncate" title="{{ $conv->detail_preview }}">
+                                            {{ $conv->detail_preview }}
+                                        </div>
                                     @endif
-                                    <span class="max-w-[120px] text-fg-muted text-xs truncate"
-                                        title="{{ $conv->detail_preview }}">
-                                        {{ $conv->direction === 'inbound' ? 'Inbound' : 'Outbound' }}{{ $conv->detail_preview ? '… ' . \Str::limit($conv->detail_preview, 20) : '' }}
-                                    </span>
                                 </div>
                             </td>
 
@@ -210,30 +244,6 @@
                                 {{ $conv->duration_label ?? '—' }}
                             </td>
 
-                            {{-- Assigned --}}
-                            <td class="px-4 py-3">
-                                @if ($conv->assignedAgent)
-                                    @php
-                                        $agent = $conv->assignedAgent;
-                                        $agentInitials = strtoupper(
-                                            substr($agent->first_name ?? '', 0, 1) .
-                                                substr($agent->last_name ?? '', 0, 1),
-                                        );
-                                        $agentColor = $colors[$agent->id % count($colors)];
-                                    @endphp
-                                    <div class="flex items-center gap-2">
-                                        <div
-                                            class="flex justify-center items-center {{ $agentColor }} rounded-full w-7 h-7 font-bold text-white text-xs shrink-0">
-                                            {{ $agentInitials }}
-                                        </div>
-                                        <span
-                                            class="max-w-[100px] text-fg text-sm truncate">{{ $agent->first_name }}</span>
-                                    </div>
-                                @else
-                                    <span class="text-fg-muted text-sm">—</span>
-                                @endif
-                            </td>
-
                             {{-- Completed By --}}
                             <td class="px-4 py-3">
                                 @if ($conv->completedByAgent)
@@ -250,13 +260,24 @@
                                             {{ $cbInitials }}
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="max-w-[110px] text-fg text-sm truncate">{{ $cb->first_name }}
-                                                {{ $cb->last_name }}</div>
-                                            @if ($conv->campaign)
+                                            <div class="max-w-[110px] font-medium text-fg text-xs truncate">{{ $cb->first_name }} {{ $cb->last_name }}</div>
+                                            @if ($conv->assignedAgent && $conv->assignedAgent->id !== $cb->id)
                                                 <div class="max-w-[110px] text-fg-muted text-xs truncate">
-                                                    {{ $conv->campaign->name }}</div>
+                                                    via {{ $conv->assignedAgent->first_name }}</div>
                                             @endif
                                         </div>
+                                    </div>
+                                @elseif ($conv->assignedAgent)
+                                    @php
+                                        $agent = $conv->assignedAgent;
+                                        $agentInitials = strtoupper(substr($agent->first_name ?? '', 0, 1) . substr($agent->last_name ?? '', 0, 1));
+                                        $agentColor = $colors[$agent->id % count($colors)];
+                                    @endphp
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex justify-center items-center {{ $agentColor }} rounded-full w-7 h-7 font-bold text-white text-xs shrink-0">
+                                            {{ $agentInitials }}
+                                        </div>
+                                        <span class="max-w-[100px] text-fg-muted text-xs truncate">{{ $agent->first_name }} {{ $agent->last_name }}</span>
                                     </div>
                                 @else
                                     <span class="text-fg-muted text-sm">—</span>

@@ -20,11 +20,11 @@
     ];
 
     $variants = [
-        'primary'   => 'bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500 w-full cursor-pointer',
-        'secondary' => 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400',
+        'primary'   => 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white focus:ring-fuchsia-500 w-full cursor-pointer',
+        'secondary' => 'bg-surface-2 text-fg hover:bg-surface-3 border border-surface focus:ring-surface-3',
         'warning'   => 'bg-yellow-500 text-black hover:bg-yellow-600 focus:ring-yellow-400',
         'danger'    => 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-        'ghost'     => 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+        'ghost'     => 'bg-transparent text-fg-muted hover:bg-surface-2 hover:text-fg focus:ring-surface-3',
     ];
 
     $variantClasses = $variants[$variant] ?? $variants['primary'];
