@@ -52,6 +52,7 @@ use App\Livewire\Dispositions\DispositionsIndex;
 use App\Livewire\Dispositions\DispositionCreate;
 use App\Livewire\Dispositions\DispositionEdit;
 use App\Livewire\Callbacks\CallbackPanel;
+use App\Livewire\Reports\ReportsOverview;
 use App\Http\Controllers\Livewire\Auth\LoginController;
 use App\Http\Controllers\Livewire\Settings\ProfileController;
 
@@ -227,6 +228,9 @@ Route::middleware(["auth"])->group(function () {
     Route::get("/ivr-menu/{ivrMenu}/edit", IvrMenuEdit::class)->name(
       "ivr-menu.edit"
     );
+
+    //Reports
+    Route::get("/reports", ReportsOverview::class)->name("reports.index");
 
     //Twilio
     Route::get("/phone/access-token", [

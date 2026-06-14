@@ -138,6 +138,22 @@ return [
   ],
 
   [
+    "label" => "Reports",
+    "icon" => "heroicon-o-chart-bar",
+    "segments" => ["reports"],
+    "permission" => null,
+    "bottom" => false,
+    "children" => [
+      [
+        "label" => "Overview",
+        "route" => "reports.index",
+        "segment" => "reports",
+        "permission" => null,
+      ],
+    ],
+  ],
+
+  [
     "label" => "Conversations",
     "icon" => "heroicon-o-chat-bubble-left-right",
     "segments" => ["conversations"],
