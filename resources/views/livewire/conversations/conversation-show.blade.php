@@ -127,138 +127,85 @@
                 <div class="space-y-7 p-6">
 
                     {{-- System: initial status event --}}
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="flex justify-center items-center bg-fuchsia-500/15 mt-0.5 rounded-full w-7 h-7 shrink-0">
-                            <x-heroicon-o-bolt class="w-3.5 h-3.5 text-fuchsia-400" />
-                        </div>
-                        <div class="flex-1 pt-1 min-w-0">
-                            <p class="text-fg-muted text-xs">
-                                <span class="font-semibold text-fuchsia-400">System</span>
-                                set the initial status to
-                                <span
-                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold {{ $s['class'] }}">{{ $s['label'] }}</span>
-                            </p>
-                            <p class="mt-0.5 text-fg-muted/50 text-xs">
-                                {{ ($conversation->started_at ?? $conversation->created_at)->diffForHumans() }}
-                            </p>
-                        </div>
-                    </div>
-
-                    {{-- Call / channel event --}}
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="shrink-0 w-7 h-7 rounded-full {{ $contactColor }} flex items-center justify-center font-bold text-white text-xs mt-0.5">
+                    {{-- Channel event header block --}}
+                    <div class="flex items-start gap-3 pb-4 border-surface border-b">
+                        <div class="shrink-0 w-9 h-9 rounded-full {{ $contactColor }} flex items-center justify-center font-bold text-white text-sm mt-0.5">
                             {{ $conversation->initials }}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-2.5">
-                                <p class="text-fg text-sm">
-                                    <span class="font-semibold">{{ $conversation->contact_name ?? 'Unknown' }}</span>
-                                    made an {{ $conversation->direction }} {{ $conversation->channel }}
-                                </p>
-                                @if ($conversation->channel === 'voice')
-                                    <x-heroicon-s-phone class="w-3.5 h-3.5 text-fg-muted/60 shrink-0" />
-                                @elseif ($conversation->channel === 'sms')
-                                    <x-heroicon-s-chat-bubble-left-ellipsis
-                                        class="w-3.5 h-3.5 text-fg-muted/60 shrink-0" />
-                                @elseif ($conversation->channel === 'email')
-                                    <x-heroicon-s-envelope class="w-3.5 h-3.5 text-fg-muted/60 shrink-0" />
-                                @else
-                                    <x-heroicon-s-chat-bubble-oval-left class="w-3.5 h-3.5 text-fg-muted/60 shrink-0" />
+                            {{-- Name + channel --}}
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="font-semibold text-fg text-sm">{{ $conversation->contact_name ?? 'Unknown' }}</span>
+                                @if ($conversation->contact_phone)
+                                    <span class="font-mono text-fg-muted text-xs">{{ $conversation->contact_phone }}</span>
                                 @endif
-                                <span class="ml-auto text-fg-muted/50 text-xs whitespace-nowrap shrink-0">
-                                    {{ ($conversation->started_at ?? $conversation->created_at)->diffForHumans() }}
+                                <span class="inline-flex items-center gap-1 text-fg-muted/60 text-xs">
+                                    @if ($conversation->channel === 'voice')
+                                        <x-heroicon-o-phone class="w-3 h-3 shrink-0" />
+                                    @elseif ($conversation->channel === 'sms')
+                                        <x-heroicon-o-chat-bubble-left-ellipsis class="w-3 h-3 shrink-0" />
+                                    @elseif ($conversation->channel === 'email')
+                                        <x-heroicon-o-envelope class="w-3 h-3 shrink-0" />
+                                    @else
+                                        <x-heroicon-o-chat-bubble-oval-left class="w-3 h-3 shrink-0" />
+                                    @endif
+                                    {{ ucfirst($conversation->direction) }} {{ ucfirst($conversation->channel) }}
                                 </span>
                             </div>
 
-                            {{-- Event detail card --}}
-                            <div class="bg-surface-2 border border-surface rounded-xl overflow-hidden">
-                                <div class="flex justify-between items-center px-4 py-3 border-surface border-b">
-                                    <div class="flex items-center gap-2">
-                                        @if ($conversation->channel === 'voice')
-                                            <x-heroicon-o-phone class="w-4 h-4 text-fg-muted" />
-                                        @elseif ($conversation->channel === 'sms')
-                                            <x-heroicon-o-chat-bubble-left-ellipsis class="w-4 h-4 text-fg-muted" />
-                                        @elseif ($conversation->channel === 'email')
-                                            <x-heroicon-o-envelope class="w-4 h-4 text-fg-muted" />
-                                        @else
-                                            <x-heroicon-o-chat-bubble-oval-left class="w-4 h-4 text-fg-muted" />
-                                        @endif
-                                        <span class="font-semibold text-fg text-sm">{{ $channelTitle }}</span>
-                                    </div>
-                                    <span class="font-mono text-fg-muted text-xs"># {{ $conversation->id }}</span>
+                            {{-- Stats + date inline --}}
+                            <div class="flex flex-wrap items-center gap-4 mt-1.5">
+                                <div class="flex items-center gap-1.5">
+                                    <x-heroicon-o-calendar class="w-3 h-3 text-fg-muted/60 shrink-0" />
+                                    <span class="text-fg-muted text-xs">{{ ($conversation->started_at ?? $conversation->created_at)->format('j M Y, g:ia') }}</span>
                                 </div>
-                                <div class="divide-y divide-surface">
-                                    @if ($conversation->contact_phone)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-28 text-fg-muted text-xs shrink-0">From</span>
-                                            <span
-                                                class="font-mono text-fg text-sm">{{ $conversation->contact_phone }}</span>
-                                        </div>
-                                    @endif
-                                    @if ($conversation->caller_name)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-28 text-fg-muted text-xs shrink-0">Caller Name</span>
-                                            <span class="text-fg text-sm">{{ $conversation->caller_name }}</span>
-                                        </div>
-                                    @endif
-                                    @php
-                                        $callerLocation = array_filter([
-                                            $conversation->caller_city,
-                                            $conversation->caller_state,
-                                            $conversation->caller_zip,
-                                            $conversation->caller_country,
-                                        ]);
-                                    @endphp
-                                    @if ($callerLocation)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-28 text-fg-muted text-xs shrink-0">Caller Location</span>
-                                            <span class="text-fg text-sm">{{ implode(', ', $callerLocation) }}</span>
-                                        </div>
-                                    @endif
-                                    @if ($conversation->to_number)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-28 text-fg-muted text-xs shrink-0">DID Called</span>
-                                            <span
-                                                class="font-mono text-fg text-sm">{{ $conversation->to_number }}</span>
-                                        </div>
-                                    @endif
-                                    @if ($conversation->forwarded_from)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-28 text-fg-muted text-xs shrink-0">Forwarded From</span>
-                                            <span
-                                                class="font-mono text-fg text-sm">{{ $conversation->forwarded_from }}</span>
-                                        </div>
-                                    @endif
-                                    <div class="flex items-center gap-4 px-4 py-2.5">
-                                        <span class="w-28 text-fg-muted text-xs shrink-0">Status</span>
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded-full font-semibold text-xs {{ $s['class'] }}">
-                                            {{ $s['label'] }}
-                                        </span>
-                                    </div>
-                                    @if ($conversation->duration_seconds !== null)
-                                        <div class="flex items-center gap-4 px-4 py-2.5">
-                                            <span class="w-24 text-fg-muted text-xs shrink-0">Duration</span>
-                                            <span
-                                                class="font-mono text-fg text-sm">{{ $conversation->duration_label }}</span>
-                                        </div>
-                                    @endif
-                                    <div class="flex items-center gap-4 px-4 py-2.5">
-                                        <span class="w-24 text-fg-muted text-xs shrink-0">Answered</span>
-                                        <span class="text-fg text-sm">
-                                            {{ in_array($conversation->status, ['in_progress', 'completed']) ? 'Yes' : 'No' }}
-                                        </span>
-                                    </div>
-                                    @if ($conversation->detail_preview)
-                                        <div class="flex items-start gap-4 px-4 py-2.5">
-                                            <span class="mt-0.5 w-24 text-fg-muted text-xs shrink-0">Preview</span>
-                                            <span
-                                                class="text-fg-muted text-sm">{{ $conversation->detail_preview }}</span>
-                                        </div>
-                                    @endif
+                                @if ($conversation->duration_seconds !== null)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">Duration</span>
+                                    <span class="font-mono font-semibold text-fg text-xs">{{ $conversation->duration_label }}</span>
                                 </div>
+                                @endif
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">Answered</span>
+                                    <span class="font-semibold text-fg text-xs">{{ in_array($conversation->status, ['in_progress', 'completed']) ? 'Yes' : 'No' }}</span>
+                                </div>
+                                @if ($conversation->to_number)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">DID</span>
+                                    <span class="font-mono text-fg text-xs">{{ $conversation->to_number }}</span>
+                                </div>
+                                @endif
+                                @php
+                                    $callerLocation = array_filter([
+                                        $conversation->caller_city,
+                                        $conversation->caller_state,
+                                        $conversation->caller_zip,
+                                    ]);
+                                @endphp
+                                @if ($callerLocation)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">Location</span>
+                                    <span class="text-fg text-xs">{{ implode(', ', $callerLocation) }}</span>
+                                </div>
+                                @endif
+                                @if ($conversation->caller_name)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">Caller</span>
+                                    <span class="text-fg text-xs">{{ $conversation->caller_name }}</span>
+                                </div>
+                                @endif
+                                @if ($conversation->forwarded_from)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-fg-muted text-xs">Fwd From</span>
+                                    <span class="font-mono text-fg text-xs">{{ $conversation->forwarded_from }}</span>
+                                </div>
+                                @endif
+                                @if ($conversation->detail_preview)
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-fg-muted text-xs shrink-0">Preview</span>
+                                    <span class="text-fg-muted/70 text-xs truncate italic">{{ $conversation->detail_preview }}</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -2047,36 +1994,6 @@
                 <h3 class="mb-0.5 font-semibold text-fg text-sm">Details</h3>
                 <p class="mb-4 text-fg-muted text-xs">Details about this conversation.</p>
                 <dl class="space-y-3">
-                    @if ($conversation->campaign)
-                        <div class="flex justify-between items-start gap-2">
-                            <dt class="w-28 text-fg-muted text-xs shrink-0">Brand</dt>
-                            <dd class="font-medium text-fg text-xs text-right">{{ $conversation->campaign->name }}
-                            </dd>
-                        </div>
-                    @endif
-                    @if ($conversation->queue)
-                        <div class="flex justify-between items-start gap-2">
-                            <dt class="w-28 text-fg-muted text-xs shrink-0">Queue</dt>
-                            <dd class="font-medium text-fg text-xs text-right">{{ $conversation->queue }}</dd>
-                        </div>
-                    @endif
-                    <div class="flex justify-between items-start gap-2">
-                        <dt class="w-28 text-fg-muted text-xs shrink-0">Channel</dt>
-                        <dd class="font-medium text-fg text-xs text-right capitalize">{{ $conversation->channel }}
-                        </dd>
-                    </div>
-                    <div class="flex justify-between items-start gap-2">
-                        <dt class="w-28 text-fg-muted text-xs shrink-0">Direction</dt>
-                        <dd class="font-medium text-fg text-xs text-right capitalize">{{ $conversation->direction }}
-                        </dd>
-                    </div>
-                    @if ($conversation->call_sid)
-                        <div class="flex justify-between items-start gap-2">
-                            <dt class="w-28 text-fg-muted text-xs shrink-0">Call SID</dt>
-                            <dd class="font-mono text-[10px] text-fg-muted text-right break-all">
-                                {{ $conversation->call_sid }}</dd>
-                        </div>
-                    @endif
                     @if ($conversation->assignedAgent)
                         <div class="flex justify-between items-start gap-2">
                             <dt class="w-28 text-fg-muted text-xs shrink-0">Assigned To</dt>
@@ -2093,84 +2010,34 @@
                                 {{ $conversation->completedByAgent->last_name }}</dd>
                         </div>
                     @endif
-                    @if ($conversation->duration_label)
+                    @if ($conversation->to_number)
                         <div class="flex justify-between items-start gap-2">
-                            <dt class="w-28 text-fg-muted text-xs shrink-0">Duration</dt>
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">DID Called</dt>
                             <dd class="font-mono font-medium text-fg text-xs text-right">
-                                {{ $conversation->duration_label }}</dd>
+                                {{ $conversation->to_number }}</dd>
                         </div>
                     @endif
-
-                    {{-- Twilio caller details --}}
-                    @if (
-                        $conversation->caller_name ||
-                            $conversation->caller_city ||
-                            $conversation->caller_state ||
-                            $conversation->caller_country ||
-                            $conversation->caller_zip ||
-                            $conversation->to_number ||
-                            $conversation->forwarded_from)
-                        <div class="space-y-3 pt-3 border-surface border-t">
-                            <dt class="font-semibold text-fg-muted text-xs uppercase tracking-wide">Caller Info</dt>
-                            @if ($conversation->caller_name)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Name</dt>
-                                    <dd class="font-medium text-fg text-xs text-right">
-                                        {{ $conversation->caller_name }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->contact_phone)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Number</dt>
-                                    <dd class="font-mono font-medium text-fg text-xs text-right">
-                                        {{ $conversation->contact_phone }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->caller_city)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">City</dt>
-                                    <dd class="font-medium text-fg text-xs text-right">
-                                        {{ $conversation->caller_city }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->caller_state)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">State</dt>
-                                    <dd class="font-medium text-fg text-xs text-right">
-                                        {{ $conversation->caller_state }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->caller_zip)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">ZIP</dt>
-                                    <dd class="font-mono font-medium text-fg text-xs text-right">
-                                        {{ $conversation->caller_zip }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->caller_country)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Country</dt>
-                                    <dd class="font-medium text-fg text-xs text-right">
-                                        {{ $conversation->caller_country }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->to_number)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">DID Called</dt>
-                                    <dd class="font-mono font-medium text-fg text-xs text-right">
-                                        {{ $conversation->to_number }}</dd>
-                                </div>
-                            @endif
-                            @if ($conversation->forwarded_from)
-                                <div class="flex justify-between items-start gap-2">
-                                    <dt class="w-28 text-fg-muted text-xs shrink-0">Forwarded From</dt>
-                                    <dd class="font-mono font-medium text-fg text-xs text-right">
-                                        {{ $conversation->forwarded_from }}</dd>
-                                </div>
-                            @endif
+                    @if ($conversation->forwarded_from)
+                        <div class="flex justify-between items-start gap-2">
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Forwarded From</dt>
+                            <dd class="font-mono font-medium text-fg text-xs text-right">
+                                {{ $conversation->forwarded_from }}</dd>
                         </div>
                     @endif
-
+                    @if ($conversation->caller_country)
+                        <div class="flex justify-between items-start gap-2">
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Country</dt>
+                            <dd class="font-medium text-fg text-xs text-right">
+                                {{ $conversation->caller_country }}</dd>
+                        </div>
+                    @endif
+                    @if ($conversation->call_sid)
+                        <div class="flex justify-between items-start gap-2">
+                            <dt class="w-28 text-fg-muted text-xs shrink-0">Call SID</dt>
+                            <dd class="font-mono text-[10px] text-fg-muted text-right break-all">
+                                {{ $conversation->call_sid }}</dd>
+                        </div>
+                    @endif
                     <div class="space-y-3 pt-3 border-surface border-t">
                         <div class="flex justify-between items-start gap-2">
                             <dt class="w-28 text-fg-muted text-xs shrink-0">Created At</dt>
