@@ -1,58 +1,82 @@
-<div class="space-y-4 p-6 stagger-children">
+<div class="flex flex-col space-y-4 p-6 h-full">
 
-    {{-- Page title --}}
-    <div>
-        <h1 class="font-bold text-fg text-xl">Stores</h1>
-        <p class="mt-0.5 text-zinc-500 text-sm">Search and manage all store locations.</p>
+    {{-- Page header --}}
+    <div class="flex flex-wrap justify-between items-start gap-4 shrink-0">
+        <div>
+            <h1 class="font-bold text-fg text-xl">Stores</h1>
+            <p class="mt-0.5 text-fg-muted text-sm">Search and manage all store locations.</p>
+        </div>
     </div>
 
-    {{-- STORES TABLE --}}
-    <div class="bg-surface border border-surface rounded-xl [overflow:clip]">
+    {{-- Main panel --}}
+    <div class="flex flex-col flex-1 bg-surface border border-surface rounded-xl min-h-0 [overflow:clip]">
 
-        {{-- Header --}}
-        <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
-            <h2 class="font-bold text-fg text-base">Stores</h2>
-            <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search stores..."
-                class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-fg text-sm transition placeholder-fg-muted">
+        {{-- Filter bar --}}
+        <div class="flex flex-wrap items-center gap-2 px-5 py-2.5 border-surface border-b shrink-0">
+
+            {{-- Search --}}
+            <div class="relative flex items-center ml-auto w-56">
+                <x-heroicon-o-magnifying-glass
+                    class="left-2.5 absolute w-3.5 h-3.5 text-fg-muted pointer-events-none" />
+                <x-input wire:model.live.debounce.300ms="search" type="text" placeholder="Search stores…"
+                    class="pl-8 w-full" />
+                @if ($search)
+                    <button wire:click="$set('search','')" type="button"
+                        class="right-2.5 absolute text-fg-muted hover:text-fg transition">
+                        <x-heroicon-o-x-mark class="w-3.5 h-3.5" />
+                    </button>
+                @endif
+            </div>
         </div>
 
         {{-- Table --}}
-        <div class="overflow-auto" x-data="{
-            _fn: null,
-            init() {
-                this._fn = () => {
-                    const pg = this.$el.nextElementSibling;
-                    this.$el.style.maxHeight = (window.innerHeight - this.$el.getBoundingClientRect().top - (pg ? pg.offsetHeight : 57) - 8) + 'px';
-                };
-                this._fn();
-                window.addEventListener('resize', this._fn);
-            },
-            destroy() { window.removeEventListener('resize', this._fn); }
-        }">
-            <table class="min-w-full text-fg text-sm stagger-rows">
+        <div class="flex-1 min-h-0 overflow-auto">
+            <table class="min-w-full text-fg text-sm">
                 <thead class="top-0 z-10 sticky bg-surface">
-                    <tr class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
+                    <tr class="border-surface border-b font-semibold text-fg-muted text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Store Name</th>
-                        <th class="px-5 py-3 text-left">Address</th>
                         <th class="px-5 py-3 text-left">Brand</th>
+                        <th class="px-5 py-3 text-left">Address</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($stores as $store)
-                        <tr class="hover:bg-hover border-surface border-b transition cursor-pointer"
-                            onclick="window.location='{{ route('store.edit', $store->id) }}'">
-                            <td class="px-5 py-4 font-semibold text-fg">{{ $store->name }}</td>
-                            <td class="px-5 py-4 text-fg-muted text-sm">{{ $store->address }}</td>
-                            <td class="px-5 py-4">
-                                <span
-                                    class="inline-flex items-center bg-surface-2 px-2.5 py-1 rounded-md font-medium text-fg-3 text-xs">
+                        <tr wire:key="store-{{ $store->id }}"
+                            onclick="window.location.href='{{ route('store.edit', $store->id) }}'"
+                            class="hover:bg-hover border-surface border-b transition cursor-pointer">
+
+                            {{-- Store Name --}}
+                            <td class="px-5 py-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="flex items-center justify-center bg-fuchsia-500/20 rounded-lg w-8 h-8 shrink-0">
+                                        <x-heroicon-o-building-storefront class="w-4 h-4 text-fuchsia-400" />
+                                    </div>
+                                    <span class="font-semibold text-fg text-sm">{{ $store->name }}</span>
+                                </div>
+                            </td>
+
+                            {{-- Brand --}}
+                            <td class="px-5 py-3">
+                                <span class="inline-flex items-center bg-surface-2 px-2.5 py-1 rounded-md font-medium text-fg text-xs">
                                     {{ $store->brand }}
                                 </span>
                             </td>
+
+                            {{-- Address --}}
+                            <td class="px-5 py-3 text-fg-muted text-sm">
+                                {{ $store->address }}
+                            </td>
+
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-5 py-16 text-zinc-500 text-center italic">No stores found.</td>
+                            <td colspan="3" class="px-5 py-20 text-center">
+                                <x-heroicon-o-building-storefront class="mx-auto mb-3 w-10 h-10 text-fg-muted/40" />
+                                <p class="text-fg-muted text-sm">No stores found.</p>
+                                @if ($search)
+                                    <p class="mt-1 text-fg-muted/60 text-xs">Try adjusting your search.</p>
+                                @endif
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -60,7 +84,7 @@
         </div>
 
         {{-- Pagination --}}
-        <x-table-pagination :paginator="$stores" label="stores" />
+        <x-table-pagination :paginator="$stores" label="stores" :per-page-options="[25, 50, 100]" />
 
     </div>
 

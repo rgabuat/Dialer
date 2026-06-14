@@ -28,11 +28,12 @@ class LeadsIndex extends Component
     'filterUser'   => ['except' => ''],
   ];
 
-  public function updatedSearch(): void    { $this->resetPage(); }
-  public function updatedFilterStatus(): void { $this->resetPage(); }
-  public function updatedFilterType(): void   { $this->resetPage(); }
-  public function updatedFilterStore(): void  { $this->resetPage(); }
-  public function updatedFilterUser(): void   { $this->resetPage(); }
+  public function updatingSearch(): void       { $this->resetPage(); }
+  public function updatingFilterStatus(): void { $this->resetPage(); }
+  public function updatingFilterType(): void   { $this->resetPage(); }
+  public function updatingFilterStore(): void  { $this->resetPage(); }
+  public function updatingFilterUser(): void   { $this->resetPage(); }
+  public function updatingPerPage(): void      { $this->resetPage(); }
 
   public function resetFilters(): void
   {

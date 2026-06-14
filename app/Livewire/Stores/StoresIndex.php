@@ -40,7 +40,6 @@ class StoresIndex extends Component
 
   public function render()
   {
-    logger("Search term:", [$this->search]);
     return view("livewire.stores.stores-index", [
       "stores" => Store::query()
         ->where(function ($q) {
