@@ -2,14 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Campaign;
+use App\Models\User;
 use App\Models\UserGroup;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Spatie\Permission\Models\Role;
 
 class DefaultSeeder extends Seeder
 {
@@ -30,7 +29,7 @@ class DefaultSeeder extends Seeder
         );
 
         $superAdmin = Role::firstOrCreate([
-            'name'       => 'Super Admin',
+            'name' => 'Super Admin',
             'guard_name' => 'web',
         ]);
 
@@ -41,9 +40,9 @@ class DefaultSeeder extends Seeder
         $campaign = Campaign::firstOrCreate(
             ['name' => 'Admin Campaign'],
             [
-                'description'  => 'Default campaign assigned to the Super Admin account.',
+                'description' => 'Default campaign assigned to the Super Admin account.',
                 'phone_number' => env('TWILIO_PHONE_NUMBER', '+10000000000'),
-                'is_active'    => true,
+                'is_active' => true,
             ]
         );
 
@@ -51,7 +50,7 @@ class DefaultSeeder extends Seeder
             ['name' => 'Admin Group'],
             [
                 'description' => 'Default user group for Super Admin.',
-                'is_active'   => true,
+                'is_active' => true,
             ]
         );
 

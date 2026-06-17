@@ -38,7 +38,7 @@ class RolesEdit extends Component
         $this->role->update(['name' => $this->name]);
         $this->role->syncPermissions($this->permissions);
 
-        session()->flash('success', 'Role updated successfully.');
+        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
     }
 
     public function addPermission()
@@ -54,6 +54,30 @@ class RolesEdit extends Component
         }
 
         $this->newPermission = '';
+    }
+
+    public function toggleModule(array $perms): void
+    {
+        $allChecked = count(array_diff($perms, $this->permissions)) === 0;
+
+        if ($allChecked) {
+            $this->permissions = array_values(array_diff($this->permissions, $perms));
+        } else {
+            $this->permissions = array_values(
+                array_unique(array_merge($this->permissions, $perms))
+            );
+        }
+    }
+
+    public function toggleAll(array $allPerms): void
+    {
+        if (count(array_diff($allPerms, $this->permissions)) === 0) {
+            $this->permissions = [];
+        } else {
+            $this->permissions = array_values(
+                array_unique(array_merge($this->permissions, $allPerms))
+            );
+        }
     }
 
     public function deletePermission(int $id)
@@ -74,9 +98,11 @@ class RolesEdit extends Component
     {
         return view('livewire.roles.roles-edit', [
             'pageGroups'         => PermissionRegistrar::$pageGroups,
+            'crudGroups'         => PermissionRegistrar::$crudGroups,
             'groupedPermissions' => Permission::where('name', 'not like', 'page.%')
                 ->get()
-                ->groupBy(fn ($p) => explode('.', $p->name)[0]),
+                ->groupBy(fn ($p) => explode('.', $p->name)[0])
+                ->toBase(),
         ])->layout('components.layouts.app');
     }
 }

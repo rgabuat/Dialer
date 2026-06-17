@@ -58,6 +58,23 @@ class PermissionRegistrar
     ];
 
     /**
+     * Maps each sidebar section to the CRUD module slugs that live under it.
+     * Used in the Roles UI to group module permissions by nav section.
+     */
+    public static array $crudGroups = [
+        'Dashboard'     => [],
+        'Campaign'      => ['campaign', 'call_list', 'callback_schedule', 'disposition'],
+        'People'        => ['user', 'user_group'],
+        'Activity'      => ['activity_log', 'agent_status', 'agent_status_log', 'agent_status_type', 'audit_log'],
+        'Operations'    => ['lead', 'store', 'store_unit'],
+        'Reports'       => [],
+        'Conversations' => ['conversation', 'conversation_note'],
+        'Workforce'     => ['roster', 'roster_shift', 'shift_activity', 'staffing_interval'],
+        'Inbound'       => ['cid_number', 'did', 'in_group', 'ivr_menu', 'ivr_menu_option'],
+        'Settings'      => ['voice_setting', 'users_meta', 'dialer_hopper'],
+    ];
+
+    /**
      * Seed all page-level permissions into the database.
      */
     public static function registerPagePermissions(): void

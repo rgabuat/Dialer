@@ -16,15 +16,15 @@
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Volume</h3>
             <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div x-data="countUp(661)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $offered }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Calls Offered</div>
                 </div>
                 <div>
-                    <div x-data="countUp(0)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $callbacksPending }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Callbacks Remaining</div>
                 </div>
                 <div>
-                    <div x-data="countUpTime(5, 20)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUpTime({{ $avgHandleMins }}, {{ $avgHandleRem }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Average Handling Time</div>
                 </div>
             </div>
@@ -34,16 +34,18 @@
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Service</h3>
             <div class="gap-4 grid grid-cols-2 stagger-children">
-                <div>
-                    <div x-data="countUpTime(25, 25)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
-                    <div class="mt-1 text-zinc-500 text-xs">Time To Answer</div>
+                <div class="flex items-center gap-3">
+                    <x-overview-donut :value="$answerRate" color="#eab308" size="52" />
+                    <div>
+                        <div class="font-black text-2xl text-accent-yellow">{{ $answerRate }}%</div>
+                        <div class="mt-1 text-zinc-500 text-xs">Answer Rate</div>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    {{-- Donut --}}
-                    <x-overview-donut value="83" color="#eab308" size="52" />
+                    <x-overview-donut :value="min($abandonRate * 10, 100)" color="#ef4444" size="52" />
                     <div>
-                        <div class="font-black text-2xl text-accent-yellow">83.13%</div>
-                        <div class="mt-1 text-zinc-500 text-xs">Answered In 60</div>
+                        <div class="font-black text-2xl text-accent-red">{{ $abandonRate }}%</div>
+                        <div class="mt-1 text-zinc-500 text-xs">Abandon Rate</div>
                     </div>
                 </div>
             </div>
@@ -54,41 +56,38 @@
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Handled</h3>
             <div class="gap-4 grid grid-cols-4 stagger-children">
                 <div>
-                    <div x-data="countUp(710)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $totalHandled }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Total</div>
                 </div>
                 <div>
-                    <div x-data="countUp(611)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $inboundHandled }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Inbounds</div>
                 </div>
                 <div>
-                    <div x-data="countUp(99)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $outboundHandled }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Outbounds</div>
                 </div>
                 <div>
-                    <div x-data="countUp(0)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $callbackHandled }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Callbacks</div>
                 </div>
             </div>
         </div>
 
-        {{-- Sales --}}
+        {{-- Outcomes --}}
         <div class="space-y-4 bg-surface p-5 border border-surface rounded-xl card-hover">
-            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Sales</h3>
+            <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Outcomes</h3>
             <div class="gap-4 grid grid-cols-2 stagger-children">
                 <div class="flex items-center gap-3">
-                    <x-overview-donut value="18" color="#ec4899" size="52" />
+                    <x-overview-donut :value="$dispositionRate" color="#ec4899" size="52" />
                     <div>
-                        <div class="font-black text-2xl text-accent-pink">17.89%</div>
-                        <div class="mt-1 text-zinc-500 text-xs">Conversion Rate</div>
+                        <div class="font-black text-2xl text-accent-pink">{{ $dispositionRate }}%</div>
+                        <div class="mt-1 text-zinc-500 text-xs">Disposition Rate</div>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <x-overview-donut value="4" color="#14b8a6" size="52" />
-                    <div>
-                        <div class="font-black text-2xl text-accent-teal">4.08%</div>
-                        <div class="mt-1 text-zinc-500 text-xs">Instant Rental Rate</div>
-                    </div>
+                <div>
+                    <div x-data="countUp({{ $inProgress }})" x-text="val" class="font-black text-3xl text-accent-teal"></div>
+                    <div class="mt-1 text-zinc-500 text-xs">In Progress</div>
                 </div>
             </div>
         </div>
@@ -98,17 +97,17 @@
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Abandoned Calls</h3>
             <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div x-data="countUp(1)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $abandonedCount }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Abandoned Calls</div>
                 </div>
                 <div>
-                    <div x-data="countUpTime(1, 43)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUpTime({{ $avgAbandonMins }}, {{ $avgAbandonRem }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Average Time To Abandon</div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-overview-donut value="1" color="#71717a" size="52" />
+                    <x-overview-donut :value="min($abandonRate * 10, 100)" color="#71717a" size="52" />
                     <div>
-                        <div class="font-black text-fg-muted text-2xl">0.15%</div>
+                        <div class="font-black text-fg-muted text-2xl">{{ $abandonRate }}%</div>
                         <div class="mt-1 text-zinc-500 text-xs">Abandoned Call Rate</div>
                     </div>
                 </div>
@@ -120,16 +119,16 @@
             <h3 class="font-semibold text-fg-muted text-sm uppercase tracking-wider">Agents</h3>
             <div class="gap-4 grid grid-cols-3 stagger-children">
                 <div>
-                    <div x-data="countUp(48)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $agentsOnline }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Online</div>
                 </div>
                 <div>
-                    <div x-data="countUp(11)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div x-data="countUp({{ $agentsAvailable }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
                     <div class="mt-1 text-zinc-500 text-xs">Available</div>
                 </div>
                 <div>
-                    <div x-data="countUp(6)" x-text="val" class="font-black text-3xl text-accent-blue"></div>
-                    <div class="mt-1 text-zinc-500 text-xs">After Call Work</div>
+                    <div x-data="countUp({{ $agentsOnBreak }})" x-text="val" class="font-black text-3xl text-accent-blue"></div>
+                    <div class="mt-1 text-zinc-500 text-xs">On Break</div>
                 </div>
             </div>
         </div>

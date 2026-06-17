@@ -83,9 +83,11 @@ class RolesCreate extends Component
   {
     return view("livewire.roles.roles-create", [
       "pageGroups"         => PermissionRegistrar::$pageGroups,
+      "crudGroups"         => PermissionRegistrar::$crudGroups,
       "groupedPermissions" => Permission::where('name', 'not like', 'page.%')
         ->get()
-        ->groupBy(fn($p) => explode(".", $p->name)[0]),
+        ->groupBy(fn($p) => explode(".", $p->name)[0])
+        ->toBase(),
     ])->layout("components.layouts.app");
   }
 }
