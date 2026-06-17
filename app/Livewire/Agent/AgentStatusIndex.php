@@ -55,6 +55,7 @@ class AgentStatusIndex extends Component
   public function render()
   {
     $baseQuery = AgentStatus::with(["user.userGroup", "statusType"])
+      ->whereHas("user")
       ->when(
         $this->search,
         fn($q) => $q->whereHas(
@@ -81,15 +82,15 @@ class AgentStatusIndex extends Component
       );
 
     $statuses = $baseQuery->paginate($this->perPage);
-    $totalCount = AgentStatus::count();
-    $availCount = AgentStatus::whereHas(
+    $totalCount = AgentStatus::whereHas("user")->count();
+    $availCount = AgentStatus::whereHas("user")->whereHas(
       "statusType",
       fn($q) => $q->where("is_available", true)
     )->count();
     $unavailCnt = $totalCount - $availCount;
 
     // Average seconds in current status for unavailable agents
-    $avgSeconds = AgentStatus::whereHas(
+    $avgSeconds = AgentStatus::whereHas("user")->whereHas(
       "statusType",
       fn($q) => $q->where("is_available", false)
     )
@@ -104,6 +105,7 @@ class AgentStatusIndex extends Component
     $grouped = collect();
     if ($this->viewMode === "grouped") {
       $grouped = AgentStatus::with(["user.userGroup", "statusType"])
+        ->whereHas("user")
         ->when(
           $this->search,
           fn($q) => $q->whereHas(

@@ -132,7 +132,7 @@
                     </thead>
                     <tbody>
                         @forelse ($statuses as $status)
-                            @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
+                            @php $initials = strtoupper(substr($status->user?->first_name ?? '?', 0, 1) . substr($status->user?->last_name ?? '', 0, 1)); @endphp
                             <tr wire:key="agent-row-{{ $status->user_id }}"
                                 class="hover:bg-hover border-surface border-b transition" x-data="{
                                     userId: {{ $status->user_id }},
@@ -179,16 +179,16 @@
                                         </span>
                                         <div>
                                             <div class="font-semibold text-fg text-sm">
-                                                {{ $status->user->first_name }}
-                                                {{ $status->user->last_name }}</div>
-                                            <div class="text-zinc-500 text-xs">{{ $status->user->email }}</div>
+                                                {{ $status->user?->first_name ?? '—' }}
+                                                {{ $status->user?->last_name ?? '' }}</div>
+                                            <div class="text-zinc-500 text-xs">{{ $status->user?->email ?? '—' }}</div>
                                         </div>
                                     </div>
                                 </td>
 
                                 {{-- Group --}}
                                 <td class="px-5 py-4 text-fg-muted text-sm">
-                                    {{ $status->user->userGroup?->name ?? '—' }}
+                                    {{ $status->user?->userGroup?->name ?? '—' }}
                                 </td>
 
                                 {{-- Status --}}
@@ -267,7 +267,7 @@
                         {{-- Agent rows --}}
                         <div class="stagger-children">
                             @foreach ($g['agents'] as $status)
-                                @php $initials = strtoupper(substr($status->user->first_name, 0, 1) . substr($status->user->last_name, 0, 1)); @endphp
+                                @php $initials = strtoupper(substr($status->user?->first_name ?? '?', 0, 1) . substr($status->user?->last_name ?? '', 0, 1)); @endphp
                                 <div wire:key="grouped-agent-{{ $status->user_id }}"
                                     class="flex items-center gap-3 bg-surface hover:bg-hover px-4 py-2.5 border-surface border-b last:border-b-0 transition"
                                     x-data="{
@@ -311,7 +311,7 @@
 
                                     {{-- Name --}}
                                     <span class="flex-1 min-w-0 font-medium text-fg-2 text-sm truncate">
-                                        {{ $status->user->first_name }} {{ $status->user->last_name }}
+                                        {{ $status->user?->first_name ?? '—' }} {{ $status->user?->last_name ?? '' }}
                                     </span>
 
                                     {{-- Status badge --}}
