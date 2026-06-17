@@ -10,6 +10,7 @@ use App\Models\ShiftActivity;
 use App\Models\User;
 use App\Models\UserGroup;
 use Carbon\Carbon;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ShiftMonitoring extends Component
@@ -18,6 +19,12 @@ class ShiftMonitoring extends Component
   public array $filterStatus = [];
   public array $filterGroup = [];
   public string $date = "";
+
+  #[On('refresh-timeline')]
+  public function refreshTimeline(): void
+  {
+      // triggers full re-render
+  }
 
   protected $queryString = [
     "search" => ["except" => ""],

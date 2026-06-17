@@ -4,7 +4,12 @@
     init() {
         if (this.isToday) {
             this._chan = window.Echo.private('agent-status');
-            this._chan.listen('.AgentStatusUpdated', () => this.$wire.$refresh());
+            this._chan.listen('.AgentStatusUpdated', (e) => {
+                // Instant badge update via window event (no re-render needed)
+                window.dispatchEvent(new CustomEvent('agent-row-update', { detail: e }));
+                // Delay slightly so the DB write completes, then re-render timeline
+                setTimeout(() => this.$wire.$refresh(), 800);
+            });
         }
     },
     destroy() { if (this._chan) this._chan.stopListening('.AgentStatusUpdated'); }
@@ -150,8 +155,6 @@
                             left: -1,
                             _t: null,
                             update() {
-                                // Use server-side roster-tz timestamp as anchor so the indicator
-                                // aligns with stored shift times (which are in the roster timezone)
                                 const serverNowTs = {{ $nowTs }};
                                 const clientOffsetSecs = Math.round(Date.now() / 1000) - serverNowTs;
                                 const elapsed = (serverNowTs + clientOffsetSecs - {{ $visibleStartTs }}) / 60;
@@ -165,11 +168,10 @@
                             destroy() { clearInterval(this._t); }
                         }" class="top-0 bottom-0 z-[9] absolute w-0 pointer-events-none"
                             :class="{ 'hidden': left < 0 }" :style="'left: ' + left + 'px'">
-                            <div class="opacity-70 w-px h-full"
-                                style="background: linear-gradient(to bottom, #ef4444 0%, rgba(239,68,68,0.15) 100%)">
+                            <div class="w-px h-full opacity-40"
+                                style="background: linear-gradient(to bottom, #a1a1aa 0%, rgba(161,161,170,0.1) 100%)">
                             </div>
-                            <div
-                                class="top-9 absolute bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] rounded-full w-2 h-2 -translate-x-1 animate-pulse">
+                            <div class="top-9 absolute bg-zinc-500 rounded-full w-1.5 h-1.5 -translate-x-[2px]">
                             </div>
                         </div>
                     @endif
@@ -231,7 +233,12 @@
                             @endphp
                             <div wire:key="agent-row-{{ $agent->id }}"
                                 class="group flex items-stretch hover:bg-hover border-b transition-colors gantt-row-animate"
-                                style="border-color: var(--border)"
+                                style="border-color: var(--border)" x-data="{
+                                    userId: {{ $agent->id }},
+                                    statusName: @js($currentStatus?->name ?? ''),
+                                    statusColor: @js($currentStatus?->color ?? ''),
+                                }"
+                                @agent-row-update.window="if ($event.detail.user_id === userId) { statusName = $event.detail.status_name; statusColor = $event.detail.status_color; }"
                                 style="animation-delay: {{ $loop->parent->index * 0.1 + $loop->index * 0.04 }}s">
 
                                 {{-- Sticky left: agent info --}}
@@ -239,7 +246,9 @@
                                     class="left-0 z-10 sticky flex items-center gap-2.5 bg-surface group-hover:bg-row-hover px-3 py-2 border-surface border-r w-[260px] transition-colors shrink-0">
                                     {{-- Avatar --}}
                                     <div class="flex justify-center items-center rounded-full w-8 h-8 font-bold text-[11px] uppercase select-none shrink-0"
-                                        style="background-color: {{ $currentStatus?->color ? $currentStatus->color . '22' : '#6366f120' }}; color: {{ $currentStatus?->color ?? '#818cf8' }}; border: 1px solid {{ $currentStatus?->color ? $currentStatus->color . '44' : '#6366f140' }}">
+                                        :style="statusColor ?
+                                            `background-color:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}44` :
+                                            'background-color:#6366f120; color:#818cf8; border:1px solid #6366f140'">
                                         {{ substr($agent->first_name, 0, 1) }}{{ substr($agent->last_name, 0, 1) }}
                                     </div>
                                     {{-- Name + badges + shift summary --}}
@@ -259,15 +268,13 @@
                                         </div>
                                         {{-- Actual → Scheduled badges --}}
                                         <div class="flex items-center gap-1 mt-0.5">
-                                            @if ($currentStatus)
-                                                <span class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
-                                                    style="background-color:{{ $currentStatus->color }}22; color:{{ $currentStatus->color }}">
-                                                    {{ $currentStatus->name }}
-                                                </span>
-                                            @else
-                                                <span
-                                                    class="bg-surface-2 px-1.5 py-0.5 rounded font-semibold text-[10px] text-fg-muted shrink-0">Offline</span>
-                                            @endif
+                                            <span x-show="statusName"
+                                                class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
+                                                :style="statusColor ?
+                                                    `background-color:${statusColor}22; color:${statusColor}` : ''"
+                                                x-text="statusName"></span>
+                                            <span x-show="!statusName"
+                                                class="bg-surface-2 px-1.5 py-0.5 rounded font-semibold text-[10px] text-fg-muted shrink-0">Offline</span>
                                             <span class="text-[9px] text-fg-muted shrink-0">&#8594;</span>
                                             @if ($agent->scheduledLabel)
                                                 <span class="px-1.5 py-0.5 rounded font-semibold text-[10px] shrink-0"
