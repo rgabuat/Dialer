@@ -3,6 +3,7 @@
 namespace App\Livewire\Roles;
 
 use Livewire\Component;
+use App\Services\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -72,9 +73,10 @@ class RolesEdit extends Component
     public function render()
     {
         return view('livewire.roles.roles-edit', [
-            'groupedPermissions' => Permission::all()->groupBy(
-                fn ($p) => explode('.', $p->name)[0]
-            ),
+            'pageGroups'         => PermissionRegistrar::$pageGroups,
+            'groupedPermissions' => Permission::where('name', 'not like', 'page.%')
+                ->get()
+                ->groupBy(fn ($p) => explode('.', $p->name)[0]),
         ])->layout('components.layouts.app');
     }
 }

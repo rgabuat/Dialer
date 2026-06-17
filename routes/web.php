@@ -93,146 +93,142 @@ Route::middleware(["auth"])->group(function () {
       return view("livewire.app.dashboard");
     })->name("dashboard");
 
-    //settings
+    // Settings — available to all authenticated users, no page permission required
     Route::get("/settings/profile", Profile::class)->name("settings.profile");
-    Route::get("/settings/knowledge", Profile::class)->name(
-      "settings.knowledge"
-    );
-    Route::get("/settings/password", Password::class)->name(
-      "settings.password"
-    );
+    Route::get("/settings/knowledge", Profile::class)->name("settings.knowledge");
+    Route::get("/settings/password", Password::class)->name("settings.password");
     Route::get("/settings/picture", Profile::class)->name("settings.picture");
-    Route::get("/settings/preferences", Preferences::class)->name(
-      "settings.preferences"
-    );
+    Route::get("/settings/preferences", Preferences::class)->name("settings.preferences");
     Route::get("/settings/phone", Phone::class)->name("settings.phone");
 
-    //users
-    Route::get("/users", UsersIndex::class)->name("users.index");
-    Route::get("/user/create", UserCreate::class)->name("user.create");
-    Route::get("/user/{user}/edit", UserEdit::class)->name("user.edit");
-
-    //activity
-    Route::get("/activity-overview", OverviewIndex::class)->name(
-      "activity.overview"
-    );
-
-    //shift monitoring
-    Route::get("/shift-monitoring", ShiftMonitoring::class)->name(
-      "shift.monitoring"
-    );
-
-    //activity logs
-    Route::get("/activity-logs", ActivitylogsIndex::class)->name(
-      "activitylogs.index"
-    );
-    Route::get("/activity-log/{log}/", ActivitylogsIndex::class)->name(
-      "activitylog.view"
-    );
-
-    //agent status
-    Route::get("/agent-status", AgentStatusIndex::class)->name(
-      "agent.status.index"
-    );
-
-    //roles and permission
-    Route::get("/roles", RolesIndex::class)->name("roles.index");
-    Route::get("/role/create", RolesCreate::class)->name("roles.create");
-    Route::get("/role/{role}/edit", RolesEdit::class)->name("roles.edit");
-    Route::get("/permissions", PermissionsIndex::class)->name(
-      "permissions.index"
-    );
-
-    //stores
-    Route::get("/stores", StoresIndex::class)->name("stores.index");
-    Route::get("/stores/{store}/edit", StoreEdit::class)->name("store.edit");
-
-    //Leads
-    Route::get("/leads", LeadsIndex::class)->name("leads.index");
-    Route::get("/lead/create", LeadCreate::class)->name("lead.create");
-    Route::get("/lead/{lead}/edit", LeadEdit::class)->name("lead.edit");
-
-    //Campaigns
-    Route::get("/campaigns", CampaignsIndex::class)->name("campaigns.index");
-    Route::get("/campaign/create", CampaignCreate::class)->name("campaign.create");
-    Route::get("/campaign/{campaign}/edit", CampaignEdit::class)->name("campaign.edit");
+    // Campaign
+    Route::middleware("permission:page.campaigns")->group(function () {
+      Route::get("/campaigns", CampaignsIndex::class)->name("campaigns.index");
+      Route::get("/campaign/create", CampaignCreate::class)->name("campaign.create");
+      Route::get("/campaign/{campaign}/edit", CampaignEdit::class)->name("campaign.edit");
+    });
 
     // Call Lists
-    Route::get("/campaign/{campaign}/lists", CallListsIndex::class)->name("campaign.lists");
-    Route::get("/campaign/{campaign}/list/create", CallListCreate::class)->name("campaign.list.create");
-    Route::get("/campaign/{campaign}/list/{callList}/edit", CallListEdit::class)->name("campaign.list.edit");
+    Route::middleware("permission:page.call_lists")->group(function () {
+      Route::get("/campaign/{campaign}/lists", CallListsIndex::class)->name("campaign.lists");
+      Route::get("/campaign/{campaign}/list/create", CallListCreate::class)->name("campaign.list.create");
+      Route::get("/campaign/{campaign}/list/{callList}/edit", CallListEdit::class)->name("campaign.list.edit");
+    });
 
     // Dispositions
-    Route::get("/campaign/{campaign}/dispositions", DispositionsIndex::class)->name("campaign.dispositions");
-    Route::get("/campaign/{campaign}/disposition/create", DispositionCreate::class)->name("campaign.disposition.create");
-    Route::get("/campaign/{campaign}/disposition/{disposition}/edit", DispositionEdit::class)->name("campaign.disposition.edit");
+    Route::middleware("permission:page.dispositions")->group(function () {
+      Route::get("/campaign/{campaign}/dispositions", DispositionsIndex::class)->name("campaign.dispositions");
+      Route::get("/campaign/{campaign}/disposition/create", DispositionCreate::class)->name("campaign.disposition.create");
+      Route::get("/campaign/{campaign}/disposition/{disposition}/edit", DispositionEdit::class)->name("campaign.disposition.edit");
+    });
 
     // Callbacks
-    Route::get("/callbacks", CallbackPanel::class)->name("callbacks.index");
+    Route::middleware("permission:page.callbacks")->group(function () {
+      Route::get("/callbacks", CallbackPanel::class)->name("callbacks.index");
+    });
 
-    //User Groups
-    Route::get("/user-groups", UserGroupsIndex::class)->name(
-      "user-groups.index"
-    );
-    Route::get("/user-group/create", UserGroupCreate::class)->name(
-      "user-group.create"
-    );
-    Route::get("/user-group/{group}/edit", UserGroupEdit::class)->name(
-      "user-group.edit"
-    );
+    // Users
+    Route::middleware("permission:page.users")->group(function () {
+      Route::get("/users", UsersIndex::class)->name("users.index");
+      Route::get("/user/create", UserCreate::class)->name("user.create");
+      Route::get("/user/{user}/edit", UserEdit::class)->name("user.edit");
+    });
 
-    //Conversations
-    Route::get("/conversations", ConversationsIndex::class)->name(
-      "conversations.index"
-    );
-    Route::get("/conversations/assigned", ConversationsIndex::class)->name(
-      "conversations.assigned"
-    );
-    Route::get("/conversations/{conversation}", ConversationShow::class)->name(
-      "conversations.show"
-    );
+    // Roles & Permissions
+    Route::middleware("permission:page.roles")->group(function () {
+      Route::get("/roles", RolesIndex::class)->name("roles.index");
+      Route::get("/role/create", RolesCreate::class)->name("roles.create");
+      Route::get("/role/{role}/edit", RolesEdit::class)->name("roles.edit");
+      Route::get("/permissions", PermissionsIndex::class)->name("permissions.index");
+    });
 
-    //Workforce
-    Route::get("/workforce/rosters", RosterIndex::class)->name(
-      "workforce.rosters.index"
-    );
-    Route::get("/workforce/roster/create", RosterCreate::class)->name(
-      "workforce.roster.create"
-    );
-    Route::get("/workforce/roster/{roster}", RosterShow::class)->name(
-      "workforce.roster.show"
-    );
+    // User Groups
+    Route::middleware("permission:page.user_groups")->group(function () {
+      Route::get("/user-groups", UserGroupsIndex::class)->name("user-groups.index");
+      Route::get("/user-group/create", UserGroupCreate::class)->name("user-group.create");
+      Route::get("/user-group/{group}/edit", UserGroupEdit::class)->name("user-group.edit");
+    });
 
-    //In-Groups
-    Route::get("/in-groups", InGroupsIndex::class)->name("in-groups.index");
-    Route::get("/in-group/create", InGroupCreate::class)->name(
-      "in-group.create"
-    );
-    Route::get("/in-group/{inGroup}/edit", InGroupEdit::class)->name(
-      "in-group.edit"
-    );
+    // Activity Overview
+    Route::middleware("permission:page.activity_overview")->group(function () {
+      Route::get("/activity-overview", OverviewIndex::class)->name("activity.overview");
+    });
 
-    //DIDs
-    Route::get("/dids", DidsIndex::class)->name("dids.index");
-    Route::get("/did/create", DidCreate::class)->name("did.create");
-    Route::get("/did/{did}/edit", DidEdit::class)->name("did.edit");
+    // Activity Logs
+    Route::middleware("permission:page.activity_logs")->group(function () {
+      Route::get("/activity-logs", ActivitylogsIndex::class)->name("activitylogs.index");
+      Route::get("/activity-log/{log}/", ActivitylogsIndex::class)->name("activitylog.view");
+    });
 
-    // CID Numbers (Twilio provisioned numbers)
-    Route::get("/cid-numbers", CidNumbersIndex::class)->name("cid-numbers.index");
+    // Agent Status
+    Route::middleware("permission:page.agent_status")->group(function () {
+      Route::get("/agent-status", AgentStatusIndex::class)->name("agent.status.index");
+    });
 
-    //IVR Menus
-    Route::get("/ivr-menus", IvrMenusIndex::class)->name("ivr-menus.index");
-    Route::get("/ivr-menu/create", IvrMenuCreate::class)->name(
-      "ivr-menu.create"
-    );
-    Route::get("/ivr-menu/{ivrMenu}/edit", IvrMenuEdit::class)->name(
-      "ivr-menu.edit"
-    );
+    // Shift Monitoring
+    Route::middleware("permission:page.shift_monitoring")->group(function () {
+      Route::get("/shift-monitoring", ShiftMonitoring::class)->name("shift.monitoring");
+    });
 
-    //Reports
-    Route::get("/reports", ReportsOverview::class)->name("reports.index")->middleware("role:Super Admin");
+    // Leads
+    Route::middleware("permission:page.leads")->group(function () {
+      Route::get("/leads", LeadsIndex::class)->name("leads.index");
+      Route::get("/lead/create", LeadCreate::class)->name("lead.create");
+      Route::get("/lead/{lead}/edit", LeadEdit::class)->name("lead.edit");
+    });
 
-    //Twilio
+    // Stores
+    Route::middleware("permission:page.stores")->group(function () {
+      Route::get("/stores", StoresIndex::class)->name("stores.index");
+      Route::get("/stores/{store}/edit", StoreEdit::class)->name("store.edit");
+    });
+
+    // Reports
+    Route::middleware("permission:page.reports")->group(function () {
+      Route::get("/reports", ReportsOverview::class)->name("reports.index");
+    });
+
+    // Conversations
+    Route::middleware("permission:page.conversations")->group(function () {
+      Route::get("/conversations", ConversationsIndex::class)->name("conversations.index");
+      Route::get("/conversations/assigned", ConversationsIndex::class)->name("conversations.assigned");
+      Route::get("/conversations/{conversation}", ConversationShow::class)->name("conversations.show");
+    });
+
+    // Workforce
+    Route::middleware("permission:page.workforce")->group(function () {
+      Route::get("/workforce/rosters", RosterIndex::class)->name("workforce.rosters.index");
+      Route::get("/workforce/roster/create", RosterCreate::class)->name("workforce.roster.create");
+      Route::get("/workforce/roster/{roster}", RosterShow::class)->name("workforce.roster.show");
+    });
+
+    // In-Groups
+    Route::middleware("permission:page.in_groups")->group(function () {
+      Route::get("/in-groups", InGroupsIndex::class)->name("in-groups.index");
+      Route::get("/in-group/create", InGroupCreate::class)->name("in-group.create");
+      Route::get("/in-group/{inGroup}/edit", InGroupEdit::class)->name("in-group.edit");
+    });
+
+    // DIDs
+    Route::middleware("permission:page.dids")->group(function () {
+      Route::get("/dids", DidsIndex::class)->name("dids.index");
+      Route::get("/did/create", DidCreate::class)->name("did.create");
+      Route::get("/did/{did}/edit", DidEdit::class)->name("did.edit");
+    });
+
+    // CID Numbers
+    Route::middleware("permission:page.cid_numbers")->group(function () {
+      Route::get("/cid-numbers", CidNumbersIndex::class)->name("cid-numbers.index");
+    });
+
+    // IVR Menus
+    Route::middleware("permission:page.ivr_menus")->group(function () {
+      Route::get("/ivr-menus", IvrMenusIndex::class)->name("ivr-menus.index");
+      Route::get("/ivr-menu/create", IvrMenuCreate::class)->name("ivr-menu.create");
+      Route::get("/ivr-menu/{ivrMenu}/edit", IvrMenuEdit::class)->name("ivr-menu.edit");
+    });
+
+    // Twilio (internal API endpoint, no page permission required)
     Route::get("/phone/access-token", [
       TwilioController::class,
       "getAccessToken",

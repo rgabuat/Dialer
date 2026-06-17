@@ -7,6 +7,71 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionRegistrar
 {
+    /**
+     * All page-level permissions, organized by nav group.
+     * Key = permission name, value = display label.
+     * Used in the Roles UI to render the "Page Access" section.
+     */
+    public static array $pageGroups = [
+        'Dashboard' => [
+            'page.dashboard' => 'Dashboard',
+        ],
+        'Campaign' => [
+            'page.campaigns'    => 'All Campaigns',
+            'page.call_lists'   => 'Call Lists',
+            'page.dispositions' => 'Dispositions',
+            'page.callbacks'    => 'Callbacks',
+        ],
+        'People' => [
+            'page.users'       => 'Users',
+            'page.roles'       => 'Roles & Permissions',
+            'page.user_groups' => 'User Groups',
+        ],
+        'Activity' => [
+            'page.activity_overview' => 'Overview',
+            'page.activity_logs'     => 'Activity Logs',
+            'page.agent_status'      => 'Agent Status',
+            'page.shift_monitoring'  => 'Shift Monitoring',
+        ],
+        'Operations' => [
+            'page.leads'  => 'Leads',
+            'page.stores' => 'Stores',
+        ],
+        'Reports' => [
+            'page.reports' => 'Reports',
+        ],
+        'Conversations' => [
+            'page.conversations' => 'Conversations',
+        ],
+        'Workforce' => [
+            'page.workforce' => 'Rosters',
+        ],
+        'Inbound' => [
+            'page.cid_numbers' => 'CID Numbers',
+            'page.in_groups'   => 'In-Groups',
+            'page.dids'        => 'DIDs',
+            'page.ivr_menus'   => 'IVR Menus',
+        ],
+        'Settings' => [
+            'page.settings' => 'Settings',
+        ],
+    ];
+
+    /**
+     * Seed all page-level permissions into the database.
+     */
+    public static function registerPagePermissions(): void
+    {
+        foreach (static::$pageGroups as $pages) {
+            foreach (array_keys($pages) as $permissionName) {
+                Permission::firstOrCreate([
+                    'name'       => $permissionName,
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
+    }
+
     public static function for(string $module, array $actions = ['view', 'create', 'update', 'delete']): void
     {
         foreach ($actions as $action) {
