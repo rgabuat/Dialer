@@ -20,3 +20,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('agent-status', function ($user) {
     return auth()->check();
 });
+
+Broadcast::channel('call-queue', function ($user) {
+    return auth()->check();
+});

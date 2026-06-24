@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Observers\ConversationObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Conversation extends Model
 {
   use HasFactory;
+
+  protected static function booted(): void
+  {
+    static::observe(ConversationObserver::class);
+  }
 
   protected $fillable = [
     "call_sid",

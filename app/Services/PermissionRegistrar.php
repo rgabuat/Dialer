@@ -32,6 +32,7 @@ class PermissionRegistrar
             'page.activity_logs'     => 'Activity Logs',
             'page.agent_status'      => 'Agent Status',
             'page.shift_monitoring'  => 'Shift Monitoring',
+            'page.queue_monitor'     => 'Queue Monitor',
         ],
         'Operations' => [
             'page.leads'  => 'Leads',
