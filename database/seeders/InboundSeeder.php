@@ -33,7 +33,6 @@ class InboundSeeder extends Seeder
         "drop_action" => "voicemail",
         "drop_destination" => null,
         "web_form_url" => null,
-        "hold_music_url" => null,
         "after_hours_action" => "voicemail",
         "after_hours_destination" => null,
         "hours_json" => null, // null = always open
@@ -83,11 +82,8 @@ class InboundSeeder extends Seeder
     Did::firstOrCreate(
       ["phone_number" => $phoneNumber],
       [
-        "description" =>
-          "Default inbound number — routes through Main IVR Menu.",
         "ivr_menu_id" => $ivrMenu->id,
         "in_group_id" => null,
-        "campaign_id" => $campaign?->id,
         "is_active" => true,
       ]
     );

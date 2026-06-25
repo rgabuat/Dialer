@@ -41,6 +41,7 @@ class Lead extends Model
         'notify_email',
         'notify_email_address',
         'selected_units',
+        'dynamic_data',
         'pipeline_stage',
         'source',
         'expires_at',
@@ -54,6 +55,7 @@ class Lead extends Model
         'notify_sms'       => 'boolean',
         'notify_email'     => 'boolean',
         'selected_units'   => 'array',
+        'dynamic_data'     => 'array',
     ];
 
     public function store()

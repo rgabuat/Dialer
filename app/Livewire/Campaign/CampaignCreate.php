@@ -83,6 +83,7 @@ class CampaignCreate extends Component
             'hold_music_url'     => $this->hold_music_url ?: null,
             'recording_enabled'  => $this->recording_enabled,
             'recording_channels' => $this->recording_channels,
+            'lead_process'       => null,
         ]);
 
         session()->flash('success', 'Campaign created successfully.');
@@ -95,4 +96,5 @@ class CampaignCreate extends Component
         return view('livewire.campaign.campaign-create')
             ->layout('components.layouts.app');
     }
+
 }

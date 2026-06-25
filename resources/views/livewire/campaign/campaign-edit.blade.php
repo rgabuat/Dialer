@@ -71,46 +71,386 @@
             {{-- ── Left: main settings (2/3) ── --}}
             <div class="xl:col-span-2 space-y-5">
 
-                {{-- Campaign Details --}}
-                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
-                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-fuchsia-500/15 shrink-0">
-                            <x-heroicon-s-megaphone class="w-3.5 h-3.5 text-fuchsia-400" />
-                        </div>
-                        <h2 class="font-semibold text-fg text-sm">Campaign Details</h2>
-                    </div>
-                    <div class="p-5 space-y-4">
-
-                        <div>
-                            <label class="block mb-1.5 font-semibold text-fg text-xs">
-                                Campaign Name <span class="text-accent-red">*</span>
-                            </label>
-                            <input wire:model.defer="name" type="text" placeholder="e.g. Sales Q2 2026"
-                                class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                            @error('name')
-                                <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block mb-1.5 font-semibold text-fg text-xs">Description</label>
-                            <textarea wire:model.defer="description" rows="3" placeholder="Optional description..."
-                                class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
-                            @error('description')
-                                <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <label class="flex items-center gap-2.5 cursor-pointer w-fit">
-                            <input wire:model.defer="is_active" type="checkbox" id="is_active"
-                                class="w-4 h-4 rounded text-fuchsia-600 border-surface-2 focus:ring-fuchsia-500 focus:ring-offset-0">
-                            <span class="text-fg text-sm font-medium">Active</span>
-                            <span class="text-fg-muted text-xs">(campaign accepts calls)</span>
-                        </label>
+                <div class="bg-surface border border-surface rounded-xl p-2">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" wire:click="$set('editor_tab', 'settings')"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition {{ $editor_tab === 'settings' ? 'bg-fuchsia-600 text-white' : 'bg-surface-2 text-fg-muted hover:text-fg hover:bg-surface' }}">
+                            <x-heroicon-o-adjustments-horizontal class="w-4 h-4" />
+                            Settings
+                        </button>
+                        <button type="button" wire:click="$set('editor_tab', 'leadprocess')"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition {{ $editor_tab === 'leadprocess' ? 'bg-cyan-600 text-white' : 'bg-surface-2 text-fg-muted hover:text-fg hover:bg-surface' }}">
+                            <x-heroicon-o-rectangle-group class="w-4 h-4" />
+                            Lead Process
+                        </button>
+                        <button type="button" wire:click="$set('editor_tab', 'callbacks')"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition {{ $editor_tab === 'callbacks' ? 'bg-emerald-600 text-white' : 'bg-surface-2 text-fg-muted hover:text-fg hover:bg-surface' }}">
+                            <x-heroicon-o-phone-arrow-up-right class="w-4 h-4" />
+                            Callbacks
+                        </button>
                     </div>
                 </div>
 
+                @if ($editor_tab === 'leadprocess')
+                    <div x-data="{
+                            selectedStep: 0,
+                            selectedField: null,
+                            draggingStep: null,
+                            draggingField: { step: null, index: null },
+                            paletteType: null,
+                            selectField(stepIndex, fieldIndex) {
+                                this.selectedStep = stepIndex;
+                                this.selectedField = fieldIndex;
+                            },
+                            startPaletteDrag(type) { this.paletteType = type; },
+                            clearDragState() {
+                                this.draggingStep = null;
+                                this.draggingField = { step: null, index: null };
+                                this.paletteType = null;
+                            },
+                            startStepDrag(index) { this.draggingStep = index; },
+                            dropStep(index) {
+                                if (this.draggingStep === null) return;
+                                if (this.draggingStep !== index) {
+                                    $wire.moveLeadStepTo(this.draggingStep, index);
+                                }
+                                this.clearDragState();
+                            },
+                            startFieldDrag(stepIndex, fieldIndex) {
+                                this.draggingField = { step: stepIndex, index: fieldIndex };
+                            },
+                            dropField(stepIndex, fieldIndex) {
+                                if (this.paletteType) {
+                                    $wire.insertLeadFieldAt(stepIndex, fieldIndex, this.paletteType);
+                                    this.selectedStep = stepIndex;
+                                    this.selectedField = fieldIndex;
+                                    this.clearDragState();
+                                    return;
+                                }
+
+                                if (this.draggingField.step === null) return;
+                                if (this.draggingField.step === stepIndex) {
+                                    if (this.draggingField.index !== fieldIndex) {
+                                        $wire.moveLeadFieldTo(stepIndex, this.draggingField.index, fieldIndex);
+                                    }
+                                } else {
+                                    $wire.moveLeadFieldAcrossSteps(this.draggingField.step, this.draggingField.index, stepIndex, fieldIndex);
+                                }
+                                this.selectField(stepIndex, fieldIndex);
+                                this.clearDragState();
+                            },
+                            dropFieldAtEnd(stepIndex, endIndex) {
+                                if (this.paletteType) {
+                                    $wire.insertLeadFieldAt(stepIndex, endIndex, this.paletteType);
+                                    this.selectedStep = stepIndex;
+                                    this.selectedField = Math.max(0, endIndex);
+                                    this.clearDragState();
+                                    return;
+                                }
+
+                                if (this.draggingField.step === null) return;
+                                if (this.draggingField.step === stepIndex) {
+                                    $wire.moveLeadFieldTo(stepIndex, this.draggingField.index, endIndex - 1);
+                                } else {
+                                    $wire.moveLeadFieldAcrossSteps(this.draggingField.step, this.draggingField.index, stepIndex, endIndex);
+                                }
+                                this.selectField(stepIndex, Math.max(0, endIndex - 1));
+                                this.clearDragState();
+                            }
+                        }"
+                        class="bg-surface border border-surface rounded-xl overflow-hidden">
+                        <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
+                            <div class="flex items-center justify-center w-7 h-7 rounded-full bg-cyan-500/15 shrink-0">
+                                <x-heroicon-s-list-bullet class="w-3.5 h-3.5 text-cyan-400" />
+                            </div>
+                            <h2 class="font-semibold text-fg text-sm">Lead Process</h2>
+                            <p class="text-fg-muted text-xs ml-auto hidden sm:block">Real canvas builder with field properties panel</p>
+                        </div>
+
+                        <div class="p-5 space-y-5">
+                            <div class="flex flex-wrap items-end justify-between gap-3">
+                                <div class="w-full md:w-auto md:min-w-[260px]">
+                                    <label class="block mb-1.5 font-semibold text-fg text-xs">Form Mode</label>
+                                    <select wire:model.change="lead_process_mode"
+                                        class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                        <option value="single">Single Form</option>
+                                        <option value="stepper">Stepper</option>
+                                    </select>
+                                    @error('lead_process_mode')
+                                        <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if ($lead_process_mode === 'stepper' || count($lead_process_steps) === 0)
+                                        <button type="button" wire:click="addLeadStep"
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 transition text-xs">
+                                            <x-heroicon-o-plus class="w-3.5 h-3.5" />
+                                            Add Step
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="bg-surface-2 border border-surface rounded-lg p-3 text-xs text-fg-muted">
+                                Drag any input from Input Library to Form Canvas. Click a canvas input to edit its properties on the right.
+                            </div>
+
+                            @error('lead_process_steps')
+                                <p class="text-accent-red text-xs">{{ $message }}</p>
+                            @enderror
+
+                            @if (count($lead_process_steps) === 0)
+                                <div class="border border-dashed border-surface rounded-lg p-6 text-center space-y-3">
+                                    <p class="text-fg text-sm font-medium">Start by adding the first step.</p>
+                                    <p class="text-fg-muted text-xs">Then drag input blocks onto the canvas to design your form.</p>
+                                    <button type="button" wire:click="addLeadStep"
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 transition text-xs">
+                                        <x-heroicon-o-plus class="w-3.5 h-3.5" />
+                                        Add First Step
+                                    </button>
+                                </div>
+                            @endif
+
+                            @php
+                                $fieldLibrary = [
+                                    ['type' => 'text', 'label' => 'Text Input'],
+                                    ['type' => 'textarea', 'label' => 'Long Text'],
+                                    ['type' => 'email', 'label' => 'Email'],
+                                    ['type' => 'phone', 'label' => 'Phone'],
+                                    ['type' => 'number', 'label' => 'Number'],
+                                    ['type' => 'date', 'label' => 'Date'],
+                                    ['type' => 'select', 'label' => 'Dropdown'],
+                                    ['type' => 'checkbox', 'label' => 'Checkbox'],
+                                ];
+                            @endphp
+
+                            <div class="grid grid-cols-1 xl:grid-cols-[250px_minmax(0,1fr)_320px] gap-4 items-start">
+                                <div class="bg-surface-2 border border-surface rounded-xl p-3 space-y-3 sticky top-4">
+                                    <div>
+                                        <p class="font-semibold text-fg text-xs">Input Library</p>
+                                        <p class="text-fg-muted text-xs mt-0.5">Drag input type to canvas</p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach ($fieldLibrary as $libraryField)
+                                            <button type="button"
+                                                draggable="true"
+                                                @dragstart="startPaletteDrag('{{ $libraryField['type'] }}')"
+                                                @dragend="clearDragState()"
+                                                @click="$wire.addLeadFieldOfType(selectedStep, '{{ $libraryField['type'] }}')"
+                                                class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-surface bg-surface hover:bg-surface-2 text-fg text-xs transition text-left cursor-grab active:cursor-grabbing">
+                                                <span>{{ $libraryField['label'] }}</span>
+                                                <x-heroicon-o-bars-3 class="w-3.5 h-3.5 text-fg-muted" />
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                    <p class="text-fg-muted/80 text-[11px]">Tip: click a type to add to selected step.</p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    @foreach ($lead_process_steps as $stepIndex => $step)
+                                        <div class="bg-surface-2 border border-surface rounded-xl p-4 space-y-4"
+                                            wire:key="lead-step-{{ $stepIndex }}"
+                                            @click="selectedStep = {{ $stepIndex }}"
+                                            @dragover.prevent
+                                            @drop.prevent="dropStep({{ $stepIndex }})"
+                                            :class="[
+                                                draggingStep === {{ $stepIndex }} ? 'ring-2 ring-cyan-500/40' : '',
+                                                selectedStep === {{ $stepIndex }} ? 'border-cyan-500/50' : ''
+                                            ]">
+
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <button type="button" draggable="true"
+                                                    @dragstart="startStepDrag({{ $stepIndex }})"
+                                                    @dragend="clearDragState()"
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-surface bg-surface text-fg-muted hover:text-fg cursor-grab active:cursor-grabbing transition"
+                                                    title="Drag step">
+                                                    <x-heroicon-o-bars-3 class="w-4 h-4" />
+                                                </button>
+                                                <input type="text" wire:model.blur="lead_process_steps.{{ $stepIndex }}.title"
+                                                    placeholder="Step title"
+                                                    class="flex-1 min-w-[220px] bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                <button type="button" wire:click="removeLeadStep({{ $stepIndex }})"
+                                                    class="inline-flex items-center px-2.5 py-2 rounded-lg border border-red-500/30 text-accent-red text-xs hover:bg-red-500/10 transition">
+                                                    Remove Step
+                                                </button>
+                                            </div>
+
+                                            @error("lead_process_steps.$stepIndex.title")
+                                                <p class="text-accent-red text-xs">{{ $message }}</p>
+                                            @enderror
+
+                                            <div class="space-y-3 border border-dashed border-surface rounded-lg p-3"
+                                                @dragover.prevent
+                                                @drop.prevent="dropFieldAtEnd({{ $stepIndex }}, {{ count($step['fields'] ?? []) }})"
+                                                :class="(draggingField.step !== null || paletteType) ? 'border-cyan-500/40 bg-cyan-500/5' : ''">
+
+                                                <div class="text-fg-muted text-[11px] uppercase tracking-wide">Form Canvas</div>
+
+                                                @foreach (($step['fields'] ?? []) as $fieldIndex => $field)
+                                                    <div class="border border-surface rounded-lg p-3 space-y-2 bg-surface/50 cursor-pointer"
+                                                        wire:key="lead-field-{{ $stepIndex }}-{{ $field['uid'] ?? $fieldIndex }}"
+                                                        @click.stop="selectField({{ $stepIndex }}, {{ $fieldIndex }})"
+                                                        draggable="true"
+                                                        @dragstart="startFieldDrag({{ $stepIndex }}, {{ $fieldIndex }})"
+                                                        @dragend="clearDragState()"
+                                                        @dragover.prevent
+                                                        @drop.prevent="dropField({{ $stepIndex }}, {{ $fieldIndex }})"
+                                                        :class="[
+                                                            draggingField.step === {{ $stepIndex }} && draggingField.index === {{ $fieldIndex }} ? 'opacity-60 ring-2 ring-cyan-500/40' : '',
+                                                            selectedStep === {{ $stepIndex }} && selectedField === {{ $fieldIndex }} ? 'ring-2 ring-fuchsia-500/40 border-fuchsia-500/40' : ''
+                                                        ]">
+
+                                                        <div class="flex items-center justify-between gap-2">
+                                                            <div class="inline-flex items-center gap-1.5 text-fg-muted text-xs">
+                                                                <x-heroicon-o-bars-3 class="w-3.5 h-3.5" />
+                                                                {{ strtoupper((string) ($field['type'] ?? 'text')) }}
+                                                            </div>
+                                                            <div class="text-fg-muted text-[11px]">Click to edit properties</div>
+                                                        </div>
+
+                                                        <div>
+                                                            <label class="block text-fg-muted text-xs mb-1">
+                                                                {{ ($field['label'] ?? '') !== '' ? $field['label'] : 'Untitled Field' }}
+                                                                @if (($field['required'] ?? false) === true)
+                                                                    <span class="text-accent-red">*</span>
+                                                                @endif
+                                                            </label>
+
+                                                            @if (($field['type'] ?? 'text') === 'textarea')
+                                                                <textarea disabled rows="2" placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                                    class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg-muted text-xs resize-none"></textarea>
+                                                            @elseif (($field['type'] ?? 'text') === 'select')
+                                                                <select disabled
+                                                                    class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg-muted text-xs">
+                                                                    <option value="">{{ $field['placeholder'] ?? 'Select option' }}</option>
+                                                                </select>
+                                                            @elseif (($field['type'] ?? 'text') === 'checkbox')
+                                                                <label class="inline-flex items-center gap-2 text-fg-muted text-xs">
+                                                                    <input type="checkbox" disabled class="w-4 h-4 rounded border-surface" />
+                                                                    <span>{{ ($field['placeholder'] ?? '') !== '' ? $field['placeholder'] : (($field['label'] ?? '') !== '' ? $field['label'] : 'Checkbox') }}</span>
+                                                                </label>
+                                                            @else
+                                                                <input type="text" disabled placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                                    class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg-muted text-xs" />
+                                                            @endif
+
+                                                            @if (($field['help_text'] ?? '') !== '')
+                                                                <p class="text-fg-muted/80 text-[11px] mt-1">{{ $field['help_text'] }}</p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+
+                                                @if (count($step['fields'] ?? []) === 0)
+                                                    <div class="text-center py-5 text-fg-muted text-xs border border-dashed border-surface rounded-lg">
+                                                        Drop input fields here
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="bg-surface-2 border border-surface rounded-xl p-4 space-y-3 sticky top-4">
+                                    <div>
+                                        <p class="font-semibold text-fg text-xs">Field Properties</p>
+                                        <p class="text-fg-muted text-xs mt-0.5">Select canvas field to edit</p>
+                                    </div>
+
+                                    <div x-show="selectedField === null" class="text-fg-muted text-xs py-6 text-center border border-dashed border-surface rounded-lg">
+                                        Click a field in the form canvas
+                                    </div>
+
+                                    @foreach ($lead_process_steps as $stepIndex => $step)
+                                        @foreach (($step['fields'] ?? []) as $fieldIndex => $field)
+                                            <div x-cloak x-show="selectedStep === {{ $stepIndex }} && selectedField === {{ $fieldIndex }}" class="space-y-3">
+                                                <div>
+                                                    <label class="block mb-1 text-fg-muted text-xs">Field Key</label>
+                                                    <input type="text" wire:model.blur="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.key"
+                                                        placeholder="e.g. first_name"
+                                                        class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                    @error("lead_process_steps.$stepIndex.fields.$fieldIndex.key")
+                                                        <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+
+                                                <div>
+                                                    <label class="block mb-1 text-fg-muted text-xs">Label</label>
+                                                    <input type="text" wire:model.blur="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.label"
+                                                        placeholder="Visible field label"
+                                                        class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                    @error("lead_process_steps.$stepIndex.fields.$fieldIndex.label")
+                                                        <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+
+                                                <div>
+                                                    <label class="block mb-1 text-fg-muted text-xs">Type</label>
+                                                    <select wire:model.change="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.type"
+                                                        class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                        <option value="text">Text</option>
+                                                        <option value="textarea">Textarea</option>
+                                                        <option value="email">Email</option>
+                                                        <option value="phone">Phone</option>
+                                                        <option value="number">Number</option>
+                                                        <option value="date">Date</option>
+                                                        <option value="select">Select</option>
+                                                        <option value="checkbox">Checkbox</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="flex items-center justify-between gap-2 border border-surface rounded-lg px-3 py-2 bg-surface">
+                                                    <div>
+                                                        <p class="text-fg text-xs font-medium">Optional / Required</p>
+                                                        <p class="text-fg-muted text-[11px]">Enable required if field must be filled</p>
+                                                    </div>
+                                                    <label class="inline-flex items-center gap-2 text-fg text-xs">
+                                                        <input type="checkbox" wire:model.change="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.required"
+                                                            class="w-4 h-4 rounded text-cyan-600 border-surface-2 focus:ring-cyan-500 focus:ring-offset-0">
+                                                        Required
+                                                    </label>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block mb-1 text-fg-muted text-xs">Placeholder</label>
+                                                    <input type="text" wire:model.blur="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.placeholder"
+                                                        placeholder="Text shown inside input"
+                                                        class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                </div>
+
+                                                <div>
+                                                    <label class="block mb-1 text-fg-muted text-xs">Help Text</label>
+                                                    <input type="text" wire:model.blur="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.help_text"
+                                                        placeholder="Short guidance shown below the field"
+                                                        class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                                </div>
+
+                                                @if (($field['type'] ?? 'text') === 'select')
+                                                    <div>
+                                                        <label class="block mb-1 text-fg-muted text-xs">Select Options (one per line)</label>
+                                                        <textarea wire:model.blur="lead_process_steps.{{ $stepIndex }}.fields.{{ $fieldIndex }}.options_text"
+                                                            rows="3"
+                                                            class="w-full bg-surface border border-surface rounded-lg px-3 py-2 text-fg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                                            placeholder="Option A&#10;Option B&#10;Option C"></textarea>
+                                                    </div>
+                                                @endif
+
+                                                <button type="button" wire:click="removeLeadField({{ $stepIndex }}, {{ $fieldIndex }})"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/30 text-accent-red text-xs hover:bg-red-500/10 transition">
+                                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
+                                                    Remove Field
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Dialer Settings --}}
+                @if ($editor_tab === 'settings')
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/15 shrink-0">
@@ -264,8 +604,10 @@
                         @enderror
                     </div>
                 </div>
+                @endif
 
                 {{-- ── CID Rotation ── --}}
+                @if ($editor_tab === 'callbacks')
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/15 shrink-0">
@@ -299,8 +641,10 @@
 
                     </div>
                 </div>
+                @endif
 
                 {{-- Agent Script --}}
+                @if ($editor_tab === 'settings')
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-yellow-500/15 shrink-0">
@@ -320,8 +664,10 @@
                         @enderror
                     </div>
                 </div>
+                @endif
 
                 {{-- Voice & Recording --}}
+                @if ($editor_tab === 'callbacks')
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500/15 shrink-0">
@@ -425,6 +771,7 @@
 
                     </div>
                 </div>
+                @endif
 
                 {{-- Actions --}}
                 <div class="flex items-center gap-3">

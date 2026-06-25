@@ -41,7 +41,7 @@ class DefaultSeeder extends Seeder
             ['name' => 'Admin Campaign'],
             [
                 'description' => 'Default campaign assigned to the Super Admin account.',
-                'phone_number' => env('TWILIO_PHONE_NUMBER', '+10000000000'),
+                'caller_id' => env('TWILIO_PHONE_NUMBER', '+10000000000'),
                 'is_active' => true,
             ]
         );

@@ -803,111 +803,70 @@
                     </div>
                     @endif
 
-                    {{-- CREATE LEAD STEPPER --}}
+                                        {{-- CREATE LEAD (dynamic by campaign lead inputs) --}}
                     @if ($accountView === 'lead')
-                    <div x-data="{
-                        step: 1,
-                        steps: ['START', 'STORAGE', 'ACTION', 'REVIEW'],
-                        lead: {
-                            first_name: '',
-                            last_name: '',
-                            reason_for_storage: '',
-                            types_of_items: '',
-                            duration: '',
-                        },
-                        action: {
-                            type: 'quote',
-                            move_in_date: '{{ now()->format('Y-m-d') }}',
-                            channels: { sms: false, email: true },
-                            email: '',
-                            property_protection: '',
-                            promo: '',
-                            admin_fee_credit: false,
-                            unit_size: '',
-                            typeDescriptions: {
-                                quote: { title: 'Self Storage Quote', body: 'The customer is interested in a unit but does not want to commit right now. This will not reserve a unit for them. We\'ll send them a confirmation of the quote.' },
-                                reservation: { title: 'Self Storage Reservation', body: 'The customer wants to reserve a unit of this type but not lock it in or make a payment. We\'ll send them a confirmation of the reservation.' },
-                                waitlist: { title: 'Self Storage Waitlist', body: 'The customer is interested in a unit size that is not currently available. We\'ll email the store with the details for them put on their waitlist.' },
-                                rental: { title: 'Self Storage Rental', body: 'The customer wants to lock in the unit, make payment and complete the process right now. We\'ll send them a link to the rental agreement and everything they need to move in.' },
-                            }
-                        },
-                        storage: {
-                            selectedStore: null,
-                            selectedUnits: {},
-                            filters: {
-                                class: 'storage',
-                                sizes: [],
-                                dimensions: [],
-                                attributes: [],
-                                max_price: '',
-                                include_unavailable: false,
-                            },
-                            unitQty(storeId, unitId) {
-                                return (this.selectedUnits[storeId + '_' + unitId] || 0);
-                            },
-                            setUnitQty(storeId, unitId, qty) {
-                                const key = storeId + '_' + unitId;
-                                if (qty <= 0) { delete this.selectedUnits[key]; } else { this.selectedUnits[key] = qty; }
-                                this.selectedUnits = {...this.selectedUnits};
-                            },
-                            filteredUnits(units) {
-                                return units.filter(u => {
-                                    const f = this.filters;
-                                    if (f.sizes.length) {
-                                        const sizeMap = { small: 'Small Storage', medium: 'Medium Storage', large: 'Large Storage' };
-                                        const allowed = f.sizes.map(s => sizeMap[s]).filter(Boolean);
-                                        if (!allowed.includes(u.category)) return false;
-                                    }
-                                    if (f.dimensions.length) {
-                                        if (!f.dimensions.includes(u.size)) return false;
-                                    }
-                                    if (f.attributes.length) {
-                                        if (!f.attributes.some(a => u.features.includes(a))) return false;
-                                    }
-                                    if (f.max_price !== '' && f.max_price !== null) {
-                                        if (u.push_rate > Number(f.max_price)) return false;
-                                    }
-                                    if (!f.include_unavailable && u.available === 0) return false;
-                                    return true;
-                                });
-                            },
-                            stores: {{ Js::from($stores) }}
-                        },
-                        submitLead($wire) {
-                            const units = Object.entries(this.storage.selectedUnits)
-                                .filter(([, qty]) => qty > 0)
-                                .map(([key, qty]) => {
-                                    const [sId, uId] = key.split('_').map(Number);
-                                    const store = this.storage.stores.find(s => s.id === sId);
-                                    const unit = store?.units.find(u => u.id === uId);
-                                    return { store_id: sId, unit_id: uId, qty, size: unit?.size, push_rate: unit?.push_rate, street_rate: unit?.street_rate };
-                                });
-                            $wire.createLead({
-                                first_name: this.lead.first_name,
-                                last_name: this.lead.last_name,
-                                email: this.action.email,
-                                reason_for_storage: this.lead.reason_for_storage,
-                                types_of_items: this.lead.types_of_items,
-                                duration: this.lead.duration,
-                                lead_type: this.action.type,
-                                move_in_date: this.action.move_in_date,
-                                property_protection: this.action.property_protection,
-                                promo: this.action.promo,
-                                admin_fee_credit: this.action.admin_fee_credit,
-                                unit_size: this.action.unit_size,
-                                notify_sms: this.action.channels.sms,
-                                notify_email: this.action.channels.email,
-                                notify_email_address: this.action.email,
-                                selected_units: units,
-                                store_id: this.storage.selectedStore ?? (units.length ? units[0].store_id : null)
-                            });
-                        }
-                    }"
-                    @lead-created.window="$wire.set('accountView', 'leads')"
-                    wire:ignore
-                    class="flex flex-col">
+                        <div
+                            x-data="{}"
+                            @lead-created.window="$wire.set('accountView', 'leads')"
+                            class="flex flex-col flex-1 min-h-0"
+                        >
 
-                            {{-- Top bar --}}
+                        {{-- Validation / process errors (outside wire:ignore — updated by Livewire) --}}
+                        @if (!empty($leadCreateErrors))
+                            <div class="px-5 py-3 bg-red-500/10 border-b border-red-500/30 shrink-0 space-y-1">
+                                @foreach ($leadCreateErrors as $err)
+                                    <p class="text-accent-red text-xs flex items-start gap-1.5">
+                                        <x-heroicon-o-exclamation-circle class="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                        {{ $err }}
+                                    </p>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div
+                            x-data="{
+                                process: {{ Js::from($leadCreateProcess) }},
+                                stores: {{ Js::from($leadCreateStores->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->values()) }},
+                                step: 0,
+                                formData: {},
+                                saving: false,
+                                init() {
+                                    (this.process.steps || []).forEach((st) => {
+                                        (st.fields || []).forEach((f) => {
+                                            if (Object.prototype.hasOwnProperty.call(this.formData, f.key)) return;
+                                            this.formData[f.key] = f.type === 'checkbox' ? false : '';
+                                        });
+                                    });
+                                },
+                                currentStep() {
+                                    return (this.process.steps || [])[this.step] || { title: 'Lead', fields: [] };
+                                },
+                                inputType(field) {
+                                    return field.type === 'phone' ? 'tel' : field.type;
+                                },
+                                canMoveNext() {
+                                    const st = this.currentStep();
+                                    return (st.fields || []).every((f) => {
+                                        if (!f.required) return true;
+                                        const v = this.formData[f.key];
+                                        if (f.type === 'checkbox') return !!v;
+                                        return String(v ?? '').trim() !== '';
+                                    });
+                                },
+                                submitLead($wire) {
+                                    this.saving = true;
+                                    $wire.createLead(this.formData)
+                                        .then(() => {
+                                            this.saving = false;
+                                        })
+                                        .catch(() => {
+                                            this.saving = false;
+                                        });
+                                }
+                            }"
+                            wire:ignore
+                            class="flex flex-col flex-1 min-h-0"
+                        >
                             <div class="flex justify-between items-center px-5 py-4 border-surface border-b shrink-0">
                                 <div class="flex items-center gap-3">
                                     <button type="button" @click="$wire.set('accountView', 'overview')"
@@ -915,868 +874,108 @@
                                         <x-heroicon-o-arrow-left class="w-4 h-4" />
                                     </button>
                                     <div>
-                                        <p class="font-bold text-fg text-sm leading-tight">New NSA Lead</p>
-                                        <p class="text-fg-muted text-xs">Create an NSA sales lead.</p>
+                                        <p class="font-bold text-fg text-sm leading-tight">Create Lead</p>
+                                        <p class="text-fg-muted text-xs">Form fields are configured in Campaign Lead Process.</p>
                                     </div>
                                 </div>
-                                {{-- Step indicators --}}
-                                <div class="flex items-center font-semibold text-xs">
-                                    <template x-for="(s, i) in steps" :key="i">
-                                        <div class="flex items-center">
-                                            <button
-                                                @click="step = i + 1"
-                                                :class="step === i + 1
-                                                    ? 'bg-surface-3 text-fg border border-surface'
-                                                    : (step > i + 1 ? 'text-fuchsia-400 hover:bg-surface-2' : 'text-fg-muted/50 hover:bg-surface-2')"
-                                                class="px-3 py-1 rounded font-semibold text-xs transition"
-                                                x-text="(i + 1) + '. ' + s">
-                                            </button>
-                                            <span x-show="i < steps.length - 1" class="mx-0.5 text-fg-muted/30">›</span>
-                                        </div>
-                                    </template>
+                                <div class="text-fg-muted text-xs" x-show="(process.steps || []).length > 0">
+                                    <span x-text="'Step ' + (step + 1) + ' of ' + process.steps.length"></span>
                                 </div>
                             </div>
 
-                            {{-- Body: Step 1 START --}}
-                            <template x-if="step === 1">
-                                <div class="flex flex-1 min-h-0 overflow-hidden">
-                                    {{-- Left labels --}}
-                                    <div class="space-y-8 px-5 py-6 border-surface border-r w-44 shrink-0">
-                                        <div>
-                                            <p class="font-semibold text-fg text-sm">Contact</p>
-                                            <p class="mt-1 text-fg-muted text-xs leading-relaxed">Capture some basic information about the contact.</p>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-fg text-sm">Needs</p>
-                                            <p class="mt-1 text-fg-muted text-xs leading-relaxed">Capture information about the contact's needs for marketing purposes.</p>
-                                        </div>
-                                    </div>
-                                    {{-- Step 1 content --}}
-                                    <div class="flex-1 overflow-y-auto">
-                                        <div>
-                                            <div class="gap-px grid grid-cols-2 border-surface border-b">
-                                                <div class="px-6 py-5 border-surface border-r">
-                                                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">First Name</label>
-                                                    <input type="text" x-model="lead.first_name"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition" />
-                                                </div>
-                                                <div class="px-6 py-5">
-                                                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Last Name</label>
-                                                    <input type="text" x-model="lead.last_name"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition" />
-                                                </div>
-                                            </div>
-                                            <div class="space-y-5 px-6 py-5">
-                                                <div>
-                                                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Reason For Storage</label>
-                                                    <select x-model="lead.reason_for_storage"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition appearance-none">
-                                                        <option value=""></option>
-                                                        <option value="Moving">Moving</option>
-                                                        <option value="Relocating">Relocating</option>
-                                                        <option value="Need Space">Need Space</option>
-                                                        <option value="Vehicle">Vehicle</option>
-                                                        <option value="Business">Business</option>
-                                                        <option value="Between Semesters">Between Semesters</option>
-                                                        <option value="Military">Military</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Types Of Items</label>
-                                                    <textarea x-model="lead.types_of_items" rows="2"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition resize-none"></textarea>
-                                                    <p class="mt-1 text-fuchsia-400 text-xs">Script: So I can determine the size you need, what types of items will you be storing?</p>
-                                                </div>
-                                                <div>
-                                                    <label class="block mb-1.5 font-medium text-fg-muted text-xs">Duration</label>
-                                                    <select x-model="lead.duration"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition appearance-none">
-                                                        <option value=""></option>
-                                                        <option value="1 Month Or Less">1 Month Or Less</option>
-                                                        <option value="2-3 Months">2-3 Months</option>
-                                                        <option value="4-6 Months">4-6 Months</option>
-                                                        <option value="7-12 Months">7-12 Months</option>
-                                                        <option value="Longer Than 1 Year">Longer Than 1 Year</option>
-                                                        <option value="Unsure">Unsure</option>
-                                                    </select>
-                                                    <p class="mt-1 text-fuchsia-400 text-xs">Script: How long do you expect to be storing with us?</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="p-5" x-show="(process.steps || []).length === 0">
+                                <div class="bg-surface-2 border border-surface rounded-xl p-4 space-y-2">
+                                    <p class="text-fg text-sm font-medium">No lead process configured.</p>
+                                    <p class="text-fg-muted text-xs">Go to <strong>Campaign Edit &rarr; Lead Process</strong> tab and add steps &amp; fields. Once saved, this form will reflect those fields automatically.</p>
+                                    @if ($conversation->campaign)
+                                        <a href="{{ route('campaign.edit', $conversation->campaign) }}" wire:navigate
+                                            class="inline-flex items-center gap-1.5 mt-1 text-fuchsia-400 hover:text-fuchsia-300 text-xs transition">
+                                            <x-heroicon-o-cog-6-tooth class="w-3.5 h-3.5" />
+                                            Configure Lead Process
+                                        </a>
+                                    @endif
                                 </div>
-                            </template>
+                            </div>
 
-                            {{-- Body: Step 2 STORAGE --}}
-                            <template x-if="step === 2">
-                                <div class="flex flex-1 min-h-0 overflow-hidden">
+                            <div class="p-5 space-y-4" x-show="(process.steps || []).length > 0">
+                                <div class="text-fg text-sm font-semibold" x-text="currentStep().title || 'Lead Inputs'"></div>
 
-                                    {{-- Stores list --}}
-                                    <div class="flex-1 divide-y divide-surface overflow-y-auto">
+                                <template x-for="field in currentStep().fields" :key="field.key">
+                                    <div>
+                                        <label class="block text-fg-muted text-xs mb-1.5">
+                                            <span x-text="field.label"></span>
+                                            <span x-show="field.required" class="text-accent-red">*</span>
+                                        </label>
 
-                                        {{-- Featured store --}}
-                                        <template x-for="store in storage.stores.filter(s => s.featured)" :key="store.id">
-                                            <div>
-                                                {{-- Store header row --}}
-                                                <div @click="storage.selectedStore = (storage.selectedStore === store.id ? null : store.id)"
-                                                    :class="storage.selectedStore === store.id ? 'bg-surface-2' : 'hover:bg-surface-2'"
-                                                    class="flex items-center gap-4 px-4 py-4 transition cursor-pointer">
-                                                    <div class="flex justify-center items-center bg-surface-3 rounded-lg w-24 h-16 overflow-hidden shrink-0">
-                                                        <x-heroicon-o-building-storefront class="w-8 h-8 text-fg-muted/30" />
-                                                    </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="font-semibold text-fg text-sm truncate" x-text="store.name"></p>
-                                                        <div class="flex items-center gap-2 mt-0.5">
-                                                            <span class="text-fg-muted text-xs" x-show="store.type" x-text="store.type"></span>
-                                                            <span class="flex items-center gap-1 text-fg-muted text-xs">
-                                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><path d="M3 9h18" stroke-width="2"/></svg>
-                                                                <span x-text="store.occupancy + '%'"></span>
-                                                            </span>
-                                                        </div>
-                                                        <p class="mt-0.5 text-fg-muted/60 text-xs" x-text="store.address"></p>
-                                                        <p class="text-fg-muted/40 text-xs" x-text="store.location"></p>
-                                                    </div>
-                                                    <div class="flex items-center gap-6 shrink-0">
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.small"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('small') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Small</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.small?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.small?.price"></p>
-                                                        </div>
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.medium"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('medium') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Medium</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.medium?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.medium?.price"></p>
-                                                        </div>
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.large"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('large') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Large</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.large?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.large?.price"></p>
-                                                        </div>
-                                                        <x-heroicon-o-chevron-down class="w-4 h-4 text-fg-muted/40 transition-transform shrink-0"
-                                                            ::class="storage.selectedStore === store.id ? 'rotate-180' : ''" />
-                                                    </div>
-                                                </div>
-
-                                                {{-- Unit rows --}}
-                                                <div x-show="storage.selectedStore === store.id" x-collapse>
-                                                    {{-- Column header --}}
-                                                    <div class="flex items-center bg-surface-3/40 px-4 py-2 border-surface border-y font-semibold text-fg-muted text-xs">
-                                                        <span class="flex-1">Unit</span>
-                                                        <span class="w-24 text-right">Street Rate</span>
-                                                        <span class="w-24 text-right">Push Rate</span>
-                                                    </div>
-
-                                                    <template x-for="unit in storage.filteredUnits(store.units)" :key="unit.id">
-                                                        <div class="px-4 py-4 border-surface/50 border-b last:border-b-0"
-                                                            :class="storage.unitQty(store.id, unit.id) > 0 ? 'bg-fuchsia-500/5' : ''">
-                                                            <div class="flex items-start gap-4">
-                                                                {{-- Selected checkmark --}}
-                                                                <div class="flex justify-center items-center mt-1 w-5 h-5 shrink-0">
-                                                                    <template x-if="storage.unitQty(store.id, unit.id) > 0">
-                                                                        <svg class="w-5 h-5 text-fuchsia-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    </template>
-                                                                </div>
-
-                                                                {{-- Unit info --}}
-                                                                <div class="flex-1 min-w-0">
-                                                                    <p class="font-bold text-fg text-base" x-text="unit.size"></p>
-                                                                    <p class="mt-0.5 text-fg-muted text-xs">
-                                                                        <span x-text="unit.category"></span>
-                                                                        <span class="text-fg-muted/50"> (<span x-text="unit.available"></span> units available)</span>
-                                                                    </p>
-
-                                                                    {{-- Features --}}
-                                                                    <div class="mt-2">
-                                                                        <p class="mb-1 font-medium text-fg-muted text-xs">Features</p>
-                                                                        <div class="flex flex-wrap gap-1.5">
-                                                                            <template x-for="f in unit.features" :key="f">
-                                                                                <span class="inline-flex items-center px-2 py-0.5 border border-surface rounded text-fg text-xs" x-text="f"></span>
-                                                                            </template>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                {{-- Rates + controls --}}
-                                                                <div class="flex flex-col items-end gap-2 w-48 shrink-0">
-                                                                    <div class="flex items-center gap-6 w-full">
-                                                                        <div class="flex-1 text-right">
-                                                                            <p class="text-fg-muted text-sm line-through" x-text="'$' + unit.street_rate"></p>
-                                                                        </div>
-                                                                        <div class="w-20 text-right">
-                                                                            <p class="font-bold text-fg text-lg" x-text="'$' + unit.push_rate"></p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {{-- Already selected: Remove + qty stepper --}}
-                                                                    <template x-if="storage.unitQty(store.id, unit.id) > 0">
-                                                                        <div class="flex flex-col items-end gap-2 w-full">
-                                                                            <button type="button"
-                                                                                @click="storage.setUnitQty(store.id, unit.id, 0)"
-                                                                                class="bg-fuchsia-600 hover:bg-fuchsia-500 py-1.5 rounded-lg w-full font-semibold text-white text-xs transition">
-                                                                                Remove
-                                                                            </button>
-                                                                            <div class="flex items-center gap-2">
-                                                                                <button type="button"
-                                                                                    @click="storage.setUnitQty(store.id, unit.id, Math.max(1, storage.unitQty(store.id, unit.id) - 1))"
-                                                                                    class="flex justify-center items-center bg-surface-2 hover:bg-surface-3 rounded w-7 h-7 font-bold text-fg text-base transition">−</button>
-                                                                                <span class="w-5 font-semibold text-fg text-sm text-center" x-text="storage.unitQty(store.id, unit.id)"></span>
-                                                                                <button type="button"
-                                                                                    @click="storage.setUnitQty(store.id, unit.id, storage.unitQty(store.id, unit.id) + 1)"
-                                                                                    class="flex justify-center items-center bg-surface-2 hover:bg-surface-3 rounded w-7 h-7 font-bold text-fg text-base transition">+</button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </template>
-
-                                                                    {{-- Not selected: Street Rate Select + Push Rate Select --}}
-                                                                    <template x-if="storage.unitQty(store.id, unit.id) === 0">
-                                                                        <div class="flex items-center gap-2 w-full">
-                                                                            <button type="button"
-                                                                                @click="storage.setUnitQty(store.id, unit.id, 1)"
-                                                                                class="flex-1 bg-surface-2 hover:bg-surface-3 py-1.5 border border-surface rounded-lg font-semibold text-fg text-xs transition">
-                                                                                Select
-                                                                            </button>
-                                                                            <button type="button"
-                                                                                @click="storage.setUnitQty(store.id, unit.id, 1)"
-                                                                                class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 py-1.5 rounded-lg font-semibold text-white text-xs transition">
-                                                                                Select
-                                                                            </button>
-                                                                        </div>
-                                                                    </template>
-                                                                </div>
-                                                            </div>
-
-                                                            {{-- Promos --}}
-                                                            <div class="mt-3 pl-9">
-                                                                <p class="mb-1.5 font-medium text-fg-muted text-xs">Promos</p>
-                                                                <div class="flex flex-wrap gap-1.5">
-                                                                    <template x-for="promo in unit.promos" :key="promo">
-                                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 border border-surface rounded text-fuchsia-400 text-xs">
-                                                                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
-                                                                            <span x-text="promo"></span>
-                                                                        </span>
-                                                                    </template>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </div>
+                                        <template x-if="field.type === 'textarea'">
+                                            <textarea x-model="formData[field.key]" rows="3"
+                                                :placeholder="field.placeholder || ''"
+                                                class="w-full bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none text-fg text-sm"></textarea>
                                         </template>
 
-                                        {{-- Nearby stores --}}
-                                        <div class="bg-surface-3/30 px-4 py-2">
-                                            <p class="font-semibold text-fg text-sm">Nearby Stores</p>
-                                        </div>
-
-                                        <template x-for="store in storage.stores.filter(s => !s.featured)" :key="store.id">
-                                            <div>
-                                                <div @click="storage.selectedStore = (storage.selectedStore === store.id ? null : store.id)"
-                                                    :class="storage.selectedStore === store.id ? 'bg-surface-2' : 'hover:bg-surface-2'"
-                                                    class="flex items-center gap-4 px-4 py-4 transition cursor-pointer">
-                                                    <div class="flex justify-center items-center bg-surface-3 rounded-lg w-24 h-16 overflow-hidden shrink-0">
-                                                        <x-heroicon-o-building-storefront class="w-8 h-8 text-fg-muted/30" />
-                                                    </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="font-semibold text-fg text-sm truncate" x-text="store.name"></p>
-                                                        <div class="flex items-center gap-2 mt-0.5">
-                                                            <span class="text-fg-muted text-xs" x-show="store.distance" x-text="store.distance + ' miles away'"></span>
-                                                            <span class="flex items-center gap-1 text-fg-muted text-xs">
-                                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/><path d="M3 9h18" stroke-width="2"/></svg>
-                                                                <span x-text="store.occupancy + '%'"></span>
-                                                            </span>
-                                                        </div>
-                                                        <p class="mt-0.5 text-fg-muted/60 text-xs" x-text="store.address"></p>
-                                                        <p class="text-fg-muted/40 text-xs" x-text="store.location"></p>
-                                                    </div>
-                                                    <div class="flex items-center gap-6 shrink-0">
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.small"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('small') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Small</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.small?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.small?.price"></p>
-                                                        </div>
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.medium"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('medium') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Medium</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.medium?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.medium?.price"></p>
-                                                        </div>
-                                                        <div class="text-center transition-all"
-                                                            x-show="store.pricing.large"
-                                                            :class="storage.filters.sizes.length && !storage.filters.sizes.includes('large') ? 'blur-sm opacity-30 select-none' : ''">
-                                                            <p class="font-medium text-fg-muted text-xs">Large</p>
-                                                            <p class="text-fg-muted/50 text-xs" x-text="store.pricing.large?.size"></p>
-                                                            <p class="font-semibold text-fg text-sm" x-text="'$' + store.pricing.large?.price"></p>
-                                                        </div>
-                                                        <x-heroicon-o-chevron-right class="w-4 h-4 text-fg-muted/40 shrink-0" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                    </div>
-
-                                    {{-- Filter sidebar --}}
-                                    <div class="space-y-5 px-4 py-4 border-surface border-l w-52 overflow-y-auto shrink-0">
-
-                                        {{-- Class --}}
-                                        <div>
-                                            <p class="mb-2 font-semibold text-fg text-xs">Class</p>
-                                            <div class="flex gap-2">
-                                                <button type="button" @click="storage.filters.class = 'storage'"
-                                                    :class="storage.filters.class === 'storage' ? 'bg-fuchsia-600 text-white' : 'bg-surface-2 text-fg-muted hover:text-fg'"
-                                                    class="flex-1 py-1.5 rounded-md font-semibold text-xs transition">Storage</button>
-                                                <button type="button" @click="storage.filters.class = 'parking'"
-                                                    :class="storage.filters.class === 'parking' ? 'bg-fuchsia-600 text-white' : 'bg-surface-2 text-fg-muted hover:text-fg'"
-                                                    class="flex-1 py-1.5 rounded-md font-semibold text-xs transition">Parking</button>
-                                            </div>
-                                        </div>
-
-                                        {{-- Size --}}
-                                        <div>
-                                            <p class="mb-2 font-semibold text-fg text-xs">Size</p>
-                                            <div class="gap-x-3 gap-y-1.5 grid grid-cols-2">
-                                                <template x-for="sz in ['Small', 'Medium', 'Large']" :key="sz">
-                                                    <label class="flex items-center gap-1.5 cursor-pointer">
-                                                        <input type="checkbox" :value="sz.toLowerCase()" x-model="storage.filters.sizes"
-                                                            class="w-3.5 h-3.5 accent-fuchsia-500" />
-                                                        <span class="text-fg-muted text-xs" x-text="sz"></span>
-                                                    </label>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        {{-- Popular Dimensions --}}
-                                        <div>
-                                            <p class="mb-2 font-semibold text-fg text-xs">Popular Dimensions</p>
-                                            <div class="gap-x-3 gap-y-1.5 grid grid-cols-2">
-                                                <template x-for="dim in ['5 x 5', '5 x 10', '5 x 15', '10 x 10', '10 x 15', '10 x 20', '10 x 25', '10 x 30']" :key="dim">
-                                                    <label class="flex items-center gap-1.5 cursor-pointer">
-                                                        <input type="checkbox" :value="dim" x-model="storage.filters.dimensions"
-                                                            class="w-3.5 h-3.5 accent-fuchsia-500" />
-                                                        <span class="text-fg-muted text-xs" x-text="dim"></span>
-                                                    </label>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        {{-- Attributes --}}
-                                        <div>
-                                            <p class="mb-2 font-semibold text-fg text-xs">Attributes</p>
-                                            <div class="space-y-1.5">
-                                                <template x-for="attr in ['Inside', 'Outside', 'Temperature Control', 'Drive Up']" :key="attr">
-                                                    <label class="flex items-center gap-1.5 cursor-pointer">
-                                                        <input type="checkbox" :value="attr" x-model="storage.filters.attributes"
-                                                            class="w-3.5 h-3.5 accent-fuchsia-500" />
-                                                        <span class="text-fuchsia-400 text-xs" x-text="attr"></span>
-                                                    </label>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        {{-- Max Price --}}
-                                        <div>
-                                            <p class="mb-2 font-semibold text-fg text-xs">Max Price</p>
-                                            <input type="number" x-model="storage.filters.max_price" placeholder=""
-                                                class="bg-surface px-3 py-1.5 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-xs transition" />
-                                        </div>
-
-                                        {{-- Include Unavailable --}}
-                                        <div>
-                                            <div class="flex justify-between items-center gap-2 mb-1">
-                                                <p class="font-semibold text-fg text-xs">Include Unavailable</p>
-                                                <button type="button" @click="storage.filters.include_unavailable = !storage.filters.include_unavailable"
-                                                    :class="storage.filters.include_unavailable ? 'bg-fuchsia-600' : 'bg-surface-3'"
-                                                    class="inline-flex relative rounded-full w-9 h-5 transition shrink-0">
-                                                    <span :class="storage.filters.include_unavailable ? 'translate-x-4' : 'translate-x-0.5'"
-                                                        class="inline-block bg-white shadow mt-0.5 rounded-full w-4 h-4 transition-transform"></span>
-                                                </button>
-                                            </div>
-                                            <p class="text-fg-muted/50 text-xs leading-relaxed">Include unavailable units for pricing indication purposes.</p>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </template>
-
-                            {{-- Body: Step 3 ACTION --}}
-                            <template x-if="step === 3">
-                                <div class="flex flex-1 min-h-0 overflow-hidden">
-                                    <div class="flex-1 overflow-y-auto">
-
-                                        {{-- Lead Type --}}
-                                        <div class="flex border-surface border-b">
-                                            <div class="px-6 py-6 border-surface border-r w-48 shrink-0">
-                                                <p class="font-semibold text-fg text-sm">Lead Type</p>
-                                                <p class="mt-1 text-fg-muted text-xs leading-relaxed">Select the type of lead.</p>
-                                                <div class="space-y-1 mt-4" x-show="action.type !== ''">
-                                                    <p class="font-semibold text-fuchsia-400 text-xs" x-text="action.typeDescriptions[action.type]?.title"></p>
-                                                    <p class="text-fg-muted text-xs leading-relaxed" x-text="action.typeDescriptions[action.type]?.body"></p>
-                                                    <template x-if="action.type === 'rental'">
-                                                        <p class="mt-1 text-fg-muted text-xs leading-relaxed">This brand does not support future date rentals. The move in date must be today.</p>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                            <div class="flex-1 px-6 py-6">
-                                                <p class="mb-3 font-medium text-fg text-sm">Type</p>
-                                                <div class="flex">
-                                                    <template x-for="t in ['quote', 'reservation', 'waitlist', 'rental']" :key="t">
-                                                        <button type="button" @click="action.type = t"
-                                                            :class="action.type === t ? 'bg-fuchsia-600 text-white border-fuchsia-600' : 'bg-surface text-fg-muted hover:text-fg border-surface'"
-                                                            class="-ml-px first:ml-0 px-4 py-1.5 border last:rounded-r-lg first:rounded-l-lg font-medium text-sm capitalize transition"
-                                                            x-text="t.charAt(0).toUpperCase() + t.slice(1)">
-                                                        </button>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Move In Date --}}
-                                        <div class="flex border-surface border-b">
-                                            <div class="px-6 py-6 border-surface border-r w-48 shrink-0"></div>
-                                            <div class="flex-1 px-6 py-6">
-                                                <p class="mb-3 font-medium text-fg text-sm">Move In Date</p>
-                                                <div class="relative">
-                                                    <input type="date" x-model="action.move_in_date"
-                                                        :readonly="action.type === 'rental'"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition" />
-                                                </div>
-                                                <p class="mt-1.5 text-fg-muted/60 text-xs"
-                                                    x-text="action.type === 'rental' ? 'The move in date must be today for this brand.' : 'Select the contact\'s estimated move in date.'"></p>
-                                            </div>
-                                        </div>
-
-                                        {{-- Waitlist: Requirements --}}
-                                        <template x-if="action.type === 'waitlist'">
-                                            <div class="flex border-surface border-b">
-                                                <div class="px-6 py-6 border-surface border-r w-48 shrink-0">
-                                                    <p class="font-semibold text-fg text-sm">Requirements</p>
-                                                    <p class="mt-1 text-fg-muted text-xs leading-relaxed">Capture details of the required storage for the waitlist.</p>
-                                                </div>
-                                                <div class="flex-1 px-6 py-6">
-                                                    <p class="mb-3 font-medium text-fg text-sm">Unit Size</p>
-                                                    <input type="text" x-model="action.unit_size"
-                                                        class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition" />
-                                                    <p class="mt-1.5 text-fg-muted/60 text-xs">Enter the dimensions or a brief description of the unit size required.</p>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        {{-- Notifications (Quote, Reservation, Rental) --}}
-                                        <template x-if="action.type !== 'waitlist'">
-                                            <div class="flex border-surface border-b">
-                                                <div class="px-6 py-6 border-surface border-r w-48 shrink-0">
-                                                    <p class="font-semibold text-fg text-sm">Notifications</p>
-                                                    <p class="mt-1 text-fg-muted text-xs leading-relaxed">
-                                                        Select channels to send the customer a confirmation of their
-                                                        <span x-text="'self-storage-' + action.type + '.'"></span>
-                                                    </p>
-                                                </div>
-                                                <div class="flex-1 space-y-4 px-6 py-6">
-                                                    <div>
-                                                        <p class="mb-3 font-medium text-fg text-sm">Channels</p>
-                                                        <div class="space-y-2">
-                                                            <label class="flex items-center gap-2 cursor-pointer">
-                                                                <input type="checkbox" x-model="action.channels.sms" class="w-4 h-4 accent-fuchsia-500" />
-                                                                <span class="text-fg-muted text-sm">SMS</span>
-                                                            </label>
-                                                            <label class="flex items-center gap-2 cursor-pointer">
-                                                                <input type="checkbox" x-model="action.channels.email" class="w-4 h-4 accent-fuchsia-500" />
-                                                                <span class="text-fg-muted text-sm">Email</span>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <template x-if="action.channels.email">
-                                                        <div>
-                                                            <p class="mb-2 font-medium text-fg text-sm">Email</p>
-                                                            <input type="email" x-model="action.email"
-                                                                class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition" />
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        {{-- Adjustments (Quote, Reservation, Rental) --}}
-                                        <template x-if="action.type !== 'waitlist'">
-                                            <div class="flex border-surface border-b">
-                                                <div class="px-6 py-6 border-surface border-r w-48 shrink-0">
-                                                    <p class="font-semibold text-fg text-sm">Adjustments</p>
-                                                    <p class="mt-1 text-fg-muted text-xs leading-relaxed">Here you can add promotions and property protection.</p>
-                                                    <div class="space-y-1.5 mt-3">
-                                                        <a href="#" class="flex items-center gap-1.5 text-fuchsia-400 hover:text-fuchsia-300 text-xs transition">
-                                                            <x-heroicon-o-information-circle class="w-3.5 h-3.5 shrink-0" />
-                                                            Property Protection Guide
-                                                        </a>
-                                                        <a href="#" class="flex items-center gap-1.5 text-fuchsia-400 hover:text-fuchsia-300 text-xs transition">
-                                                            <x-heroicon-o-information-circle class="w-3.5 h-3.5 shrink-0" />
-                                                            Promotion Guide
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-1 space-y-5 px-6 py-6">
-                                                    {{-- Unit adjustment cards --}}
-                                                    <template x-for="(qty, key) in storage.selectedUnits" :key="key">
-                                                        <template x-if="qty > 0">
-                                                            <div x-data="{
-                                                                get info() {
-                                                                    const [sId, uId] = key.split('_').map(Number);
-                                                                    const store = storage.stores.find(s => s.id === sId);
-                                                                    const unit  = store?.units.find(u => u.id === uId);
-                                                                    return unit ? { size: unit.size, price: unit.push_rate } : null;
-                                                                }
-                                                            }" class="space-y-4 bg-surface-2 p-4 border border-surface rounded-xl">
-                                                                <template x-if="info">
-                                                                    <div>
-                                                                        <div class="flex justify-between items-start mb-4">
-                                                                            <div>
-                                                                                <p class="font-semibold text-fg text-sm" x-text="'Unit (' + info.size + ') @ $' + info.price"></p>
-                                                                                <p class="text-fg-muted text-xs">Push Rate</p>
-                                                                            </div>
-                                                                            <button type="button" @click="storage.setUnitQty(...key.split('_').map(Number), 0)"
-                                                                                class="text-fg-muted hover:text-fg transition">
-                                                                                <x-heroicon-o-x-mark class="w-4 h-4" />
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="space-y-3">
-                                                                            <div>
-                                                                                <p class="mb-1.5 font-semibold text-fg text-xs">Property Protection</p>
-                                                                                <select x-model="action.property_protection"
-                                                                                    class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition appearance-none">
-                                                                                    <option value="">No Coverage</option>
-                                                                                    <option value="2000">$2,000 Coverage @ $12.00 Month</option>
-                                                                                    <option value="3000">$3,000 Coverage @ $17.00 Month</option>
-                                                                                    <option value="5000">$5,000 Coverage @ $25.00 Month</option>
-                                                                                </select>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p class="mb-1.5 font-semibold text-fg text-xs">Promo</p>
-                                                                                <select x-model="action.promo"
-                                                                                    class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition appearance-none">
-                                                                                    <option value="-">-</option>
-                                                                                    <option value="senior_discount">5% Senior Discount (65+)</option>
-                                                                                    <option value="50_off_first">50% Off First Month'S Rent</option>
-                                                                                    <option value="1st_month_free">1st Month Free</option>
-                                                                                    <option value="military">5% Military & First Responder</option>
-                                                                                </select>
-                                                                            </div>
-                                                                            <div class="flex justify-between items-start gap-4 pt-1">
-                                                                                <div>
-                                                                                    <p class="font-semibold text-fg text-xs">Admin Fee Credit</p>
-                                                                                    <p class="mt-0.5 text-fg-muted/60 text-xs leading-relaxed">Apply a credit to offset the administration fee for this rental.</p>
-                                                                                </div>
-                                                                                <button type="button" @click="action.admin_fee_credit = !action.admin_fee_credit"
-                                                                                    :class="action.admin_fee_credit ? 'bg-fuchsia-600' : 'bg-surface-3'"
-                                                                                    class="inline-flex relative mt-0.5 rounded-full w-9 h-5 transition shrink-0">
-                                                                                    <span :class="action.admin_fee_credit ? 'translate-x-4' : 'translate-x-0.5'"
-                                                                                        class="inline-block bg-white shadow mt-0.5 rounded-full w-4 h-4 transition-transform"></span>
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </template>
-                                                            </div>
-                                                        </template>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        {{-- Unit Selection (Rental only) --}}
-                                        <template x-if="action.type === 'rental'">
-                                            <div class="flex border-surface border-b">
-                                                <div class="px-6 py-6 border-surface border-r w-48 shrink-0">
-                                                    <p class="font-semibold text-fg text-sm">Unit Selection</p>
-                                                    <p class="mt-1 text-fg-muted text-xs leading-relaxed">Optionally select a specific unit.</p>
-                                                    <a href="#" class="flex items-center gap-1.5 mt-3 text-fuchsia-400 hover:text-fuchsia-300 text-xs transition">
-                                                        <x-heroicon-o-information-circle class="w-3.5 h-3.5 shrink-0" />
-                                                        Location Map
-                                                    </a>
-                                                </div>
-                                                <div class="flex-1 space-y-4 px-6 py-6">
-                                                    <template x-for="(qty, key) in storage.selectedUnits" :key="key">
-                                                        <template x-if="qty > 0">
-                                                            <div x-data="{
-                                                                unit_number: '',
-                                                                get info() {
-                                                                    const [sId, uId] = key.split('_').map(Number);
-                                                                    const store = storage.stores.find(s => s.id === sId);
-                                                                    const unit  = store?.units.find(u => u.id === uId);
-                                                                    return unit ? { size: unit.size, price: unit.push_rate } : null;
-                                                                }
-                                                            }">
-                                                                <template x-if="info">
-                                                                    <div>
-                                                                        <p class="mb-2 font-semibold text-fg text-sm" x-text="'Unit (' + info.size + ') @ $' + info.price"></p>
-                                                                        <select x-model="unit_number"
-                                                                            class="bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none w-full text-fg text-sm transition appearance-none">
-                                                                            <option value="">Unit Number</option>
-                                                                            <option value="2180">Unit Number 2180</option>
-                                                                            <option value="2181">Unit Number 2181</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </template>
-                                                            </div>
-                                                        </template>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                    </div>
-                                </div>
-                            </template>
-
-                            {{-- Body: Step 4 REVIEW --}}
-                            <template x-if="step === 4">
-                                <div class="flex flex-1 min-h-0 overflow-hidden">
-
-                                    {{-- Left: summary details --}}
-                                    <div class="flex-1 divide-y divide-surface overflow-y-auto">
-
-                                        <div class="flex items-center gap-4 px-6 py-4">
-                                            <span class="w-40 text-fg-muted text-xs shrink-0">Type</span>
-                                            <span class="text-fg text-sm capitalize" x-text="action.type.charAt(0).toUpperCase() + action.type.slice(1)"></span>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 px-6 py-4">
-                                            <span class="w-40 text-fg-muted text-xs shrink-0">Move In Date</span>
-                                            <span class="text-fg text-sm" x-text="action.move_in_date ? new Date(action.move_in_date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : '—'"></span>
-                                        </div>
-
-                                        <div class="flex items-start gap-4 px-6 py-4">
-                                            <span class="mt-0.5 w-40 text-fg-muted text-xs shrink-0">Account Strategy</span>
-                                            <div class="flex flex-col gap-1">
-                                                <div class="flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-green-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
-                                                    <span class="text-fg text-sm">Existing Account</span>
-                                                </div>
-                                                <span class="text-fg text-sm" x-text="(lead.first_name + ' ' + lead.last_name).trim() || '—'"></span>
-                                                <span class="text-fg-muted text-xs">260414231723392</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 px-6 py-4">
-                                            <span class="w-40 text-fg-muted text-xs shrink-0">Name</span>
-                                            <span class="text-fg text-sm" x-text="(lead.first_name + ' ' + lead.last_name).trim() || '—'"></span>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 px-6 py-4">
-                                            <span class="w-40 text-fg-muted text-xs shrink-0">Email</span>
-                                            <span class="text-fuchsia-400 text-sm" x-text="action.email || '—'"></span>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 px-6 py-4">
-                                            <span class="w-40 text-fg-muted text-xs shrink-0">Notifications</span>
-                                            <span class="text-fg text-sm">
-                                                <span x-show="action.channels.email && action.channels.sms">Email, SMS</span>
-                                                <span x-show="action.channels.email && !action.channels.sms">Email</span>
-                                                <span x-show="!action.channels.email && action.channels.sms">SMS</span>
-                                                <span x-show="!action.channels.email && !action.channels.sms">None</span>
-                                            </span>
-                                        </div>
-
-                                    </div>
-
-                                    {{-- Right: Units + Move-In Costs sidebar --}}
-                                    <div class="space-y-6 px-5 py-5 border-surface border-l w-72 overflow-y-auto shrink-0">
-
-                                        {{-- Units summary --}}
-                                        <div>
-                                            <p class="font-semibold text-fg text-sm">Units</p>
-                                            <p class="mt-0.5 mb-3 text-fg-muted text-xs">A summary of the selected units.</p>
-                                            <div class="space-y-4">
-                                                <template x-for="(qty, key) in storage.selectedUnits" :key="key">
-                                                    <template x-if="qty > 0">
-                                                        <div x-data="{
-                                                            get info() {
-                                                                const [sId, uId] = key.split('_').map(Number);
-                                                                const store = storage.stores.find(s => s.id === sId);
-                                                                return store?.units.find(u => u.id === uId) || null;
-                                                            },
-                                                            get protectionLabel() {
-                                                                const map = { '2000': '$2,000 coverage @ $12.00 month', '3000': '$3,000 coverage @ $17.00 month', '5000': '$5,000 coverage @ $25.00 month' };
-                                                                return map[action.property_protection] || null;
-                                                            },
-                                                            get protectionCost() {
-                                                                const map = { '2000': 12, '3000': 17, '5000': 25 };
-                                                                return map[action.property_protection] || 0;
-                                                            },
-                                                            get promoLabel() {
-                                                                const map = { 'senior_discount': '5% Senior Discount (65+)', '50_off_first': '50% Off First Month\'S Rent', '1st_month_free': '1st Month Free', 'military': '5% Military & First Responder' };
-                                                                return action.promo !== '-' ? map[action.promo] : null;
-                                                            }
-                                                        }">
-                                                            <template x-if="info">
-                                                                <div>
-                                                                    <div class="flex justify-between items-center mb-1">
-                                                                        <span class="font-semibold text-fg text-sm">Unit <span x-text="info.id * 100 + info.id"></span></span>
-                                                                        <span class="font-bold text-fg text-sm" x-text="'$' + info.push_rate"></span>
-                                                                    </div>
-                                                                    <div class="flex items-center gap-1.5 mb-1 text-fg-muted text-xs">
-                                                                        <x-heroicon-o-archive-box class="w-3.5 h-3.5 shrink-0" />
-                                                                        <span x-text="info.size + ' @ Push Rate'"></span>
-                                                                    </div>
-                                                                    <template x-if="protectionLabel">
-                                                                        <div class="flex justify-between items-center mb-1 text-xs">
-                                                                            <div class="flex items-center gap-1.5 text-fg-muted">
-                                                                                <x-heroicon-o-shield-check class="w-3.5 h-3.5 shrink-0" />
-                                                                                <span x-text="protectionLabel"></span>
-                                                                            </div>
-                                                                            <span class="text-fg-muted" x-text="'+$' + protectionCost"></span>
-                                                                        </div>
-                                                                    </template>
-                                                                    <template x-if="promoLabel">
-                                                                        <div class="flex items-center gap-1.5 text-fg-muted text-xs">
-                                                                            <x-heroicon-o-tag class="w-3.5 h-3.5 shrink-0" />
-                                                                            <span x-text="promoLabel"></span>
-                                                                        </div>
-                                                                    </template>
-                                                                </div>
-                                                            </template>
-                                                        </div>
+                                        <template x-if="field.type === 'select'">
+                                            <select x-model="formData[field.key]"
+                                                class="w-full bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none text-fg text-sm">
+                                                <option value="">Select</option>
+                                                <template x-if="field.key === 'store_id'">
+                                                    <template x-for="s in stores" :key="s.id">
+                                                        <option :value="String(s.id)" x-text="s.name"></option>
                                                     </template>
                                                 </template>
-                                            </div>
-                                        </div>
-
-                                        {{-- Move-In Costs --}}
-                                        <div>
-                                            <p class="font-semibold text-fg text-sm">Move-In Costs</p>
-                                            <p class="mt-0.5 mb-4 text-fg-muted text-xs">The charges payable at move-in.</p>
-                                            <div x-data="{
-                                                get unitCost() {
-                                                    return Object.entries(storage.selectedUnits).reduce((sum, [key, qty]) => {
-                                                        if (!qty) return sum;
-                                                        const [sId, uId] = key.split('_').map(Number);
-                                                        const store = storage.stores.find(s => s.id === sId);
-                                                        const unit = store?.units.find(u => u.id === uId);
-                                                        return sum + (unit ? unit.push_rate * qty : 0);
-                                                    }, 0);
-                                                },
-                                                get protectionCost() {
-                                                    const map = { '2000': 12, '3000': 17, '5000': 25 };
-                                                    return map[action.property_protection] || 0;
-                                                },
-                                                get discount() {
-                                                    return action.promo === 'senior_discount' ? -(this.unitCost * 0.05).toFixed(2) :
-                                                           action.promo === 'military'        ? -(this.unitCost * 0.05).toFixed(2) :
-                                                           action.promo === '50_off_first'    ? -(this.unitCost * 0.50).toFixed(2) :
-                                                           action.promo === '1st_month_free'  ? -this.unitCost : 0;
-                                                },
-                                                get adminFee() { return 29; },
-                                                get subtotal() { return (Number(this.unitCost) + Number(this.protectionCost) + Number(this.adminFee) + Number(this.discount)); },
-                                                get tax() { return (this.subtotal * 0.008).toFixed(2); },
-                                                get total() { return (Number(this.subtotal) + Number(this.tax)).toFixed(2); }
-                                            }" class="space-y-3">
-                                                <div class="flex justify-between items-start">
-                                                    <div>
-                                                        <p class="font-medium text-fg text-xs">Move In Rent</p>
-                                                        <p class="text-fg-muted/50 text-xs">Move In Rent</p>
-                                                    </div>
-                                                    <span class="font-semibold text-fg text-xs" x-text="'$' + Number(unitCost).toFixed(2)"></span>
-                                                </div>
-                                                <div class="flex justify-between items-start">
-                                                    <div>
-                                                        <p class="font-medium text-fg text-xs">Administrative Fee</p>
-                                                        <p class="text-fg-muted/50 text-xs">Administrative Fee</p>
-                                                    </div>
-                                                    <span class="font-semibold text-fg text-xs" x-text="'$' + adminFee"></span>
-                                                </div>
-                                                <template x-if="protectionCost > 0">
-                                                    <div class="flex justify-between items-start">
-                                                        <div>
-                                                            <p class="font-medium text-fg text-xs">Insurance</p>
-                                                            <p class="text-fg-muted/50 text-xs">Insurance</p>
-                                                        </div>
-                                                        <span class="font-semibold text-fg text-xs" x-text="'$' + protectionCost"></span>
-                                                    </div>
-                                                </template>
-                                                <template x-if="discount != 0">
-                                                    <div class="flex justify-between items-start">
-                                                        <div>
-                                                            <p class="font-medium text-fg text-xs italic">Discount</p>
-                                                            <p class="text-fg-muted/50 text-xs">Discount</p>
-                                                        </div>
-                                                        <span class="font-semibold text-xs text-accent-red" x-text="'$' + Number(discount).toFixed(2)"></span>
-                                                    </div>
-                                                </template>
-                                                <div class="space-y-1 pt-3 border-surface border-t">
-                                                    <div class="flex justify-between items-center">
-                                                        <p class="font-semibold text-fg text-sm">Total Move In Cost</p>
-                                                        <span class="font-bold text-fg text-base" x-text="'$' + total"></span>
-                                                    </div>
-                                                    <div class="flex justify-between items-center">
-                                                        <p class="text-fg-muted text-xs">Tax Included</p>
-                                                        <span class="text-fg-muted text-xs" x-text="'$' + tax"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </template>
-
-                            {{-- Footer --}}
-                            <div class="border-surface border-t shrink-0">
-
-                                {{-- Selected units summary (step 2 only) --}}
-                                <template x-if="(step === 2 || step === 3 || step === 4) && Object.keys(storage.selectedUnits).length > 0">
-                                    <div class="flex flex-wrap items-center gap-3 bg-surface-2 px-5 py-2 border-surface border-b">
-                                        <template x-for="(qty, key) in storage.selectedUnits" :key="key">
-                                            <template x-if="qty > 0">
-                                                <div x-data="{
-                                                    get info() {
-                                                        const [sId, uId] = key.split('_').map(Number);
-                                                        const store = storage.stores.find(s => s.id === sId);
-                                                        const unit  = store?.units.find(u => u.id === uId);
-                                                        return unit ? { size: unit.size, price: unit.push_rate, qty } : null;
-                                                    }
-                                                }" class="flex items-center gap-1.5">
-                                                    <template x-if="info">
-                                                        <span class="inline-flex items-center gap-1 bg-fuchsia-500/10 px-2.5 py-1 border border-fuchsia-500/30 rounded-full text-fg text-xs">
-                                                            <span class="font-semibold text-fuchsia-400" x-text="info.qty + ' ×'"></span>
-                                                            <span x-text="info.size"></span>
-                                                            <span class="text-fg-muted">@</span>
-                                                            <span class="font-semibold" x-text="'$' + info.price"></span>
-                                                            <span class="text-fg-muted/60">Push Rate</span>
-                                                        </span>
+                                                <template x-if="field.key !== 'store_id'">
+                                                    <template x-for="opt in (field.options || [])" :key="opt">
+                                                        <option :value="opt" x-text="opt"></option>
                                                     </template>
-                                                </div>
-                                            </template>
+                                                </template>
+                                            </select>
                                         </template>
-                                        <span class="ml-auto font-medium text-fg-muted text-xs"
-                                            x-text="Object.values(storage.selectedUnits).reduce((a,b)=>a+b,0) + ' unit' + (Object.values(storage.selectedUnits).reduce((a,b)=>a+b,0) === 1 ? '' : 's') + ' selected'">
-                                        </span>
+
+                                        <template x-if="field.type === 'checkbox'">
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" x-model="formData[field.key]" class="w-4 h-4 accent-fuchsia-500" />
+                                                <span class="text-fg text-sm" x-text="field.placeholder || field.label"></span>
+                                            </label>
+                                        </template>
+
+                                        <template x-if="!['textarea', 'select', 'checkbox'].includes(field.type)">
+                                            <input :type="inputType(field)" x-model="formData[field.key]"
+                                                :placeholder="field.placeholder || ''"
+                                                class="w-full bg-surface px-3 py-2 border border-surface focus:border-fuchsia-500 rounded-lg outline-none text-fg text-sm" />
+                                        </template>
+
+                                        <p x-show="field.help_text" class="text-fg-muted text-xs mt-1" x-text="field.help_text"></p>
                                     </div>
                                 </template>
+                            </div>
 
+                            <div class="border-surface border-t shrink-0" x-show="(process.steps || []).length > 0">
                                 <div class="flex justify-between items-center px-5 py-3">
-                                    <button type="button" x-show="step > 1" @click="step--"
+                                    <button type="button" x-show="step > 0" @click="step = Math.max(step - 1, 0)"
                                         class="inline-flex items-center gap-1.5 bg-surface-2 hover:bg-surface-3 px-4 py-2 rounded-lg font-semibold text-fg-muted hover:text-fg text-sm transition">
                                         Back
                                     </button>
-                                    <span x-show="step === 1"></span>
+                                    <span x-show="step === 0"></span>
+
                                     <button type="button"
-                                        @click="step === 4 ? submitLead($wire) : (step < steps.length ? step++ : null)"
-                                        :disabled="step > steps.length"
-                                        class="inline-flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 px-4 py-2 rounded-lg font-semibold text-white text-sm transition disabled:cursor-not-allowed"
-                                        x-text="step === 4 ? ('Create ' + action.type.charAt(0).toUpperCase() + action.type.slice(1)) : 'Continue'">
+                                        x-show="step < process.steps.length - 1"
+                                        @click="if (canMoveNext()) step++"
+                                        :disabled="!canMoveNext()"
+                                        class="inline-flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 px-4 py-2 rounded-lg font-semibold text-white text-sm transition">
+                                        Continue
+                                    </button>
+
+                                    <button type="button"
+                                        x-show="step >= process.steps.length - 1"
+                                        @click="if (!saving) submitLead($wire)"
+                                        :disabled="saving || !canMoveNext()"
+                                        class="inline-flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 px-4 py-2 rounded-lg font-semibold text-white text-sm transition">
+                                        <span x-show="!saving">Create Lead</span>
+                                        <span x-show="saving">Creating...</span>
                                     </button>
                                 </div>
                             </div>
-
-                        </div>
-                    </div>
+                        </div>{{-- end wire:ignore Alpine form --}}
+                        </div>{{-- end outer @lead-created wrapper --}}
                     @endif
 
                 </div>
@@ -2203,3 +1402,4 @@
 
 
 </div>
+

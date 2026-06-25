@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Lead;
 use App\Models\Store;
 use App\Models\StoreUnit;
+use Illuminate\Support\Facades\Validator;
 
 class ConversationShow extends Component
 {
@@ -16,6 +17,7 @@ class ConversationShow extends Component
   public string $sidebarTab = "details";
   public string $accountView = "overview";
   public ?int $selectedLeadId = null;
+  public array $leadCreateErrors = [];
 
   public function mount(Conversation $conversation): void
   {
@@ -47,31 +49,82 @@ class ConversationShow extends Component
 
   public function createLead(array $data): void
   {
-    $lead = Lead::create([
-      'first_name'           => $data['first_name'] ?? '',
-      'last_name'            => $data['last_name'] ?? '',
-      'email'                => $data['email'] ?: null,
-      'phone'                => $this->conversation->contact_phone,
-      'conversation_id'      => $this->conversation->id,
-      'store_id'             => $data['store_id'] ?: null,
-      'lead_type'            => $data['lead_type'] ?? null,
-      'move_in_date'         => $data['move_in_date'] ?: null,
-      'reason_for_storage'   => $data['reason_for_storage'] ?: null,
-      'types_of_items'       => $data['types_of_items'] ?: null,
-      'duration'             => $data['duration'] ?: null,
-      'property_protection'  => $data['property_protection'] ?: null,
-      'promo'                => ($data['promo'] !== '-') ? ($data['promo'] ?: null) : null,
-      'admin_fee_credit'     => (bool) ($data['admin_fee_credit'] ?? false),
-      'unit_size'            => $data['unit_size'] ?: null,
-      'notify_sms'           => (bool) ($data['notify_sms'] ?? false),
-      'notify_email'         => (bool) ($data['notify_email'] ?? false),
-      'notify_email_address' => $data['notify_email_address'] ?: null,
-      'selected_units'       => $data['selected_units'] ?? [],
-      'status'               => 'NEW',
-      'created_by'           => auth()->id(),
-    ]);
+    $this->leadCreateErrors = [];
 
-    $fullName = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+    $process = $this->resolveLeadProcess($this->conversation->campaign?->lead_process);
+    $fieldMap = [];
+    foreach (($process['steps'] ?? []) as $step) {
+      foreach (($step['fields'] ?? []) as $field) {
+        $key = $field['key'] ?? '';
+        if ($key === '') {
+          continue;
+        }
+        $fieldMap[$key] = $field;
+      }
+    }
+
+    if (count($fieldMap) === 0) {
+      $this->leadCreateErrors = ['No lead process configured for this campaign. Go to Campaign Edit → Lead Process tab to add fields.'];
+      return;
+    }
+
+    $rules = [];
+    foreach ($fieldMap as $key => $field) {
+      $rules[$key] = $this->fieldRules($field);
+    }
+
+    $validator = Validator::make($data, $rules);
+    if ($validator->fails()) {
+      $this->leadCreateErrors = $validator->errors()->all();
+      return;
+    }
+    $validated = $validator->validated();
+
+    $fillable = collect((new Lead())->getFillable())
+      ->reject(fn (string $column) => in_array($column, ['created_by', 'last_actioned_by', 'dynamic_data'], true))
+      ->values()
+      ->all();
+
+    $booleanColumns = ['admin_fee_credit', 'notify_sms', 'notify_email'];
+    $arrayColumns = ['selected_units'];
+
+    $leadPayload = [
+      'conversation_id' => $this->conversation->id,
+      'created_by' => auth()->id(),
+      'last_actioned_by' => auth()->id(),
+      'status' => 'NEW',
+      'dynamic_data' => $this->normalizedDynamicData($validated),
+    ];
+
+    foreach ($validated as $key => $value) {
+      if (!in_array($key, $fillable, true)) {
+        continue;
+      }
+
+      if (in_array($key, $booleanColumns, true)) {
+        $leadPayload[$key] = (bool) $value;
+        continue;
+      }
+
+      if (in_array($key, $arrayColumns, true)) {
+        $leadPayload[$key] = is_array($value) ? $value : [];
+        continue;
+      }
+
+      if (is_string($value)) {
+        $value = trim($value);
+      }
+
+      $leadPayload[$key] = $value === '' ? null : $value;
+    }
+
+    if (empty($leadPayload['phone']) && $this->conversation->contact_phone) {
+      $leadPayload['phone'] = $this->conversation->contact_phone;
+    }
+
+    $lead = Lead::create($leadPayload);
+
+    $fullName = trim(((string) ($leadPayload['first_name'] ?? '')) . ' ' . ((string) ($leadPayload['last_name'] ?? '')));
     if ($fullName !== '') {
       $this->conversation->update(['contact_name' => $fullName]);
       $this->conversation->refresh();
@@ -147,30 +200,8 @@ class ConversationShow extends Component
 
     $notes = $this->conversation->notes()->with("author")->get();
 
-    $stores = Store::with('units')->orderByDesc('featured')->orderBy('name')->get()
-      ->map(fn(Store $s) => [
-        'id'        => $s->id,
-        'featured'  => (bool) $s->featured,
-        'name'      => $s->name,
-        'type'      => $s->type,
-        'occupancy' => (float) $s->occupancy,
-        'address'   => $s->address,
-        'location'  => implode(', ', array_filter([$s->city, $s->state, $s->zip, $s->country])),
-        'distance'  => null,
-        'pricing'   => $s->pricing,
-        'units'     => $s->units->map(fn(StoreUnit $u) => [
-          'id'          => $u->id,
-          'size'        => $u->size,
-          'category'    => $u->category,
-          'available'   => $u->available,
-          'street_rate' => $u->street_rate,
-          'push_rate'   => $u->push_rate,
-          'features'    => $u->features ?? [],
-          'promos'      => $u->promos ?? [],
-        ])->values()->all(),
-      ])
-      ->values()
-      ->all();
+    $leadCreateStores = Store::orderBy('name')->get(['id', 'name']);
+    $leadCreateProcess = $this->resolveLeadProcess($this->conversation->campaign?->lead_process);
 
     $leads = Lead::where('conversation_id', $this->conversation->id)
       ->with('creator', 'store')
@@ -185,10 +216,119 @@ class ConversationShow extends Component
 
     return view("livewire.conversations.conversation-show", [
       "notes"        => $notes,
-      "stores"       => $stores,
+      "stores"       => $leadCreateStores->toArray(),
+      "leadCreateStores" => $leadCreateStores,
+      "leadCreateProcess" => $leadCreateProcess,
       "leads"        => $leads,
       "accountStore" => $accountStore,
       "selectedLead" => $selectedLead,
     ])->layout("components.layouts.app");
+  }
+
+  private function resolveLeadProcess(mixed $process): array
+  {
+    $mode = 'single';
+    if (is_array($process) && in_array(($process['mode'] ?? null), ['single', 'stepper'], true)) {
+      $mode = $process['mode'];
+    }
+
+    $steps = [];
+    if (is_array($process)) {
+      foreach (($process['steps'] ?? []) as $rawStep) {
+        if (!is_array($rawStep)) {
+          continue;
+        }
+
+        $fields = [];
+        foreach (($rawStep['fields'] ?? []) as $rawField) {
+          if (!is_array($rawField)) {
+            continue;
+          }
+
+          $key = strtolower(trim((string) ($rawField['key'] ?? '')));
+          if ($key === '') {
+            continue;
+          }
+
+          $fields[] = [
+            'key' => $key,
+            'label' => trim((string) ($rawField['label'] ?? $key)),
+            'type' => (string) ($rawField['type'] ?? 'text'),
+            'required' => (bool) ($rawField['required'] ?? false),
+            'placeholder' => (string) ($rawField['placeholder'] ?? ''),
+            'help_text' => (string) ($rawField['help_text'] ?? ''),
+            'options' => collect($rawField['options'] ?? [])->map(fn ($v) => trim((string) $v))->filter()->values()->all(),
+          ];
+        }
+
+        if (count($fields) === 0) {
+          continue;
+        }
+
+        $steps[] = [
+          'title' => trim((string) ($rawStep['title'] ?? 'Step')) ?: 'Step',
+          'fields' => $fields,
+        ];
+      }
+    }
+
+    if ($mode === 'single' && count($steps) > 1) {
+      $steps = [array_values($steps)[0]];
+    }
+
+    return [
+      'mode' => $mode,
+      'steps' => array_values($steps),
+    ];
+  }
+
+  private function fieldRules(array $field): array
+  {
+    $rules = [];
+    $type = $field['type'] ?? 'text';
+    $required = (bool) ($field['required'] ?? false);
+
+    $rules[] = $required ? 'required' : 'nullable';
+
+    if (($field['key'] ?? '') === 'store_id') {
+      $rules[] = 'integer';
+      $rules[] = 'exists:stores,id';
+      return $rules;
+    }
+
+    if ($type === 'email') {
+      $rules[] = 'email';
+      $rules[] = 'max:255';
+    } elseif ($type === 'number') {
+      $rules[] = 'numeric';
+    } elseif ($type === 'date') {
+      $rules[] = 'date';
+    } elseif ($type === 'checkbox') {
+      $rules[] = 'boolean';
+    } elseif ($type === 'select') {
+      $options = collect($field['options'] ?? [])->filter()->values()->all();
+      if (count($options) > 0) {
+        $rules[] = 'in:' . implode(',', array_map(fn ($v) => (string) $v, $options));
+      }
+    } else {
+      $rules[] = 'string';
+      $rules[] = 'max:1000';
+    }
+
+    return $rules;
+  }
+
+  private function normalizedDynamicData(array $data): array
+  {
+    $output = [];
+    foreach ($data as $key => $value) {
+      if (is_string($value)) {
+        $value = trim($value);
+      }
+
+      $output[$key] = $value === '' ? null : $value;
+    }
+
+    return $output;
   }
 }

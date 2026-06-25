@@ -7,6 +7,7 @@ use App\Models\Campaign;
 use App\Models\InGroup;
 use App\Models\User;
 use App\Events\CampaignDeleted;
+use Illuminate\Support\Str;
 
 class CampaignEdit extends Component
 {
@@ -42,6 +43,11 @@ class CampaignEdit extends Component
     public string $hold_music_url = '';
     public bool $recording_enabled = false;
     public string $recording_channels = 'both';
+    public string $editor_tab = 'settings';
+
+    // Lead process builder
+    public string $lead_process_mode = 'single';
+    public array $lead_process_steps = [];
 
     public function mount(Campaign $campaign): void
     {
@@ -71,6 +77,10 @@ class CampaignEdit extends Component
         $this->hold_music_url     = $campaign->hold_music_url     ?? '';
         $this->recording_enabled  = (bool) ($campaign->recording_enabled  ?? false);
         $this->recording_channels = $campaign->recording_channels ?? 'both';
+
+        $normalizedLeadProcess = $this->normalizeLeadProcess($campaign->lead_process);
+        $this->lead_process_mode = $normalizedLeadProcess['mode'];
+        $this->lead_process_steps = $normalizedLeadProcess['steps'];
 
         // Load currently assigned in-groups (cast to string so wire:model checkboxes work)
         $this->selectedInGroupIds = $campaign->inGroups()
@@ -107,9 +117,96 @@ class CampaignEdit extends Component
             'hold_music_url'     => ['nullable', 'url', 'max:1000'],
             'recording_enabled'  => ['boolean'],
             'recording_channels' => ['required', 'in:both,inbound,outbound'],
+            'lead_process_mode' => ['required', 'in:single,stepper'],
+            'lead_process_steps' => ['nullable', 'array'],
+            'lead_process_steps.*.title' => ['nullable', 'string', 'max:80'],
+            'lead_process_steps.*.fields' => ['nullable', 'array'],
+            'lead_process_steps.*.fields.*.key' => ['nullable', 'alpha_dash', 'max:50'],
+            'lead_process_steps.*.fields.*.label' => ['nullable', 'string', 'max:80'],
+            'lead_process_steps.*.fields.*.type' => ['nullable', 'in:text,textarea,email,phone,number,date,select,checkbox'],
+            'lead_process_steps.*.fields.*.required' => ['boolean'],
+            'lead_process_steps.*.fields.*.placeholder' => ['nullable', 'string', 'max:150'],
+            'lead_process_steps.*.fields.*.help_text' => ['nullable', 'string', 'max:250'],
+            'lead_process_steps.*.fields.*.options_text' => ['nullable', 'string', 'max:2000'],
             'selectedInGroupIds'   => ['array'],
             'selectedInGroupIds.*' => ['integer', 'exists:in_groups,id'],
         ]);
+
+        $seenFieldKeys = [];
+        $rawSteps = $this->lead_process_mode === 'single'
+            ? array_slice($this->lead_process_steps, 0, 1)
+            : $this->lead_process_steps;
+
+        $steps = [];
+        foreach ($rawSteps as $stepIndex => $step) {
+            $title = trim((string) ($step['title'] ?? ''));
+            $stepFields = [];
+
+            foreach (($step['fields'] ?? []) as $fieldIndex => $field) {
+                $key = strtolower(trim((string) ($field['key'] ?? '')));
+                $label = trim((string) ($field['label'] ?? ''));
+                $type = (string) ($field['type'] ?? 'text');
+
+                if ($key === '' && $label === '') {
+                    continue;
+                }
+
+                if ($key === '' || $label === '') {
+                    $this->addError(
+                        "lead_process_steps.{$stepIndex}.fields.{$fieldIndex}.key",
+                        'Field key and label are required.'
+                    );
+                    continue;
+                }
+
+                if (isset($seenFieldKeys[$key])) {
+                    $this->addError(
+                        "lead_process_steps.{$stepIndex}.fields.{$fieldIndex}.key",
+                        'Field keys must be unique across the full lead process.'
+                    );
+                    continue;
+                }
+
+                $seenFieldKeys[$key] = true;
+
+                $options = [];
+                if ($type === 'select') {
+                    $options = collect(explode("\n", (string) ($field['options_text'] ?? '')))
+                        ->map(fn (string $item) => trim($item))
+                        ->filter()
+                        ->unique()
+                        ->values()
+                        ->all();
+                }
+
+                $stepFields[] = [
+                    'uid' => (string) ($field['uid'] ?? Str::uuid()),
+                    'key' => $key,
+                    'label' => $label,
+                    'type' => $type,
+                    'required' => (bool) ($field['required'] ?? false),
+                    'placeholder' => trim((string) ($field['placeholder'] ?? '')) ?: null,
+                    'help_text' => trim((string) ($field['help_text'] ?? '')) ?: null,
+                    'options' => $options,
+                ];
+            }
+
+            if (count($stepFields) > 0) {
+                $steps[] = [
+                    'title' => $title !== '' ? $title : ('Step ' . (count($steps) + 1)),
+                    'fields' => $stepFields,
+                ];
+            }
+        }
+
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $leadProcess = [
+            'mode' => $this->lead_process_mode,
+            'steps' => $steps,
+        ];
 
         $this->campaign->update([
             'name'         => $this->name,
@@ -135,6 +232,7 @@ class CampaignEdit extends Component
             'hold_music_url'     => $this->hold_music_url ?: null,
             'recording_enabled'  => $this->recording_enabled,
             'recording_channels' => $this->recording_channels,
+            'lead_process'       => count($steps) > 0 ? $leadProcess : null,
         ]);
 
         // Sync in-group assignments via campaign_id FK
@@ -176,5 +274,219 @@ class CampaignEdit extends Component
         return view('livewire.campaign.campaign-edit', [
             'allInGroups' => InGroup::orderBy('name')->get(),
         ])->layout('components.layouts.app');
+    }
+
+    public function addLeadStep(): void
+    {
+        $this->lead_process_steps[] = [
+            'title' => 'Step ' . (count($this->lead_process_steps) + 1),
+            'fields' => [
+                $this->newLeadField(),
+            ],
+        ];
+    }
+
+    public function removeLeadStep(int $stepIndex): void
+    {
+        unset($this->lead_process_steps[$stepIndex]);
+        $this->lead_process_steps = array_values($this->lead_process_steps);
+    }
+
+    public function addLeadField(int $stepIndex): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex])) {
+            return;
+        }
+
+        $this->lead_process_steps[$stepIndex]['fields'][] = $this->newLeadField();
+    }
+
+    public function removeLeadField(int $stepIndex, int $fieldIndex): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
+            return;
+        }
+
+        unset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex]);
+        $this->lead_process_steps[$stepIndex]['fields'] = array_values($this->lead_process_steps[$stepIndex]['fields']);
+    }
+
+    public function moveLeadStepUp(int $stepIndex): void
+    {
+        if ($stepIndex <= 0 || !isset($this->lead_process_steps[$stepIndex])) {
+            return;
+        }
+
+        [$this->lead_process_steps[$stepIndex - 1], $this->lead_process_steps[$stepIndex]] =
+            [$this->lead_process_steps[$stepIndex], $this->lead_process_steps[$stepIndex - 1]];
+        $this->lead_process_steps = array_values($this->lead_process_steps);
+    }
+
+    public function moveLeadStepDown(int $stepIndex): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex + 1])) {
+            return;
+        }
+
+        [$this->lead_process_steps[$stepIndex + 1], $this->lead_process_steps[$stepIndex]] =
+            [$this->lead_process_steps[$stepIndex], $this->lead_process_steps[$stepIndex + 1]];
+        $this->lead_process_steps = array_values($this->lead_process_steps);
+    }
+
+    public function moveLeadFieldUp(int $stepIndex, int $fieldIndex): void
+    {
+        if ($fieldIndex <= 0 || !isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
+            return;
+        }
+
+        [$this->lead_process_steps[$stepIndex]['fields'][$fieldIndex - 1], $this->lead_process_steps[$stepIndex]['fields'][$fieldIndex]] =
+            [$this->lead_process_steps[$stepIndex]['fields'][$fieldIndex], $this->lead_process_steps[$stepIndex]['fields'][$fieldIndex - 1]];
+        $this->lead_process_steps[$stepIndex]['fields'] = array_values($this->lead_process_steps[$stepIndex]['fields']);
+    }
+
+    public function moveLeadFieldDown(int $stepIndex, int $fieldIndex): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex + 1])) {
+            return;
+        }
+
+        [$this->lead_process_steps[$stepIndex]['fields'][$fieldIndex + 1], $this->lead_process_steps[$stepIndex]['fields'][$fieldIndex]] =
+            [$this->lead_process_steps[$stepIndex]['fields'][$fieldIndex], $this->lead_process_steps[$stepIndex]['fields'][$fieldIndex + 1]];
+        $this->lead_process_steps[$stepIndex]['fields'] = array_values($this->lead_process_steps[$stepIndex]['fields']);
+    }
+
+    public function moveLeadStepTo(int $fromIndex, int $toIndex): void
+    {
+        if (!isset($this->lead_process_steps[$fromIndex])) {
+            return;
+        }
+
+        $toIndex = max(0, min($toIndex, count($this->lead_process_steps) - 1));
+        if ($fromIndex === $toIndex) {
+            return;
+        }
+
+        $moved = $this->lead_process_steps[$fromIndex];
+        array_splice($this->lead_process_steps, $fromIndex, 1);
+        array_splice($this->lead_process_steps, $toIndex, 0, [$moved]);
+        $this->lead_process_steps = array_values($this->lead_process_steps);
+    }
+
+    public function moveLeadFieldTo(int $stepIndex, int $fromIndex, int $toIndex): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fromIndex])) {
+            return;
+        }
+
+        $fields = $this->lead_process_steps[$stepIndex]['fields'];
+        $toIndex = max(0, min($toIndex, count($fields) - 1));
+        if ($fromIndex === $toIndex) {
+            return;
+        }
+
+        $moved = $fields[$fromIndex];
+        array_splice($fields, $fromIndex, 1);
+        array_splice($fields, $toIndex, 0, [$moved]);
+
+        $this->lead_process_steps[$stepIndex]['fields'] = array_values($fields);
+    }
+
+    public function moveLeadFieldAcrossSteps(int $fromStepIndex, int $fromIndex, int $toStepIndex, int $toIndex): void
+    {
+        if (!isset($this->lead_process_steps[$fromStepIndex]['fields'][$fromIndex])) {
+            return;
+        }
+
+        if (!isset($this->lead_process_steps[$toStepIndex]['fields'])) {
+            return;
+        }
+
+        $fromFields = $this->lead_process_steps[$fromStepIndex]['fields'];
+        $toFields = $this->lead_process_steps[$toStepIndex]['fields'];
+
+        $moved = $fromFields[$fromIndex];
+        array_splice($fromFields, $fromIndex, 1);
+
+        if (count($fromFields) === 0) {
+            $fromFields[] = $this->newLeadField();
+        }
+
+        $toIndex = max(0, min($toIndex, count($toFields)));
+        array_splice($toFields, $toIndex, 0, [$moved]);
+
+        $this->lead_process_steps[$fromStepIndex]['fields'] = array_values($fromFields);
+        $this->lead_process_steps[$toStepIndex]['fields'] = array_values($toFields);
+    }
+
+    private function normalizeLeadProcess(mixed $process): array
+    {
+        if (!is_array($process)) {
+            return [
+                'mode' => 'single',
+                'steps' => [],
+            ];
+        }
+
+        $mode = in_array(($process['mode'] ?? null), ['single', 'stepper'], true)
+            ? $process['mode']
+            : 'single';
+
+        $steps = [];
+        foreach (($process['steps'] ?? []) as $rawStep) {
+            if (!is_array($rawStep)) {
+                continue;
+            }
+
+            $fields = [];
+            foreach (($rawStep['fields'] ?? []) as $rawField) {
+                if (!is_array($rawField)) {
+                    continue;
+                }
+
+                $optionsText = collect($rawField['options'] ?? [])
+                    ->map(fn ($item) => trim((string) $item))
+                    ->filter()
+                    ->implode("\n");
+
+                $fields[] = [
+                    'uid' => (string) ($rawField['uid'] ?? Str::uuid()),
+                    'key' => strtolower(trim((string) ($rawField['key'] ?? ''))),
+                    'label' => trim((string) ($rawField['label'] ?? '')),
+                    'type' => (string) ($rawField['type'] ?? 'text'),
+                    'required' => (bool) ($rawField['required'] ?? false),
+                    'placeholder' => (string) ($rawField['placeholder'] ?? ''),
+                    'help_text' => (string) ($rawField['help_text'] ?? ''),
+                    'options_text' => $optionsText,
+                ];
+            }
+
+            if (count($fields) === 0) {
+                $fields[] = $this->newLeadField();
+            }
+
+            $steps[] = [
+                'title' => trim((string) ($rawStep['title'] ?? 'Step')) ?: 'Step',
+                'fields' => $fields,
+            ];
+        }
+
+        return [
+            'mode' => $mode,
+            'steps' => $steps,
+        ];
+    }
+
+    private function newLeadField(): array
+    {
+        return [
+            'uid' => (string) Str::uuid(),
+            'key' => '',
+            'label' => '',
+            'type' => 'text',
+            'required' => false,
+            'placeholder' => '',
+            'help_text' => '',
+            'options_text' => '',
+        ];
     }
 }

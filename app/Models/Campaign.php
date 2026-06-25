@@ -18,6 +18,7 @@ class Campaign extends Model
     "tts_completed", "tts_busy", "tts_no_answer", "tts_failed", "tts_canceled",
     "greeting_message", "hold_music_url",
     "recording_enabled", "recording_channels",
+    "lead_process",
   ];
 
   protected $casts = [
@@ -28,6 +29,7 @@ class Campaign extends Model
     "hopper_level"       => "integer",
     "max_calls"          => "integer",
     "recording_enabled"  => "boolean",
+    "lead_process"       => "array",
   ];
 
   public function userGroups()
