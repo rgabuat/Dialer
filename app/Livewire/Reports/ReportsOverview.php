@@ -3,6 +3,7 @@
 namespace App\Livewire\Reports;
 
 use Livewire\Component;
+use App\Models\Campaign;
 use App\Models\Conversation;
 use App\Models\Lead;
 use Carbon\Carbon;
@@ -187,21 +188,38 @@ class ReportsOverview extends Component
 
     private function exportCampaigns($from, $to): array
     {
+        $userGroupId     = auth()->user()->user_group_id;
+        $userCampaignIds = $userGroupId
+            ? Campaign::whereHas('userGroups', fn($q) => $q->where('user_group_id', $userGroupId))->pluck('id')
+            : collect();
+
         $rows = Conversation::whereBetween('started_at', [$from, $to])
+            ->when($userCampaignIds->isNotEmpty(), fn($q) => $q->whereIn('campaign_id', $userCampaignIds))
+            ->when($userCampaignIds->isEmpty(), fn($q) => $q->whereRaw('0=1'))
             ->with('campaign:id,name')
-            ->select('campaign_id', DB::raw('count(*) as total'), DB::raw('round(avg(duration_seconds)) as avg_dur'),
-                DB::raw("sum(case when status='completed' then 1 else 0 end) as completed"))
+            ->select(
+                'campaign_id',
+                DB::raw('count(*) as total'),
+                DB::raw("sum(case when direction='inbound' then 1 else 0 end) as inbound"),
+                DB::raw("sum(case when direction='outbound' then 1 else 0 end) as outbound"),
+                DB::raw("sum(case when status='completed' then 1 else 0 end) as completed"),
+                DB::raw("sum(case when status='abandoned' then 1 else 0 end) as abandoned"),
+                DB::raw('round(avg(duration_seconds)) as avg_dur')
+            )
             ->groupBy('campaign_id')
             ->orderByDesc('total')
             ->get();
 
-        $out = [['Campaign', 'Conversations', 'Completed', 'Completion %', 'Avg Duration (sec)']];
+        $out = [['Campaign', 'Total Calls', 'Inbound', 'Outbound', 'Completed', 'Abandoned', 'Completion %', 'Avg Duration (sec)']];
 
         foreach ($rows as $r) {
             $out[] = [
                 $r->campaign?->name ?? 'No Campaign',
                 $r->total,
+                $r->inbound ?? 0,
+                $r->outbound ?? 0,
                 $r->completed,
+                $r->abandoned ?? 0,
                 $r->total ? round($r->completed / $r->total * 100) : 0,
                 $r->avg_dur ?? 0,
             ];
@@ -247,7 +265,7 @@ class ReportsOverview extends Component
             ->groupBy('status')
             ->get();
 
-        // ── By campaign ───────────────────────────────────────────────────────
+        // ── By campaign (global – used in Overview top-campaigns widget) ─────
         $byCampaign = Conversation::whereBetween('started_at', [$from, $to])
             ->with('campaign:id,name')
             ->select('campaign_id', DB::raw('count(*) as total'), DB::raw('round(avg(duration_seconds)) as avg_dur'),
@@ -256,6 +274,39 @@ class ReportsOverview extends Component
             ->orderByDesc('total')
             ->limit(15)
             ->get();
+
+        // ── Call Volume – user-scoped campaign breakdown ──────────────────────
+        $userGroupId     = auth()->user()->user_group_id;
+        $userCampaignIds = $userGroupId
+            ? Campaign::whereHas('userGroups', fn($q) => $q->where('user_group_id', $userGroupId))->pluck('id')
+            : collect();
+
+        $callVolumeByCampaign = Conversation::whereBetween('started_at', [$from, $to])
+            ->when($userCampaignIds->isNotEmpty(), fn($q) => $q->whereIn('campaign_id', $userCampaignIds))
+            ->when($userCampaignIds->isEmpty(), fn($q) => $q->whereRaw('0=1'))
+            ->with('campaign:id,name,type,dial_mode')
+            ->select(
+                'campaign_id',
+                DB::raw('count(*) as total'),
+                DB::raw("sum(case when direction='inbound' then 1 else 0 end) as inbound"),
+                DB::raw("sum(case when direction='outbound' then 1 else 0 end) as outbound"),
+                DB::raw("sum(case when status='completed' then 1 else 0 end) as completed"),
+                DB::raw("sum(case when status='abandoned' then 1 else 0 end) as abandoned"),
+                DB::raw('round(avg(duration_seconds)) as avg_dur')
+            )
+            ->groupBy('campaign_id')
+            ->orderByDesc('total')
+            ->get();
+
+        $cvTotalCalls  = $callVolumeByCampaign->sum('total');
+        $cvInbound     = $callVolumeByCampaign->sum('inbound');
+        $cvOutbound    = $callVolumeByCampaign->sum('outbound');
+        $cvCompleted   = $callVolumeByCampaign->sum('completed');
+        $cvAbandoned   = $callVolumeByCampaign->sum('abandoned');
+        $cvAvgDur      = $cvTotalCalls > 0
+            ? (int) round($callVolumeByCampaign->sum(fn($r) => ($r->avg_dur ?? 0) * $r->total) / $cvTotalCalls)
+            : 0;
+        $cvMaxTotal    = $callVolumeByCampaign->max('total') ?: 1;
 
         // ── By disposition ────────────────────────────────────────────────────
         $byDisposition = Conversation::whereBetween('started_at', [$from, $to])
@@ -352,7 +403,9 @@ class ReportsOverview extends Component
             'avgDuration', 'totalLeads', 'convertedLeads', 'activeAgents',
             'byChannel', 'byDirection', 'byStatus', 'byCampaign', 'byDisposition', 'byAgent',
             'leadsPerAgent', 'leadsByType', 'leadsByStage', 'leadsByStore', 'leadsByAgent',
-            'dailyVolume', 'maxDailyVolume', 'totalLeadValue', 'convertedLeadValue'
+            'dailyVolume', 'maxDailyVolume', 'totalLeadValue', 'convertedLeadValue',
+            'callVolumeByCampaign', 'cvTotalCalls', 'cvInbound', 'cvOutbound',
+            'cvCompleted', 'cvAbandoned', 'cvAvgDur', 'cvMaxTotal'
         ))->layout('components.layouts.app');
     }
 }
