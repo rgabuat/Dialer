@@ -9,6 +9,8 @@ use App\Models\Lead;
 use App\Models\Store;
 use App\Models\StoreUnit;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ConversationShow extends Component
 {
@@ -118,14 +120,31 @@ class ConversationShow extends Component
       $leadPayload[$key] = $value === '' ? null : $value;
     }
 
+    $resolvedNames = $this->resolveLeadNames($validated);
+    $leadPayload['first_name'] = $resolvedNames['first_name'];
+    $leadPayload['last_name'] = $resolvedNames['last_name'];
+
     if (empty($leadPayload['phone']) && $this->conversation->contact_phone) {
       $leadPayload['phone'] = $this->conversation->contact_phone;
     }
 
-    $lead = Lead::create($leadPayload);
+    try {
+      $lead = Lead::create($leadPayload);
+    } catch (Throwable $e) {
+      Log::error('Conversation lead create failed.', [
+        'conversation_id' => $this->conversation->id,
+        'campaign_id' => $this->conversation->campaign_id,
+        'validated_keys' => array_keys($validated),
+        'payload_keys' => array_keys($leadPayload),
+        'error' => $e->getMessage(),
+      ]);
+
+      $this->leadCreateErrors = ['Unable to create lead right now. Please verify lead process fields (first and last name) and try again.'];
+      return;
+    }
 
     $fullName = trim(((string) ($leadPayload['first_name'] ?? '')) . ' ' . ((string) ($leadPayload['last_name'] ?? '')));
-    if ($fullName !== '') {
+    if ($fullName !== '' && strcasecmp($fullName, 'Unknown Lead') !== 0) {
       $this->conversation->update(['contact_name' => $fullName]);
       $this->conversation->refresh();
     }
@@ -330,5 +349,43 @@ class ConversationShow extends Component
     }
 
     return $output;
+  }
+
+  private function resolveLeadNames(array $validated): array
+  {
+    $firstName = $this->firstNonEmpty($validated, ['first_name', 'firstname', 'first', 'fname', 'given_name']);
+    $lastName = $this->firstNonEmpty($validated, ['last_name', 'lastname', 'last', 'lname', 'family_name', 'surname']);
+
+    $contactName = trim((string) ($this->conversation->contact_name ?? ''));
+    if ($contactName !== '') {
+      $parts = preg_split('/\s+/', $contactName) ?: [];
+      if ($firstName === null && count($parts) > 0) {
+        $firstName = trim((string) ($parts[0] ?? '')) ?: null;
+      }
+      if ($lastName === null && count($parts) > 1) {
+        $lastName = trim((string) implode(' ', array_slice($parts, 1))) ?: null;
+      }
+    }
+
+    return [
+      'first_name' => $firstName ?? 'Unknown',
+      'last_name' => $lastName ?? 'Lead',
+    ];
+  }
+
+  private function firstNonEmpty(array $data, array $keys): ?string
+  {
+    foreach ($keys as $key) {
+      if (!array_key_exists($key, $data)) {
+        continue;
+      }
+
+      $value = trim((string) $data[$key]);
+      if ($value !== '') {
+        return $value;
+      }
+    }
+
+    return null;
   }
 }

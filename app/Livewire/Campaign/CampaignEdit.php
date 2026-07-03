@@ -301,6 +301,28 @@ class CampaignEdit extends Component
         $this->lead_process_steps[$stepIndex]['fields'][] = $this->newLeadField();
     }
 
+    public function addLeadFieldOfType(int $stepIndex, string $type): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex])) {
+            return;
+        }
+
+        $this->lead_process_steps[$stepIndex]['fields'][] = $this->newLeadField($type);
+    }
+
+    public function insertLeadFieldAt(int $stepIndex, int $fieldIndex, string $type): void
+    {
+        if (!isset($this->lead_process_steps[$stepIndex])) {
+            return;
+        }
+
+        $fields = $this->lead_process_steps[$stepIndex]['fields'] ?? [];
+        $fieldIndex = max(0, min($fieldIndex, count($fields)));
+
+        array_splice($fields, $fieldIndex, 0, [$this->newLeadField($type)]);
+        $this->lead_process_steps[$stepIndex]['fields'] = array_values($fields);
+    }
+
     public function removeLeadField(int $stepIndex, int $fieldIndex): void
     {
         if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
@@ -476,13 +498,16 @@ class CampaignEdit extends Component
         ];
     }
 
-    private function newLeadField(): array
+    private function newLeadField(string $type = 'text'): array
     {
+        $allowedTypes = ['text', 'textarea', 'email', 'phone', 'number', 'date', 'select', 'checkbox'];
+        $resolvedType = in_array($type, $allowedTypes, true) ? $type : 'text';
+
         return [
             'uid' => (string) Str::uuid(),
             'key' => '',
             'label' => '',
-            'type' => 'text',
+            'type' => $resolvedType,
             'required' => false,
             'placeholder' => '',
             'help_text' => '',
