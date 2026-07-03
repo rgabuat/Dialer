@@ -4,15 +4,23 @@
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
             <h1 class="font-bold text-fg text-xl">CID Numbers</h1>
-            <p class="mt-0.5 text-zinc-500 text-sm">Manage your Twilio phone numbers as CID (Caller ID) numbers. Import
-                numbers, toggle active/rotation status, and sync webhooks.</p>
+            <p class="mt-0.5 text-zinc-500 text-sm">Import Twilio numbers into your CID pool, then organise them into
+                <a href="{{ route('cid-groups.index') }}" wire:navigate class="text-fuchsia-400 hover:underline font-medium">CID Groups</a>
+                and bind each group to a campaign for exclusive per-campaign rotation.</p>
         </div>
-        <button wire:click="refresh" type="button"
-            class="inline-flex items-center gap-2 bg-surface-2 hover:bg-surface border border-surface px-3 py-2 rounded-lg text-fg text-sm font-medium transition">
-            <x-heroicon-o-arrow-path class="w-4 h-4 text-fg-muted" wire:loading.class="animate-spin"
-                wire:target="refresh" />
-            Refresh
-        </button>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('cid-groups.index') }}" wire:navigate
+                class="inline-flex items-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 px-3 py-2 rounded-lg text-white text-sm font-medium transition">
+                <x-heroicon-o-rectangle-stack class="w-4 h-4" />
+                CID Groups
+            </a>
+            <button wire:click="refresh" type="button"
+                class="inline-flex items-center gap-2 bg-surface-2 hover:bg-surface border border-surface px-3 py-2 rounded-lg text-fg text-sm font-medium transition">
+                <x-heroicon-o-arrow-path class="w-4 h-4 text-fg-muted" wire:loading.class="animate-spin"
+                    wire:target="refresh" />
+                Refresh
+            </button>
+        </div>
     </div>
 
     {{-- Error --}}
@@ -38,8 +46,7 @@
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
             <div>
                 <h2 class="font-bold text-fg text-base">Imported CID Numbers</h2>
-                <p class="text-fg-muted text-xs mt-0.5">Numbers in your CID pool — toggle Active and In Rotation per
-                    number.</p>
+                <p class="text-fg-muted text-xs mt-0.5">Assign numbers to a <a href="{{ route('cid-groups.index') }}" wire:navigate class="text-fuchsia-400 hover:underline">CID Group</a>, then toggle Active and In Rotation per number within that group.</p>
             </div>
         </div>
 
@@ -54,8 +61,9 @@
                             class="border-surface border-b font-semibold text-zinc-500 text-xs uppercase tracking-wider">
                             <th class="px-5 py-3 text-left">Phone Number</th>
                             <th class="px-5 py-3 text-left">Friendly Name</th>
+                            <th class="px-5 py-3 text-left">CID Group</th>
                             <th class="px-5 py-3 text-center">Active</th>
-                            <th class="px-5 py-3 text-center">In Rotation</th>
+                            <th class="px-5 py-3 text-center" title="Participates in the group's round-robin rotation">In Rotation</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,6 +71,19 @@
                             <tr class="hover:bg-hover border-surface border-b transition">
                                 <td class="px-5 py-3 font-mono font-semibold text-fg">{{ $cid->phone_number }}</td>
                                 <td class="px-5 py-3 text-fg-muted text-sm">{{ $cid->friendly_name ?? '—' }}</td>
+
+                                {{-- CID Group --}}
+                                <td class="px-5 py-3">
+                                    @if ($cid->cidGroup)
+                                        <a href="{{ route('cid-group.edit', $cid->cidGroup) }}" wire:navigate
+                                            class="inline-flex items-center gap-1.5 bg-fuchsia-500/10 px-2.5 py-1 rounded text-fuchsia-400 text-xs font-medium hover:bg-fuchsia-500/20 transition">
+                                            <x-heroicon-s-rectangle-stack class="w-3 h-3" />
+                                            {{ $cid->cidGroup->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-fg-muted/50 text-xs italic">Unassigned</span>
+                                    @endif
+                                </td>
 
                                 {{-- Active toggle --}}
                                 <td class="px-5 py-3 text-center">
@@ -75,11 +96,19 @@
 
                                 {{-- In Rotation toggle --}}
                                 <td class="px-5 py-3 text-center">
-                                    <button wire:click="toggleRotation({{ $cid->id }})" type="button"
-                                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none {{ $cid->in_rotation ? 'bg-blue-500' : 'bg-zinc-600' }}">
-                                        <span
-                                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform {{ $cid->in_rotation ? 'translate-x-4' : 'translate-x-1' }}"></span>
-                                    </button>
+                                    @if ($cid->cidGroup)
+                                        <button wire:click="toggleRotation({{ $cid->id }})" type="button"
+                                            title="{{ $cid->in_rotation ? 'Remove from' : 'Include in' }} {{ $cid->cidGroup->name }} rotation"
+                                            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none {{ $cid->in_rotation ? 'bg-blue-500' : 'bg-zinc-600' }}">
+                                            <span
+                                                class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform {{ $cid->in_rotation ? 'translate-x-4' : 'translate-x-1' }}"></span>
+                                        </button>
+                                    @else
+                                        <span title="Assign to a CID group first to enable rotation"
+                                            class="inline-flex items-center justify-center w-9 h-5">
+                                            <span class="w-3 h-3 rounded-full bg-zinc-700 border border-zinc-600" ></span>
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -92,8 +121,11 @@
                         class="inline-block w-4 h-2.5 rounded-full bg-emerald-500"></span> Active — number is available
                     for use</span>
                 <span class="flex items-center gap-1.5"><span
-                        class="inline-block w-4 h-2.5 rounded-full bg-blue-500"></span> In Rotation — included in
-                    campaign CID round-robin pool</span>
+                        class="inline-block w-4 h-2.5 rounded-full bg-blue-500"></span> In Rotation — participates in
+                    the CID group's round-robin pool</span>
+                <span class="flex items-center gap-1.5"><span
+                        class="inline-block w-3 h-3 rounded-full bg-zinc-700 border border-zinc-600"></span> No group — assign to a
+                    <a href="{{ route('cid-groups.index') }}" wire:navigate class="text-fuchsia-400 hover:underline">CID group</a> to enable rotation</span>
             </div>
         @endif
 
@@ -108,11 +140,18 @@
                 <p class="text-fg-muted text-xs mt-0.5">{{ count($numbers) }}
                     number{{ count($numbers) !== 1 ? 's' : '' }} on account — import to add to CID pool</p>
             </div>
-            <a href="{{ route('dids.index') }}" wire:navigate
-                class="inline-flex items-center gap-2 text-fg-muted hover:text-fg text-sm transition">
-                <x-heroicon-o-list-bullet class="w-4 h-4" />
-                View DID List
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('cid-groups.index') }}" wire:navigate
+                    class="inline-flex items-center gap-1.5 text-fuchsia-400 hover:text-fuchsia-300 text-sm font-medium transition">
+                    <x-heroicon-o-rectangle-stack class="w-4 h-4" />
+                    Manage CID Groups
+                </a>
+                <a href="{{ route('dids.index') }}" wire:navigate
+                    class="inline-flex items-center gap-2 text-fg-muted hover:text-fg text-sm transition">
+                    <x-heroicon-o-list-bullet class="w-4 h-4" />
+                    View DID List
+                </a>
+            </div>
         </div>
 
         <div class="overflow-auto">

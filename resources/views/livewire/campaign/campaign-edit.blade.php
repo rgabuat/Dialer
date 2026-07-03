@@ -12,24 +12,18 @@
             <p class="text-fg-muted text-sm mt-0.5">Update campaign and dialer settings.</p>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-            <a href="{{ route('campaign.lists', $campaign) }}" wire:navigate
-                class="inline-flex items-center gap-1.5 bg-surface-2 hover:bg-surface border border-surface px-3 py-2 rounded-lg text-fg text-sm font-medium transition">
-                <x-heroicon-o-queue-list class="w-4 h-4 text-fg-muted" />
-                Call Lists
+            <div class="flex items-center gap-2 flex-wrap">
+            <button type="submit" form="campaign-form"
+                class="inline-flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 px-4 py-2 rounded-lg font-semibold text-white text-sm transition">
+                <span wire:loading.remove wire:target="save"><x-heroicon-o-check class="w-4 h-4" /></span>
+                <span wire:loading wire:target="save"><x-heroicon-o-arrow-path class="w-4 h-4 animate-spin" /></span>
+                <span wire:loading.remove wire:target="save">Save Changes</span>
+                <span wire:loading wire:target="save">Saving…</span>
+            </button>
+            <a href="{{ route('campaigns.index') }}" wire:navigate
+                class="inline-flex items-center px-3 py-2 rounded-lg border border-surface bg-surface-2 hover:bg-surface text-fg-muted hover:text-fg text-sm font-medium transition">
+                Cancel
             </a>
-            <a href="{{ route('campaign.dispositions', $campaign) }}" wire:navigate
-                class="inline-flex items-center gap-1.5 bg-surface-2 hover:bg-surface border border-surface px-3 py-2 rounded-lg text-fg text-sm font-medium transition">
-                <x-heroicon-o-tag class="w-4 h-4 text-fg-muted" />
-                Dispositions
-            </a>
-            @can('campaign.delete')
-                <button wire:click="confirmDelete" type="button"
-                    class="inline-flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3 py-2 rounded-lg text-accent-red text-sm font-medium transition">
-                    <x-heroicon-o-trash class="w-4 h-4" />
-                    Delete
-                </button>
-            @endcan
         </div>
     </div>
 
@@ -42,34 +36,9 @@
         </div>
     @endif
 
-    {{-- ── Delete confirmation ──────────────────────────────────────────── --}}
-    @if ($confirmingDelete)
-        <div
-            class="flex items-center justify-between gap-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-4">
-            <div class="flex items-center gap-2">
-                <x-heroicon-o-exclamation-triangle class="w-4 h-4 text-accent-red shrink-0" />
-                <p class="text-accent-red text-sm">Delete <strong>{{ $campaign->name }}</strong>? This cannot be undone.
-                </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <button wire:click="delete" type="button"
-                    class="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition">
-                    Yes, delete
-                </button>
-                <button wire:click="$set('confirmingDelete', false)" type="button"
-                    class="inline-flex items-center px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface border border-surface text-fg-muted text-sm font-medium transition">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    @endif
-
     {{-- ── Form ─────────────────────────────────────────────────────────── --}}
-    <form wire:submit.prevent="save">
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-            {{-- ── Left: main settings (2/3) ── --}}
-            <div class="xl:col-span-2 space-y-5">
+    <form id="campaign-form" wire:submit.prevent="save">
+        <div class="space-y-5">
 
                 <div class="bg-surface border border-surface rounded-xl p-2">
                     <div class="grid grid-cols-3 gap-2">
@@ -449,112 +418,115 @@
                     </div>
                 @endif
 
-                {{-- Dialer Settings --}}
+                {{-- Settings tab --}}
                 @if ($editor_tab === 'settings')
-                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
-                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/15 shrink-0">
-                            <x-heroicon-s-phone class="w-3.5 h-3.5 text-blue-400" />
-                        </div>
-                        <h2 class="font-semibold text-fg text-sm">Dialer Settings</h2>
-                        <p class="text-fg-muted text-xs ml-auto hidden sm:block">Configure how calls are placed and
-                            handled</p>
-                    </div>
-                    <div class="p-5 space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                <div class="space-y-5">
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Campaign Type</label>
-                                <select wire:model.defer="type"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                {{-- Name / Description / Active --}}
+                <div class="bg-surface border border-surface rounded-xl p-5 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block mb-1 text-fg-muted text-xs font-semibold">Campaign Name <span class="text-accent-red">*</span></label>
+                            <input wire:model.defer="name" type="text" placeholder="e.g. Summer Outbound"
+                                class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                            @error('name') <p class="text-accent-red text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-fg-muted text-xs font-semibold">Description <span class="font-normal">(optional)</span></label>
+                            <input wire:model.defer="description" type="text" placeholder="Short description…"
+                                class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                            @error('description') <p class="text-accent-red text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                                <div class="relative">
+                                    <input type="checkbox" wire:model.defer="is_active" class="sr-only peer">
+                                    <div class="w-9 h-5 rounded-full bg-zinc-600 peer-checked:bg-emerald-500 transition-colors"></div>
+                                    <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                                </div>
+                                <span class="text-fg text-sm font-medium">Active</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Dialer Settings --}}
+                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2.5 px-5 py-3.5 border-b border-surface bg-surface-2">
+                        <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/15 shrink-0">
+                            <x-heroicon-s-phone class="w-3 h-3 text-blue-400" />
+                        </div>
+                        <h2 class="font-semibold text-fg text-sm">Dialer</h2>
+                    </div>
+                    <div class="divide-y divide-surface">
+
+                        {{-- Row 1: Type + Mode --}}
+                        <div class="grid grid-cols-2 gap-px bg-surface">
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Type</label>
+                                <select wire:model.defer="type" class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
                                     <option value="OUTBOUND">Outbound</option>
                                     <option value="INBOUND">Inbound</option>
                                     <option value="BLENDED">Blended</option>
                                 </select>
-                                @error('type')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                                @error('type') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
                             </div>
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Dial Mode</label>
-                                <select wire:model.defer="dial_mode"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Dial Mode</label>
+                                <select wire:model.defer="dial_mode" class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
                                     <option value="MANUAL">Manual</option>
                                     <option value="PREVIEW">Preview</option>
                                     <option value="PROGRESSIVE">Progressive</option>
                                     <option value="PREDICTIVE">Predictive</option>
                                 </select>
-                                @error('dial_mode')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                                @error('dial_mode') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">
-                                    Dial Level
-                                    <span class="font-normal text-fg-muted">(predictive ratio)</span>
-                                </label>
-                                <input wire:model.defer="dial_level" type="number" step="0.1" min="0.1"
-                                    max="10"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                @error('dial_level')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                        {{-- Row 2: Caller ID + Hopper --}}
+                        <div class="grid grid-cols-2 gap-px bg-surface">
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Outbound Caller ID</label>
+                                <input wire:model.defer="caller_id" type="text" placeholder="+1… (blank = default)"
+                                    class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg placeholder:text-fg-muted/40 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                @error('caller_id') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
                             </div>
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Max Simultaneous
-                                    Calls</label>
-                                <input wire:model.defer="max_calls" type="number" min="1" max="100"
-                                    placeholder="Unlimited"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                @error('max_calls')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">Outbound Caller ID</label>
-                                <input wire:model.defer="caller_id" type="text"
-                                    placeholder="+1234567890 (blank = system default)"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                @error('caller_id')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block mb-1.5 font-semibold text-fg text-xs">
-                                    Hopper Level
-                                    <span class="font-normal text-fg-muted">(leads to pre-queue)</span>
-                                </label>
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Hopper Level <span class="font-normal text-fg-muted/60">(leads pre-queued)</span></label>
                                 <input wire:model.defer="hopper_level" type="number" min="1" max="1000"
-                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                @error('hopper_level')
-                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                                    class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                @error('hopper_level') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block mb-1.5 font-semibold text-fg text-xs">
-                                After-Call Work (ACW) Timer
-                                <span class="font-normal text-fg-muted">— seconds, 0 = disabled</span>
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <input wire:model.defer="acw_seconds" type="number" min="0" max="3600"
-                                    class="w-28 bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                <span class="text-fg-muted text-xs">seconds of wrap-up time after each call</span>
+                        {{-- Row 3: Dial Level + Max Calls + ACW --}}
+                        <div class="grid grid-cols-3 gap-px bg-surface">
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Dial Level <span class="font-normal text-fg-muted/60">(ratio)</span></label>
+                                <input wire:model.defer="dial_level" type="number" step="0.1" min="0.1" max="10"
+                                    class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                @error('dial_level') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
                             </div>
-                            @error('acw_seconds')
-                                <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">Max Calls <span class="font-normal text-fg-muted/60">(simultaneous)</span></label>
+                                <input wire:model.defer="max_calls" type="number" min="1" max="100" placeholder="Unlimited"
+                                    class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg placeholder:text-fg-muted/40 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                @error('max_calls') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="bg-surface-2 px-4 py-3 space-y-1.5">
+                                <label class="block text-fg-muted text-xs font-semibold">ACW Timer <span class="font-normal text-fg-muted/60">(seconds)</span></label>
+                                <input wire:model.defer="acw_seconds" type="number" min="0" max="3600"
+                                    class="w-full bg-surface border border-surface rounded-lg px-2.5 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                @error('acw_seconds') <p class="text-accent-red text-xs mt-0.5">{{ $message }}</p> @enderror
+                            </div>
                         </div>
 
                     </div>
                 </div>
+
+                </div>{{-- /left col --}}
+                <div class="space-y-5">{{-- right col --}}
 
                 {{-- ── Inbound Groups ── --}}
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
@@ -604,10 +576,34 @@
                         @enderror
                     </div>
                 </div>
+                {{-- Agent Script --}}
+                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
+                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
+                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-yellow-500/15 shrink-0">
+                            <x-heroicon-s-document-text class="w-3.5 h-3.5 text-accent-yellow" />
+                        </div>
+                        <h2 class="font-semibold text-fg text-sm">Agent Script</h2>
+                        <p class="text-fg-muted text-xs ml-auto hidden sm:block">Shown to agents during active calls</p>
+                    </div>
+                    <div class="p-5">
+                        <textarea wire:model.defer="script" rows="12" placeholder="Enter the script agents will see during calls..."
+                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
+                        @error('script')
+                            <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                </div>{{-- /right col --}}
+                </div>{{-- /settings grid --}}
                 @endif
 
-                {{-- ── CID Rotation ── --}}
+                {{-- Callbacks tab --}}
                 @if ($editor_tab === 'callbacks')
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                <div class="space-y-5">
+
+                {{-- ── CID Rotation ── --}}
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/15 shrink-0">
@@ -619,21 +615,47 @@
                     </div>
                     <div class="p-5 space-y-4">
 
-                        <label class="flex items-center gap-2.5 cursor-pointer w-fit">
-                            <input wire:model.live="cid_rotation" type="checkbox"
-                                class="w-4 h-4 rounded text-emerald-600 border-surface-2 focus:ring-emerald-500 focus:ring-offset-0">
+                        <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                            <div class="relative">
+                                <input wire:model.live="cid_rotation" type="checkbox" class="sr-only peer">
+                                <div class="w-9 h-5 rounded-full bg-zinc-600 peer-checked:bg-emerald-500 transition-colors"></div>
+                                <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                            </div>
                             <span class="text-fg text-sm font-medium">Enable CID Rotation</span>
-                            <span class="text-fg-muted text-xs">(overrides fixed Outbound Caller ID)</span>
+                            <span class="text-fg-muted text-xs">(overrides fixed Caller ID)</span>
                         </label>
 
                         @if ($cid_rotation)
-                            <p class="text-fg-muted text-xs">
-                                When enabled, outbound calls will rotate through all CID numbers marked
-                                <span class="text-emerald-400 font-medium">In Rotation</span> on the
-                                <a href="{{ route('cid-numbers.index') }}" wire:navigate
-                                    class="text-emerald-400 hover:underline font-medium">CID Numbers</a> page.
-                                The fixed Outbound Caller ID above is used as fallback when the pool is empty.
-                            </p>
+                            <div>
+                                <label class="block mb-1.5 font-semibold text-fg text-xs">
+                                    CID Group
+                                    <span class="font-normal text-fg-muted ml-1">— numbers in this group are exclusive to this campaign</span>
+                                </label>
+                                <select wire:model.defer="cid_group_id"
+                                    class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">— No group selected (use fixed Caller ID) —</option>
+                                    @foreach ($allCidGroups as $group)
+                                        @php
+                                            $boundToOther = $group->campaign && $group->campaign->id !== $campaign->id;
+                                        @endphp
+                                        <option value="{{ $group->id }}"
+                                            {{ $boundToOther ? 'disabled' : '' }}
+                                            {{ (int) $cid_group_id === $group->id ? 'selected' : '' }}>
+                                            {{ $group->name }}
+                                            ({{ $group->cidNumbers->count() }} number{{ $group->cidNumbers->count() !== 1 ? 's' : '' }})
+                                            @if ($boundToOther) — bound to {{ $group->campaign->name }} @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('cid_group_id')
+                                    <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-fg-muted/60 text-xs mt-1.5">
+                                    Only active, unbound groups are shown. Manage groups on the
+                                    <a href="{{ route('cid-groups.index') }}" wire:navigate class="text-emerald-400 hover:underline font-medium">CID Groups</a> page.
+                                    The fixed Outbound Caller ID is used as fallback when the group is empty.
+                                </p>
+                            </div>
                         @else
                             <p class="text-fg-muted/60 text-xs">When disabled, the <span class="text-fg">Outbound
                                     Caller ID</span> field above is used for all calls.</p>
@@ -641,33 +663,11 @@
 
                     </div>
                 </div>
-                @endif
 
-                {{-- Agent Script --}}
-                @if ($editor_tab === 'settings')
-                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-                    <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
-                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-yellow-500/15 shrink-0">
-                            <x-heroicon-s-document-text class="w-3.5 h-3.5 text-accent-yellow" />
-                        </div>
-                        <h2 class="font-semibold text-fg text-sm">Agent Script</h2>
-                        <p class="text-fg-muted text-xs ml-auto hidden sm:block">Shown to agents during active calls
-                        </p>
-                    </div>
-                    <div class="p-5">
-                        <textarea wire:model.defer="script" rows="8" placeholder="Enter the script agents will see during calls..."
-                            class="w-full bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg placeholder:text-fg-muted/40 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-fuchsia-500"></textarea>
-                        <p class="text-fg-muted/60 text-xs mt-1.5">Supports plain text. Displayed in a scrollable
-                            Script tab in the conversation view.</p>
-                        @error('script')
-                            <p class="text-accent-red text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-                @endif
+                </div>{{-- /left col --}}
+                <div class="space-y-5">{{-- right col --}}
 
                 {{-- Voice & Recording --}}
-                @if ($editor_tab === 'callbacks')
                 <div class="bg-surface border border-surface rounded-xl overflow-hidden">
                     <div class="flex items-center gap-2.5 px-5 py-4 border-b border-surface bg-surface-2">
                         <div class="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500/15 shrink-0">
@@ -751,159 +751,34 @@
                         </div>
 
                         {{-- Recording --}}
-                        <div class="border-t border-surface pt-4 flex flex-wrap items-center gap-6">
-                            <label class="flex items-center gap-2.5 cursor-pointer">
-                                <input wire:model.live="recording_enabled" type="checkbox"
-                                    class="w-4 h-4 rounded text-fuchsia-600 border-surface-2 focus:ring-fuchsia-500 focus:ring-offset-0">
-                                <span class="text-fg text-sm font-medium">Enable Call Recording</span>
+                        <div class="border-t border-surface pt-4 flex flex-wrap items-center gap-4">
+                            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                                <div class="relative">
+                                    <input wire:model.live="recording_enabled" type="checkbox" class="sr-only peer">
+                                    <div class="w-9 h-5 rounded-full bg-zinc-600 peer-checked:bg-fuchsia-500 transition-colors"></div>
+                                    <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+                                </div>
+                                <span class="text-fg text-sm font-medium">Record Calls</span>
                             </label>
                             @if ($recording_enabled)
-                                <div>
-                                    <select wire:model.defer="recording_channels"
-                                        class="bg-surface-2 border border-surface rounded-lg px-3 py-2 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
-                                        <option value="both">Both channels</option>
-                                        <option value="inbound">Inbound only</option>
-                                        <option value="outbound">Outbound only</option>
-                                    </select>
-                                </div>
+                                <select wire:model.defer="recording_channels"
+                                    class="bg-surface-2 border border-surface rounded-lg px-3 py-1.5 text-fg text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500">
+                                    <option value="both">Both channels</option>
+                                    <option value="inbound">Inbound only</option>
+                                    <option value="outbound">Outbound only</option>
+                                </select>
                             @endif
                         </div>
 
                     </div>
                 </div>
+
+                </div>{{-- /right col --}}
+                </div>{{-- /callbacks grid --}}
                 @endif
 
-                {{-- Actions --}}
-                <div class="flex items-center gap-3">
-                    <button type="submit"
-                        class="inline-flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 px-5 py-2.5 rounded-lg font-semibold text-white text-sm transition">
-                        <span wire:loading.remove wire:target="save">Save Changes</span>
-                        <span wire:loading wire:target="save">Saving…</span>
-                    </button>
-                    <a href="{{ route('campaigns.index') }}" wire:navigate
-                        class="inline-flex items-center px-4 py-2.5 rounded-lg border border-surface bg-surface-2 hover:bg-surface text-fg-muted hover:text-fg text-sm font-medium transition">
-                        Cancel
-                    </a>
-                </div>
 
-            </div>
 
-            {{-- ── Right: sidebar (1/3) ── --}}
-            <div class="space-y-4">
-
-                {{-- Summary card --}}
-                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-                    <div class="px-4 py-3 bg-surface-2 border-b border-surface">
-                        <h3 class="font-semibold text-fg text-sm">Summary</h3>
-                    </div>
-                    <dl class="divide-y divide-surface">
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">ID</dt>
-                            <dd class="font-mono text-fg text-xs">#{{ $campaign->id }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">Type</dt>
-                            <dd>
-                                @php
-                                    $tColor = [
-                                        'OUTBOUND' => 'text-blue-400',
-                                        'INBOUND' => 'text-accent-green',
-                                        'BLENDED' => 'text-fuchsia-400',
-                                    ];
-                                @endphp
-                                <span
-                                    class="font-semibold text-xs {{ $tColor[$campaign->type] ?? 'text-fg-muted' }}">{{ $campaign->type }}</span>
-                            </dd>
-                        </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">Dial Mode</dt>
-                            <dd class="font-mono text-fg text-xs">{{ $campaign->dial_mode }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">Status</dt>
-                            <dd>
-                                @if ($campaign->is_active)
-                                    <span
-                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/15 text-accent-green text-xs font-semibold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-accent-green inline-block"></span>
-                                        Active
-                                    </span>
-                                @else
-                                    <span
-                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-2 text-fg-muted text-xs font-semibold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-fg-muted/40 inline-block"></span>
-                                        Inactive
-                                    </span>
-                                @endif
-                            </dd>
-                        </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">Created</dt>
-                            <dd class="text-fg text-xs">{{ $campaign->created_at->format('j M Y') }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <dt class="text-fg-muted text-xs">Updated</dt>
-                            <dd class="text-fg text-xs">{{ $campaign->updated_at->diffForHumans() }}</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                {{-- Quick links --}}
-                <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-                    <div class="px-4 py-3 bg-surface-2 border-b border-surface">
-                        <h3 class="font-semibold text-fg text-sm">Quick Links</h3>
-                    </div>
-                    <div class="divide-y divide-surface">
-                        <a href="{{ route('campaign.lists', $campaign) }}" wire:navigate
-                            class="flex items-center justify-between px-4 py-3 hover:bg-surface-2 transition group">
-                            <div class="flex items-center gap-2.5">
-                                <x-heroicon-o-queue-list class="w-4 h-4 text-fuchsia-400 shrink-0" />
-                                <span class="text-fg text-sm font-medium">Call Lists</span>
-                            </div>
-                            <x-heroicon-o-chevron-right
-                                class="w-3.5 h-3.5 text-fg-muted/40 group-hover:text-fg-muted transition" />
-                        </a>
-                        <a href="{{ route('campaign.dispositions', $campaign) }}" wire:navigate
-                            class="flex items-center justify-between px-4 py-3 hover:bg-surface-2 transition group">
-                            <div class="flex items-center gap-2.5">
-                                <x-heroicon-o-tag class="w-4 h-4 text-fuchsia-400 shrink-0" />
-                                <span class="text-fg text-sm font-medium">Dispositions</span>
-                            </div>
-                            <x-heroicon-o-chevron-right
-                                class="w-3.5 h-3.5 text-fg-muted/40 group-hover:text-fg-muted transition" />
-                        </a>
-                        <a href="{{ route('conversations.index') }}" wire:navigate
-                            class="flex items-center justify-between px-4 py-3 hover:bg-surface-2 transition group">
-                            <div class="flex items-center gap-2.5">
-                                <x-heroicon-o-chat-bubble-left-right class="w-4 h-4 text-fuchsia-400 shrink-0" />
-                                <span class="text-fg text-sm font-medium">Conversations</span>
-                            </div>
-                            <x-heroicon-o-chevron-right
-                                class="w-3.5 h-3.5 text-fg-muted/40 group-hover:text-fg-muted transition" />
-                        </a>
-                    </div>
-                </div>
-
-                {{-- Dial mode guide --}}
-                <div class="bg-surface border border-surface rounded-xl p-4 space-y-3">
-                    <h3 class="font-semibold text-fg-muted text-xs uppercase tracking-wide">Dial Mode Guide</h3>
-                    <div class="space-y-2">
-                        @foreach ([
-        'MANUAL' => 'Agent enters number manually each call.',
-        'PREVIEW' => 'Agent reviews lead info before dialing.',
-        'PROGRESSIVE' => 'Server dials one lead per available agent.',
-        'PREDICTIVE' => 'Server dials by ratio to maximize connect time.',
-    ] as $mode => $desc)
-                            <div class="flex items-start gap-2">
-                                <span
-                                    class="font-mono bg-surface-2 px-1.5 py-0.5 rounded text-fg text-xs shrink-0">{{ $mode }}</span>
-                                <span class="text-fg-muted text-xs leading-relaxed">{{ $desc }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-            </div>
         </div>
     </form>
 

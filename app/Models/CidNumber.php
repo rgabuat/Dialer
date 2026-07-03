@@ -17,10 +17,16 @@ class CidNumber extends Model
         'friendly_name',
         'is_active',
         'in_rotation',
+        'cid_group_id',
     ];
 
     protected $casts = [
         'is_active'   => 'boolean',
         'in_rotation' => 'boolean',
     ];
+
+    public function cidGroup()
+    {
+        return $this->belongsTo(CidGroup::class);
+    }
 }

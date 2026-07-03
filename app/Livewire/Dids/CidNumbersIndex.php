@@ -137,7 +137,7 @@ class CidNumbersIndex extends Component
     {
         return view('livewire.dids.cid-numbers-index', [
             'ourWebhookBase' => rtrim(config('app.url'), '/') . '/api/call-routing',
-            'importedCids'   => CidNumber::orderBy('phone_number')->get(),
+            'importedCids'   => CidNumber::with('cidGroup')->orderBy('phone_number')->get(),
         ])->layout('components.layouts.app');
     }
 }

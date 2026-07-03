@@ -11,7 +11,7 @@ class Campaign extends Model
 
   protected $fillable = [
     "name", "description", "is_active",
-    "type", "dial_mode", "dial_level", "caller_id", "cid_rotation",
+    "type", "dial_mode", "dial_level", "caller_id", "cid_rotation", "cid_group_id",
     "script", "acw_seconds", "hopper_level", "max_calls",
     // Voice & recording
     "tts_voice", "tts_language",
@@ -24,6 +24,7 @@ class Campaign extends Model
   protected $casts = [
     "is_active"          => "boolean",
     "cid_rotation"       => "boolean",
+    "cid_group_id"       => "integer",
     "dial_level"         => "decimal:2",
     "acw_seconds"        => "integer",
     "hopper_level"       => "integer",
@@ -62,17 +63,23 @@ class Campaign extends Model
     return $this->hasMany(\App\Models\InGroup::class);
   }
 
+  public function cidGroup()
+  {
+    return $this->belongsTo(\App\Models\CidGroup::class);
+  }
+
   /**
    * Pick the next CID model for this campaign using round-robin from the global CID rotation pool.
    * Returns a CidNumber model, or null if rotation is disabled / pool is empty.
    */
   public function nextCidModel(): ?\App\Models\CidNumber
   {
-    if (!$this->cid_rotation) {
+    if (!$this->cid_rotation || !$this->cid_group_id) {
         return null;
     }
 
-    $pool = \App\Models\CidNumber::where('is_active', true)
+    $pool = \App\Models\CidNumber::where('cid_group_id', $this->cid_group_id)
+        ->where('is_active', true)
         ->where('in_rotation', true)
         ->orderBy('phone_number')
         ->get();

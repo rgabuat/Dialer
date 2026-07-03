@@ -16,6 +16,8 @@ use App\Livewire\Campaign\CampaignSelect;
 use App\Livewire\Campaign\CampaignsIndex;
 use App\Livewire\Conversations\ConversationShow;
 use App\Livewire\Conversations\ConversationsIndex;
+use App\Livewire\Dids\CidGroupEdit;
+use App\Livewire\Dids\CidGroupsIndex;
 use App\Livewire\Dids\CidNumbersIndex;
 use App\Livewire\Dids\DidCreate;
 use App\Livewire\Dids\DidEdit;
@@ -224,6 +226,8 @@ Route::middleware(['auth'])->group(function () {
         // CID Numbers
         Route::middleware('permission:page.cid_numbers')->group(function () {
             Route::get('/cid-numbers', CidNumbersIndex::class)->name('cid-numbers.index');
+            Route::get('/cid-groups', CidGroupsIndex::class)->name('cid-groups.index');
+            Route::get('/cid-group/{cidGroup}/edit', CidGroupEdit::class)->name('cid-group.edit');
         });
 
         // IVR Menus

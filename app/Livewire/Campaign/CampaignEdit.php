@@ -29,6 +29,8 @@ class CampaignEdit extends Component
     /** @var array<int, string> IDs of in-groups currently assigned to this campaign */
     public array $selectedInGroupIds = [];
 
+    public ?int $cid_group_id = null;
+
     public bool $confirmingDelete = false;
 
     // Voice & recording
@@ -59,7 +61,8 @@ class CampaignEdit extends Component
         $this->dial_mode    = $campaign->dial_mode ?? 'MANUAL';
         $this->dial_level   = (string) ($campaign->dial_level ?? '1.00');
         $this->caller_id    = $campaign->caller_id ?? '';
-        $this->cid_rotation = (bool) ($campaign->cid_rotation ?? false);
+        $this->cid_rotation  = (bool) ($campaign->cid_rotation ?? false);
+        $this->cid_group_id  = $campaign->cid_group_id ? (int) $campaign->cid_group_id : null;
         $this->script       = $campaign->script ?? '';
         $this->acw_seconds  = (int) ($campaign->acw_seconds ?? 0);
         $this->hopper_level = (int) ($campaign->hopper_level ?? 50);
@@ -100,7 +103,8 @@ class CampaignEdit extends Component
             'dial_mode'    => ['required', 'in:MANUAL,PREVIEW,PROGRESSIVE,PREDICTIVE'],
             'dial_level'   => ['numeric', 'min:0.1', 'max:10'],
             'caller_id'    => ['nullable', 'string', 'max:50'],
-            'cid_rotation' => ['boolean'],
+            'cid_rotation'  => ['boolean'],
+            'cid_group_id'  => ['nullable', 'integer', 'exists:cid_groups,id'],
             'script'       => ['nullable', 'string'],
             'acw_seconds'  => ['integer', 'min:0', 'max:3600'],
             'hopper_level' => ['integer', 'min:1', 'max:1000'],
@@ -216,7 +220,8 @@ class CampaignEdit extends Component
             'dial_mode'    => $this->dial_mode,
             'dial_level'   => $this->dial_level,
             'caller_id'    => $this->caller_id ?: null,
-            'cid_rotation' => $this->cid_rotation,
+            'cid_rotation'  => $this->cid_rotation,
+            'cid_group_id'  => $this->cid_group_id,
             'script'       => $this->script ?: null,
             'acw_seconds'  => $this->acw_seconds,
             'hopper_level' => $this->hopper_level,
@@ -273,6 +278,10 @@ class CampaignEdit extends Component
     {
         return view('livewire.campaign.campaign-edit', [
             'allInGroups' => InGroup::orderBy('name')->get(),
+            'allCidGroups' => \App\Models\CidGroup::with('campaign:id,name')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
         ])->layout('components.layouts.app');
     }
 

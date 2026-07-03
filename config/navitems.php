@@ -211,6 +211,8 @@ return [
       "dids",
       "did",
       "cid-numbers",
+      "cid-groups",
+      "cid-group",
       "ivr-menus",
       "ivr-menu",
     ],
@@ -221,6 +223,12 @@ return [
         "label" => "CID Numbers",
         "route" => "cid-numbers.index",
         "segment" => "cid-numbers",
+        "permission" => "page.cid_numbers",
+      ],
+      [
+        "label" => "CID Groups",
+        "route" => "cid-groups.index",
+        "segment" => "cid-groups",
         "permission" => "page.cid_numbers",
       ],
       [
