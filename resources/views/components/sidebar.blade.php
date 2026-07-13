@@ -1,5 +1,6 @@
 @php
     $allItems = config('navitems');
+    $allItems = array_filter($allItems, fn($i) => empty($i['hidden']));
     $mainItems = array_filter($allItems, fn($i) => empty($i['bottom']));
     $bottomItems = array_filter($allItems, fn($i) => !empty($i['bottom']));
 
@@ -40,8 +41,9 @@
             foreach ($children as $child) {
                 $cp = $child['permission'] ?? null;
                 $cr = $child['role'] ?? null;
-                $canViewChild = (!$cp || (auth()->check() && auth()->user()->can($cp)))
-                    && (!$cr || (auth()->check() && auth()->user()->hasRole($cr)));
+                $canViewChild =
+                    (!$cp || (auth()->check() && auth()->user()->can($cp))) &&
+                    (!$cr || (auth()->check() && auth()->user()->hasRole($cr)));
                 if ($canViewChild && !empty($child['route']) && Route::has($child['route'])) {
                     return route($child['route']);
                 }

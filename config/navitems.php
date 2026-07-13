@@ -23,6 +23,7 @@ return [
   [
     "label" => "Campaign",
     "icon" => "heroicon-o-megaphone",
+    "hidden" => true,
     "segments" => [
       "campaigns",
       "campaign",
@@ -205,6 +206,7 @@ return [
   [
     "label" => "Inbound",
     "icon" => "heroicon-o-phone-arrow-down-left",
+    "hidden" => true,
     "segments" => [
       "in-groups",
       "in-group",

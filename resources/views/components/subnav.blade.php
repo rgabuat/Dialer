@@ -1,5 +1,5 @@
 @php
-    $navItems = config('navitems');
+    $navItems = array_filter(config('navitems'), fn($i) => empty($i['hidden']));
     $currentSegment = request()->segment(1);
 
     // Find the active parent item
