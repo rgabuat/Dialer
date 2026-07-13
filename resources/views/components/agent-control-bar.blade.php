@@ -181,6 +181,20 @@
                             </svg>
                         </button>
 
+                        {{-- Whisper / consult --}}
+                        <button @click="openWhisper" title="Whisper to another agent"
+                            :disabled="hasConsultCall"
+                            :class="hasConsultCall
+                                ? 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                                : 'bg-surface-2 hover:bg-hover text-fg-muted border-surface'"
+                            class="inline-flex justify-center items-center border rounded-md w-7 h-7 text-xs transition-all duration-150 disabled:opacity-100">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 12.76c0 1.6 1.123 2.994 2.693 3.343l2.291.509a1.125 1.125 0 0 1 .814.652l1.01 2.246a1.125 1.125 0 0 0 1.936.204l1.286-1.715a1.125 1.125 0 0 1 1.11-.42l2.5.5a3.375 3.375 0 0 0 3.981-3.31V7.5a3.375 3.375 0 0 0-3.981-3.31l-2.5.5a1.125 1.125 0 0 1-1.11-.42L10.994 2.555a1.125 1.125 0 0 0-1.936.204l-1.01 2.246a1.125 1.125 0 0 1-.814.652l-2.291.509A3.375 3.375 0 0 0 2.25 9.74v3.02Z" />
+                            </svg>
+                        </button>
+
                         {{-- Hang Up --}}
                         <button @click="hangUp"
                             class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-500 shadow-sm px-3 py-1.5 rounded-md font-semibold text-white text-xs transition-all duration-150">
@@ -317,6 +331,7 @@
 @persist('transfer-modal')
     <div x-data="{
         open: false,
+        mode: 'transfer',
         tab: 'number',
         destination: '',
         agents: [],
@@ -327,7 +342,9 @@
                 this.agents = await r.json();
             } catch { this.agents = []; }
         }
-    }" x-on:open-transfer.window="open = true; destination = ''; tab = 'number'; loadAgents()"
+    }"
+        x-on:open-transfer.window="open = true; mode = 'transfer'; destination = ''; tab = 'number'; loadAgents()"
+        x-on:open-whisper.window="open = true; mode = 'whisper'; destination = ''; tab = 'agent'; loadAgents()"
         x-show="open" x-cloak x-trap.noscroll="open" @keydown.escape.window="open = false"
         class="z-50 fixed inset-0 flex justify-center items-center bg-black/70 px-4">
 
@@ -342,11 +359,13 @@
                     <span class="inline-flex justify-center items-center bg-indigo-500/15 rounded-full w-7 h-7">
                         <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
+                            <path x-show="mode === 'transfer'" stroke-linecap="round" stroke-linejoin="round"
                                 d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                            <path x-show="mode === 'whisper'" stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 12.76c0 1.6 1.123 2.994 2.693 3.343l2.291.509a1.125 1.125 0 0 1 .814.652l1.01 2.246a1.125 1.125 0 0 0 1.936.204l1.286-1.715a1.125 1.125 0 0 1 1.11-.42l2.5.5a3.375 3.375 0 0 0 3.981-3.31V7.5a3.375 3.375 0 0 0-3.981-3.31l-2.5.5a1.125 1.125 0 0 1-1.11-.42L10.994 2.555a1.125 1.125 0 0 0-1.936.204l-1.01 2.246a1.125 1.125 0 0 1-.814.652l-2.291.509A3.375 3.375 0 0 0 2.25 9.74v3.02Z" />
                         </svg>
                     </span>
-                    <h2 class="font-semibold text-fg text-sm">Transfer Call</h2>
+                    <h2 class="font-semibold text-fg text-sm" x-text="mode === 'whisper' ? 'Whisper Consult' : 'Transfer Call'"></h2>
                 </div>
                 <button @click="open = false"
                     class="flex justify-center items-center hover:bg-surface-2 rounded-md w-7 h-7 text-fg-muted hover:text-fg transition">
@@ -357,7 +376,7 @@
             </div>
 
             {{-- Tabs --}}
-            <div class="flex border-surface border-b text-sm">
+            <div x-show="mode === 'transfer'" class="flex border-surface border-b text-sm">
                 <button @click="tab='number'"
                     :class="tab === 'number' ? 'border-b-2 border-indigo-500 text-fg font-semibold' :
                         'text-fg-muted hover:text-fg'"
@@ -378,14 +397,14 @@
 
             {{-- Agent tab --}}
             <div x-show="tab==='agent'" class="px-5 py-4">
-                <p class="mb-3 text-fg-muted text-xs">Select an online agent to transfer this call to.</p>
+                <p class="mb-3 text-fg-muted text-xs" x-text="mode === 'whisper' ? 'Select an agent for a private consult while the client stays on hold.' : 'Select an online agent to transfer this call to.'"></p>
                 <div class="space-y-1 max-h-52 overflow-y-auto">
                     <template x-if="agents.length === 0">
                         <p class="py-3 text-fg-muted text-xs text-center">No agents currently on Phones status.</p>
                     </template>
                     <template x-for="agent in agents" :key="agent.id">
                         <button
-                            @click="destination = agent.identity; $dispatch('do-transfer', agent.identity); open = false"
+                            @click="destination = agent.identity; $dispatch(mode === 'whisper' ? 'do-whisper' : 'do-transfer', agent.identity); open = false"
                             class="flex items-center gap-3 bg-surface-2 hover:bg-hover px-3 py-2.5 rounded-lg w-full text-fg text-sm transition">
                             <span
                                 class="inline-flex justify-center items-center bg-indigo-500/20 rounded-full w-7 h-7 font-bold text-indigo-400 text-xs shrink-0"
@@ -403,7 +422,7 @@
                     class="flex-1 bg-surface-2 hover:bg-hover py-2.5 rounded-xl font-medium text-fg-muted text-sm transition">
                     Cancel
                 </button>
-                <button x-show="tab==='number'"
+                <button x-show="mode === 'transfer' && tab==='number'"
                     @click="if(destination){ $dispatch('do-transfer', destination); open = false; }"
                     :disabled="!destination"
                     :class="destination ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm' :
@@ -414,6 +433,18 @@
                             d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                     </svg>
                     Transfer
+                </button>
+                <button x-show="mode === 'whisper'"
+                    @click="if(destination){ $dispatch('do-whisper', destination); open = false; }"
+                    :disabled="!destination"
+                    :class="destination ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-sm' :
+                        'bg-surface-2 text-fg-muted opacity-50 cursor-not-allowed'"
+                    class="inline-flex flex-1 justify-center items-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 12.76c0 1.6 1.123 2.994 2.693 3.343l2.291.509a1.125 1.125 0 0 1 .814.652l1.01 2.246a1.125 1.125 0 0 0 1.936.204l1.286-1.715a1.125 1.125 0 0 1 1.11-.42l2.5.5a3.375 3.375 0 0 0 3.981-3.31V7.5a3.375 3.375 0 0 0-3.981-3.31l-2.5.5a1.125 1.125 0 0 1-1.11-.42L10.994 2.555a1.125 1.125 0 0 0-1.936.204l-1.01 2.246a1.125 1.125 0 0 1-.814.652l-2.291.509A3.375 3.375 0 0 0 2.25 9.74v3.02Z" />
+                    </svg>
+                    Start Whisper
                 </button>
             </div>
         </div>
@@ -429,9 +460,12 @@
         // Guard-checks ensure these are never reset when the script is re-evaluated.
         if (!('_twilioDevice' in window)) window._twilioDevice = null;
         if (!('_twilioActiveCall' in window)) window._twilioActiveCall = null;
+        if (!('_twilioConsultCall' in window)) window._twilioConsultCall = null;
         if (!('_twilioIncomingCall' in window)) window._twilioIncomingCall = null;
         if (!('_twilioCallStartedAt' in window)) window._twilioCallStartedAt = null;
         if (!('_twilioIdentity' in window)) window._twilioIdentity = null;
+        if (!('_twilioHeldCallSid' in window)) window._twilioHeldCallSid = null;
+        if (!('_twilioAutoAcceptNextIncoming' in window)) window._twilioAutoAcceptNextIncoming = false;
 
         function agentPhone() {
             return {
@@ -447,6 +481,8 @@
                 _callTimer: null,
                 isMuted: false,
                 isOnHold: false,
+                hasConsultCall: false,
+                _holdingForConsult: false,
                 canAcceptCalls: @json((bool) ($authStatusType?->handles_inbound ?? false)),
                 canMakeOutbound: @json((bool) ($authStatusType?->handles_outbound ?? false)),
 
@@ -458,6 +494,10 @@
                 init() {
                     // Restore identity so outbound calls work after navigation
                     if (window._twilioIdentity) this.identity = window._twilioIdentity;
+                    if (window._twilioHeldCallSid) {
+                        this.isOnHold = true;
+                        this.callStatus = 'Customer on hold';
+                    }
 
                     if (window._twilioDevice) {
                         this.deviceReady = (window._twilioDevice.state === 'registered');
@@ -473,6 +513,13 @@
                         // Ensure the call-ended handler points to this Alpine instance
                         window._twilioActiveCall.on('disconnect', () => this._onCallEnded());
                         window._twilioActiveCall.on('cancel', () => this._onCallEnded());
+                    }
+                    if (window._twilioConsultCall) {
+                        this.hasConsultCall = true;
+                        this.callStatus = 'Private consult';
+                        window._twilioConsultCall.on('disconnect', () => this._onConsultEnded());
+                        window._twilioConsultCall.on('cancel', () => this._onConsultEnded());
+                        window._twilioConsultCall.on('reject', () => this._onConsultEnded());
                     }
                     if (window._twilioIncomingCall) {
                         this.hasIncomingCall = true;
@@ -539,6 +586,10 @@
                         window._twilioActiveCall = null;
                         window._twilioCallStartedAt = null;
                     }
+                    if (window._twilioConsultCall) {
+                        window._twilioConsultCall.disconnect();
+                        window._twilioConsultCall = null;
+                    }
                     if (window._twilioDevice) {
                         try {
                             window._twilioDevice.destroy();
@@ -549,6 +600,11 @@
                     this.initializing = false;
                     this.hasActiveCall = false;
                     this.hasIncomingCall = false;
+                    this.hasConsultCall = false;
+                    this.isOnHold = false;
+                    this._holdingForConsult = false;
+                    window._twilioHeldCallSid = null;
+                    window._twilioAutoAcceptNextIncoming = false;
                     this._stopTimer();
                 },
 
@@ -572,6 +628,13 @@
                     });
 
                     window._twilioDevice.on('incoming', call => {
+                        if (window._twilioAutoAcceptNextIncoming) {
+                            window._twilioAutoAcceptNextIncoming = false;
+                            window._twilioIncomingCall = call;
+                            this.acceptIncoming();
+                            return;
+                        }
+
                         window._twilioIncomingCall = call;
                         this.hasIncomingCall = true;
                         this.incomingCallerNumber = call.parameters.From || '';
@@ -603,6 +666,7 @@
                     window._twilioIncomingCall.accept();
                     window._twilioActiveCall = window._twilioIncomingCall;
                     window._twilioIncomingCall = null;
+                    window._twilioHeldCallSid = null;
                     this.hasIncomingCall = false;
                     this.hasActiveCall = true;
                     this.isMuted = false;
@@ -710,11 +774,32 @@
                     window.addEventListener('do-transfer', e => this.transferCall(e.detail), {
                         once: true
                     });
+                    window.addEventListener('do-whisper', e => this.startWhisper(e.detail), {
+                        once: true
+                    });
+                },
+
+                attachConsultCallEvents(call) {
+                    call.on('accept', () => {
+                        this.hasConsultCall = true;
+                        this.callStatus = 'Private consult';
+                    });
+                    call.on('disconnect', () => this._onConsultEnded());
+                    call.on('cancel', () => this._onConsultEnded());
+                    call.on('reject', () => this._onConsultEnded());
                 },
 
                 // Central teardown called by disconnect / cancel / reject events.
                 _onCallEnded() {
                     window._twilioActiveCall = null;
+                    if (this._holdingForConsult || window._twilioHeldCallSid) {
+                        this._holdingForConsult = false;
+                        this.hasActiveCall = false;
+                        this.isMuted = false;
+                        this.isOnHold = true;
+                        this.callStatus = this.hasConsultCall ? 'Private consult' : 'Customer on hold';
+                        return;
+                    }
                     window._twilioCallStartedAt = null; // clear start time only on actual call end
                     this.hasActiveCall = false;
                     this.isMuted = false;
@@ -727,6 +812,25 @@
 
                 // ── mute ────────────────────────────────────────────────
 
+                async _onConsultEnded() {
+                    window._twilioConsultCall = null;
+                    this.hasConsultCall = false;
+
+                    if (window._twilioHeldCallSid) {
+                        try {
+                            await this.resumeHeldCustomer();
+                            this.callStatus = 'Reconnecting...';
+                        } catch (e) {
+                            console.error('Resume after whisper failed', e);
+                            this.callStatus = 'Customer on hold';
+                            window.Toast.show('Consult ended, but the client could not be resumed automatically.', 'warning');
+                        }
+                        return;
+                    }
+
+                    this.callStatus = this.hasActiveCall ? 'In call' : 'Connecting...';
+                },
+
                 toggleMute() {
                     if (!window._twilioActiveCall) return;
                     this.isMuted = !this.isMuted;
@@ -737,8 +841,7 @@
                 // ── hold ────────────────────────────────────────────────
 
                 async toggleHold() {
-                    if (!window._twilioActiveCall) return;
-                    const callSid = window._twilioActiveCall.parameters?.CallSid;
+                    const callSid = window._twilioHeldCallSid || window._twilioActiveCall?.parameters?.CallSid;
                     if (!callSid) {
                         window.Toast.show('Call SID not available yet.', 'warning');
                         return;
@@ -757,23 +860,12 @@
                                 }),
                                 credentials: 'same-origin',
                             });
+                            window._twilioHeldCallSid = callSid;
                             this.isOnHold = true;
                             this.callStatus = 'On hold';
                         } else {
-                            await fetch('{{ route('twilio.resumeCall') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ??
-                                        ''
-                                },
-                                body: JSON.stringify({
-                                    call_sid: callSid
-                                }),
-                                credentials: 'same-origin',
-                            });
-                            this.isOnHold = false;
-                            this.callStatus = 'In call';
+                            await this.resumeHeldCustomer();
+                            this.callStatus = 'Reconnecting...';
                         }
                     } catch (e) {
                         console.error('Hold/Resume failed', e);
@@ -783,8 +875,113 @@
 
                 // ── transfer ────────────────────────────────────────────
 
+                async resumeHeldCustomer() {
+                    const callSid = window._twilioHeldCallSid || window._twilioActiveCall?.parameters?.CallSid;
+                    if (!callSid) {
+                        throw new Error('Held call SID not available.');
+                    }
+
+                    window._twilioAutoAcceptNextIncoming = true;
+                    await fetch('{{ route('twilio.resumeCall') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
+                        },
+                        body: JSON.stringify({
+                            call_sid: callSid,
+                            agent_identity: this.identity
+                        }),
+                        credentials: 'same-origin',
+                    });
+                    this.isOnHold = false;
+                },
+
                 openTransfer() {
                     window.dispatchEvent(new CustomEvent('open-transfer'));
+                },
+
+                openWhisper() {
+                    if (this.hasConsultCall) {
+                        window.Toast.show('A whisper consult is already active.', 'warning');
+                        return;
+                    }
+                    const callSid = window._twilioHeldCallSid || window._twilioActiveCall?.parameters?.CallSid;
+                    if (!callSid) {
+                        window.Toast.show('An active client call is required first.', 'warning');
+                        return;
+                    }
+                    window.dispatchEvent(new CustomEvent('open-whisper'));
+                },
+
+                async startWhisper(destination) {
+                    if (!destination) return;
+                    if (!window._twilioDevice) {
+                        window.Toast.show('Calling device is not ready yet.', 'warning');
+                        return;
+                    }
+                    if (destination === this.identity) {
+                        window.Toast.show('Select another agent for the consult.', 'warning');
+                        return;
+                    }
+                    if (this.hasConsultCall) {
+                        window.Toast.show('A whisper consult is already active.', 'warning');
+                        return;
+                    }
+
+                    const liveCallSid = window._twilioActiveCall?.parameters?.CallSid;
+                    const heldCallSid = window._twilioHeldCallSid;
+                    const customerCallSid = heldCallSid || liveCallSid;
+
+                    if (!customerCallSid) {
+                        window.Toast.show('An active client call is required first.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        if (!heldCallSid) {
+                            this._holdingForConsult = true;
+                            await fetch('{{ route('twilio.holdCall') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
+                                },
+                                body: JSON.stringify({
+                                    call_sid: customerCallSid
+                                }),
+                                credentials: 'same-origin',
+                            });
+                            window._twilioHeldCallSid = customerCallSid;
+                            this.isOnHold = true;
+                            this.callStatus = 'Customer on hold';
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                        }
+
+                        const consultCall = await window._twilioDevice.connect({
+                            params: {
+                                To: destination,
+                                agent: this.identity,
+                                whisper_consult: '1',
+                                consult_call_sid: customerCallSid,
+                                From: '{{ config('services.twilio.caller_id') }}',
+                            }
+                        });
+                        window._twilioConsultCall = consultCall;
+                        this.hasConsultCall = true;
+                        this.callStatus = 'Consulting...';
+                        this.attachConsultCallEvents(consultCall);
+                    } catch (e) {
+                        console.error('Whisper consult failed', e);
+                        if (window._twilioHeldCallSid && !this.hasConsultCall) {
+                            try {
+                                await this.resumeHeldCustomer();
+                            } catch (resumeError) {
+                                console.error('Resume after whisper failure failed', resumeError);
+                            }
+                        }
+                        window.Toast.show('Whisper consult failed. The client was resumed if possible.', 'error');
+                    }
                 },
 
                 async transferCall(destination) {
@@ -821,6 +1018,10 @@
                 // ── hang up ─────────────────────────────────────────────
 
                 hangUp() {
+                    if (window._twilioConsultCall) {
+                        window._twilioConsultCall.disconnect();
+                        return;
+                    }
                     if (window._twilioActiveCall) {
                         window._twilioActiveCall.disconnect();
                         window._twilioActiveCall = null;
@@ -828,6 +1029,7 @@
                         this.hasActiveCall = false;
                         this.isMuted = false;
                         this.isOnHold = false;
+                        window._twilioHeldCallSid = null;
                         this._stopTimer();
                     }
                 },

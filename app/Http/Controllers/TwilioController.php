@@ -682,12 +682,34 @@ class TwilioController extends Controller
 
     public function resumeCall(Request $request)
     {
-        $request->validate(['call_sid' => 'required|string|max:64']);
+        $request->validate([
+            'call_sid' => 'required|string|max:64',
+            'agent_identity' => 'nullable|string|max:64',
+        ]);
 
         $client = $this->twilioClient();
-        $client->calls($request->call_sid)->update([
-            'url' => route('twilio.handleCallRouting'),
+        $agentIdentity = (string) ($request->input('agent_identity') ?: ('user_'.auth()->id()));
+        $callbackUrl = rtrim(config('app.url'), '/').'/api/call/complete';
+        $voice = new VoiceResponse;
+
+        if (! preg_match('/^user_\d+$/', $agentIdentity)) {
+            return response()->json([
+                'message' => 'Invalid agent identity.',
+            ], 422);
+        }
+
+        $dial = $voice->dial('', [
+            'callerId' => config('services.twilio.caller_id'),
+            'timeout' => 30,
+            'action' => $callbackUrl,
             'method' => 'POST',
+            'statusCallback' => $callbackUrl,
+            'statusCallbackEvent' => 'completed',
+        ]);
+        $dial->client($agentIdentity);
+
+        $client->calls($request->call_sid)->update([
+            'twiml' => $voice->__toString(),
         ]);
 
         return response()->json(['success' => true]);
@@ -768,7 +790,9 @@ class TwilioController extends Controller
                     'name' => trim($s->user->first_name.' '.$s->user->last_name),
                     'identity' => 'user_'.$s->user_id,
                 ]
-            );
+            )
+            ->filter(fn ($agent) => $agent['id'] !== auth()->id())
+            ->values();
 
         return response()->json($agents);
     }
@@ -1062,6 +1086,7 @@ class TwilioController extends Controller
         string $callbackUrl,
         VoiceResponse $voice
     ): \Illuminate\Http\Response {
+        $isWhisperConsult = request()->boolean('whisper_consult');
         $userId = null;
         if (
             $agentParam &&
@@ -1096,35 +1121,38 @@ class TwilioController extends Controller
             'campaign_id' => $campaign?->id,
             'cid_number_id' => $cidModel?->id,
             'caller_id' => $callerId,
+            'is_whisper_consult' => $isWhisperConsult,
         ]);
 
-        Conversation::create([
-            'call_sid' => $callSid,
-            'channel' => 'voice',
-            'direction' => 'outbound',
-            'status' => 'in_progress',
-            'contact_phone' => $to,
-            'campaign_id' => $campaign?->id,
-            'cid_number_id' => $cidModel?->id,
-            'assigned_to' => $userId,
-            'started_at' => now(),
-        ]);
-
-        ActivityLogger::info(
-            'call',
-            'cid_rotation',
-            'Outbound CID selected: '.$callerId,
-            auth()->user(),
-            $campaign,
-            [
-                'cid' => $callerId,
-                'cid_id' => $cidModel?->id,
-                'rotation_on' => (bool) $campaign?->cid_rotation,
-                'to' => $to,
+        if (! $isWhisperConsult) {
+            Conversation::create([
                 'call_sid' => $callSid,
-                'source' => 'browser_dial',
-            ]
-        );
+                'channel' => 'voice',
+                'direction' => 'outbound',
+                'status' => 'in_progress',
+                'contact_phone' => $to,
+                'campaign_id' => $campaign?->id,
+                'cid_number_id' => $cidModel?->id,
+                'assigned_to' => $userId,
+                'started_at' => now(),
+            ]);
+
+            ActivityLogger::info(
+                'call',
+                'cid_rotation',
+                'Outbound CID selected: '.$callerId,
+                auth()->user(),
+                $campaign,
+                [
+                    'cid' => $callerId,
+                    'cid_id' => $cidModel?->id,
+                    'rotation_on' => (bool) $campaign?->cid_rotation,
+                    'to' => $to,
+                    'call_sid' => $callSid,
+                    'source' => 'browser_dial',
+                ]
+            );
+        }
 
         $dial = $voice->dial('', [
             'callerId' => $callerId,
