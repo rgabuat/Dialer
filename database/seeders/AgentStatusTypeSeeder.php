@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\AgentStatusType;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class AgentStatusTypeSeeder extends Seeder
 {
@@ -14,7 +13,7 @@ class AgentStatusTypeSeeder extends Seeder
     public function run(): void
     {
         //
-        AgentStatusType::insert([
+        $types = [
             [
                 'name' => 'Phones',
                 'slug' => 'phones',
@@ -22,6 +21,8 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => true,
                 'is_productive' => true,
                 'is_break' => false,
+                'handles_inbound' => true,
+                'handles_outbound' => true,
             ],
             [
                 'name' => 'Outbound',
@@ -30,6 +31,8 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => true,
                 'is_productive' => true,
                 'is_break' => false,
+                'handles_inbound' => false,
+                'handles_outbound' => true,
             ],
             [
                 'name' => 'Break',
@@ -38,6 +41,8 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => false,
                 'is_productive' => false,
                 'is_break' => true,
+                'handles_inbound' => false,
+                'handles_outbound' => false,
             ],
             [
                 'name' => 'Lunch',
@@ -46,6 +51,8 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => false,
                 'is_productive' => false,
                 'is_break' => true,
+                'handles_inbound' => false,
+                'handles_outbound' => false,
             ],
             [
                 'name' => 'Other',
@@ -54,6 +61,8 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => false,
                 'is_productive' => false,
                 'is_break' => false,
+                'handles_inbound' => false,
+                'handles_outbound' => false,
             ],
             [
                 'name' => 'Offline',
@@ -62,7 +71,16 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_available' => false,
                 'is_productive' => false,
                 'is_break' => false,
+                'handles_inbound' => false,
+                'handles_outbound' => false,
             ],
-        ]);
+        ];
+
+        foreach ($types as $type) {
+            AgentStatusType::updateOrCreate(
+                ['slug' => $type['slug']],
+                $type
+            );
+        }
     }
 }

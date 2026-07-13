@@ -15,7 +15,7 @@
     init() {
         // Listen for status changes from StatusSwitcher
         window.addEventListener('agent-status-changed', (e) => {
-            const d = e.detail || (e.detail?.[0] ?? {});
+            const d = Array.isArray(e.detail) ? (e.detail[0] ?? {}) : (e.detail ?? {});
             this.statusHandlesOutbound = d.handles_outbound ?? false;
             $wire.call('handleStatusChange', d);
         });
