@@ -269,5 +269,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Lead template management
         Route::get('/lead-templates', [\App\Http\Controllers\Admin\AdminLeadTemplateController::class, 'index'])->name('lead-templates.index');
         Route::delete('/lead-templates/{leadTemplate}', [\App\Http\Controllers\Admin\AdminLeadTemplateController::class, 'destroy'])->name('lead-templates.destroy');
+
+        // CID group management
+        Route::get('/cid-groups', [\App\Http\Controllers\Admin\AdminCidGroupController::class, 'index'])->name('cid-groups.index');
+        Route::delete('/cid-groups/{cidGroup}', [\App\Http\Controllers\Admin\AdminCidGroupController::class, 'destroy'])->name('cid-groups.destroy');
+
+        // CID numbers manager (Twilio sync + local pool)
+        Route::get('/cid-numbers', \App\Livewire\Admin\CidNumbersManager::class)->name('cid-numbers.index');
+
+        // Inbound group management
+        Route::get('/in-groups', [\App\Http\Controllers\Admin\AdminInGroupController::class, 'index'])->name('in-groups.index');
+        Route::delete('/in-groups/{inGroup}', [\App\Http\Controllers\Admin\AdminInGroupController::class, 'destroy'])->name('in-groups.destroy');
     });
 });
