@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Panel — csrpro' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 
 <body class="bg-base min-h-screen antialiased">
@@ -81,19 +82,16 @@
         </div>
     </aside>
 
-    {{-- ── Main content ── --}}
+    {{-- ── Main ── --}}
     <div class="pl-56 flex flex-col min-h-screen">
-
-        {{-- Topbar --}}
         <header
             class="sticky top-0 z-30 flex items-center justify-between h-14 px-6 bg-surface border-b border-surface">
-            <h1 class="font-semibold text-fg text-sm">{{ $heading ?? 'Dashboard' }}</h1>
+            <h1 class="font-semibold text-fg text-sm">{{ $heading ?? 'Admin' }}</h1>
             <span class="text-xs text-fg-muted">Super Admin</span>
         </header>
 
-        {{-- Page --}}
         <main class="flex-1 p-6">
-            @yield('content')
+            {{ $slot }}
         </main>
     </div>
 

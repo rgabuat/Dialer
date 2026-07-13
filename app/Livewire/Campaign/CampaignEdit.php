@@ -2,28 +2,40 @@
 
 namespace App\Livewire\Campaign;
 
-use Livewire\Component;
+use App\Events\CampaignDeleted;
 use App\Models\Campaign;
+use App\Models\CidGroup;
 use App\Models\InGroup;
 use App\Models\User;
-use App\Events\CampaignDeleted;
 use Illuminate\Support\Str;
+use Livewire\Component;
 
 class CampaignEdit extends Component
 {
     public Campaign $campaign;
 
     public string $name = '';
+
     public string $description = '';
+
     public bool $is_active = true;
+
     public string $type = 'OUTBOUND';
+
     public string $dial_mode = 'MANUAL';
+
     public string $dial_level = '1.00';
+
     public string $caller_id = '';
+
     public bool $cid_rotation = false;
+
     public string $script = '';
+
     public int $acw_seconds = 0;
+
     public int $hopper_level = 50;
+
     public ?int $max_calls = null;
 
     /** @var array<int, string> IDs of in-groups currently assigned to this campaign */
@@ -35,50 +47,62 @@ class CampaignEdit extends Component
 
     // Voice & recording
     public string $tts_voice = 'alice';
+
     public string $tts_language = 'en-US';
+
     public string $tts_completed = 'Thank you for calling. Goodbye.';
+
     public string $tts_busy = 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
+
     public string $tts_no_answer = 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
+
     public string $tts_failed = 'We are sorry, we encountered an issue. Please call back later. Goodbye.';
+
     public string $tts_canceled = 'The call was ended. Thank you. Goodbye.';
+
     public string $greeting_message = '';
+
     public string $hold_music_url = '';
+
     public bool $recording_enabled = false;
+
     public string $recording_channels = 'both';
+
     public string $editor_tab = 'settings';
 
     // Lead process builder
     public string $lead_process_mode = 'single';
+
     public array $lead_process_steps = [];
 
     public function mount(Campaign $campaign): void
     {
-        $this->campaign     = $campaign;
-        $this->name         = $campaign->name;
-        $this->description  = $campaign->description ?? '';
-        $this->is_active    = $campaign->is_active;
-        $this->type         = $campaign->type ?? 'OUTBOUND';
-        $this->dial_mode    = $campaign->dial_mode ?? 'MANUAL';
-        $this->dial_level   = (string) ($campaign->dial_level ?? '1.00');
-        $this->caller_id    = $campaign->caller_id ?? '';
-        $this->cid_rotation  = (bool) ($campaign->cid_rotation ?? false);
-        $this->cid_group_id  = $campaign->cid_group_id ? (int) $campaign->cid_group_id : null;
-        $this->script       = $campaign->script ?? '';
-        $this->acw_seconds  = (int) ($campaign->acw_seconds ?? 0);
+        $this->campaign = $campaign;
+        $this->name = $campaign->name;
+        $this->description = $campaign->description ?? '';
+        $this->is_active = $campaign->is_active;
+        $this->type = $campaign->type ?? 'OUTBOUND';
+        $this->dial_mode = $campaign->dial_mode ?? 'MANUAL';
+        $this->dial_level = (string) ($campaign->dial_level ?? '1.00');
+        $this->caller_id = $campaign->caller_id ?? '';
+        $this->cid_rotation = (bool) ($campaign->cid_rotation ?? false);
+        $this->cid_group_id = $campaign->cid_group_id ? (int) $campaign->cid_group_id : null;
+        $this->script = $campaign->script ?? '';
+        $this->acw_seconds = (int) ($campaign->acw_seconds ?? 0);
         $this->hopper_level = (int) ($campaign->hopper_level ?? 50);
-        $this->max_calls    = $campaign->max_calls ? (int) $campaign->max_calls : null;
+        $this->max_calls = $campaign->max_calls ? (int) $campaign->max_calls : null;
 
         // Voice & recording
-        $this->tts_voice          = $campaign->tts_voice          ?? 'alice';
-        $this->tts_language       = $campaign->tts_language       ?? 'en-US';
-        $this->tts_completed      = $campaign->tts_completed      ?? 'Thank you for calling. Goodbye.';
-        $this->tts_busy           = $campaign->tts_busy           ?? 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
-        $this->tts_no_answer      = $campaign->tts_no_answer      ?? 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
-        $this->tts_failed         = $campaign->tts_failed         ?? 'We are sorry, we encountered an issue. Please call back later. Goodbye.';
-        $this->tts_canceled       = $campaign->tts_canceled       ?? 'The call was ended. Thank you. Goodbye.';
-        $this->greeting_message   = $campaign->greeting_message   ?? '';
-        $this->hold_music_url     = $campaign->hold_music_url     ?? '';
-        $this->recording_enabled  = (bool) ($campaign->recording_enabled  ?? false);
+        $this->tts_voice = $campaign->tts_voice ?? 'alice';
+        $this->tts_language = $campaign->tts_language ?? 'en-US';
+        $this->tts_completed = $campaign->tts_completed ?? 'Thank you for calling. Goodbye.';
+        $this->tts_busy = $campaign->tts_busy ?? 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
+        $this->tts_no_answer = $campaign->tts_no_answer ?? 'We are sorry, no agents are currently available. Please call back later. Goodbye.';
+        $this->tts_failed = $campaign->tts_failed ?? 'We are sorry, we encountered an issue. Please call back later. Goodbye.';
+        $this->tts_canceled = $campaign->tts_canceled ?? 'The call was ended. Thank you. Goodbye.';
+        $this->greeting_message = $campaign->greeting_message ?? '';
+        $this->hold_music_url = $campaign->hold_music_url ?? '';
+        $this->recording_enabled = (bool) ($campaign->recording_enabled ?? false);
         $this->recording_channels = $campaign->recording_channels ?? 'both';
 
         $normalizedLeadProcess = $this->normalizeLeadProcess($campaign->lead_process);
@@ -96,30 +120,30 @@ class CampaignEdit extends Component
     public function save(): void
     {
         $this->validate([
-            'name'         => ['required', 'string', 'max:255'],
-            'description'  => ['nullable', 'string'],
-            'is_active'    => ['boolean'],
-            'type'         => ['required', 'in:OUTBOUND,INBOUND,BLENDED'],
-            'dial_mode'    => ['required', 'in:MANUAL,PREVIEW,PROGRESSIVE,PREDICTIVE'],
-            'dial_level'   => ['numeric', 'min:0.1', 'max:10'],
-            'caller_id'    => ['nullable', 'string', 'max:50'],
-            'cid_rotation'  => ['boolean'],
-            'cid_group_id'  => ['nullable', 'integer', 'exists:cid_groups,id'],
-            'script'       => ['nullable', 'string'],
-            'acw_seconds'  => ['integer', 'min:0', 'max:3600'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+            'type' => ['required', 'in:OUTBOUND,INBOUND,BLENDED'],
+            'dial_mode' => ['required', 'in:MANUAL,PREVIEW,PROGRESSIVE,PREDICTIVE'],
+            'dial_level' => ['numeric', 'min:0.1', 'max:10'],
+            'caller_id' => ['nullable', 'string', 'max:50'],
+            'cid_rotation' => ['boolean'],
+            'cid_group_id' => ['nullable', 'integer', 'exists:cid_groups,id'],
+            'script' => ['nullable', 'string'],
+            'acw_seconds' => ['integer', 'min:0', 'max:3600'],
             'hopper_level' => ['integer', 'min:1', 'max:1000'],
-            'max_calls'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'max_calls' => ['nullable', 'integer', 'min:1', 'max:100'],
             // Voice
-            'tts_voice'          => ['required', 'in:alice,man,woman'],
-            'tts_language'       => ['required', 'string', 'max:20'],
-            'tts_completed'      => ['required', 'string', 'max:500'],
-            'tts_busy'           => ['required', 'string', 'max:500'],
-            'tts_no_answer'      => ['required', 'string', 'max:500'],
-            'tts_failed'         => ['required', 'string', 'max:500'],
-            'tts_canceled'       => ['required', 'string', 'max:500'],
-            'greeting_message'   => ['nullable', 'string', 'max:500'],
-            'hold_music_url'     => ['nullable', 'url', 'max:1000'],
-            'recording_enabled'  => ['boolean'],
+            'tts_voice' => ['required', 'in:alice,man,woman'],
+            'tts_language' => ['required', 'string', 'max:20'],
+            'tts_completed' => ['required', 'string', 'max:500'],
+            'tts_busy' => ['required', 'string', 'max:500'],
+            'tts_no_answer' => ['required', 'string', 'max:500'],
+            'tts_failed' => ['required', 'string', 'max:500'],
+            'tts_canceled' => ['required', 'string', 'max:500'],
+            'greeting_message' => ['nullable', 'string', 'max:500'],
+            'hold_music_url' => ['nullable', 'url', 'max:1000'],
+            'recording_enabled' => ['boolean'],
             'recording_channels' => ['required', 'in:both,inbound,outbound'],
             'lead_process_mode' => ['required', 'in:single,stepper'],
             'lead_process_steps' => ['nullable', 'array'],
@@ -132,7 +156,7 @@ class CampaignEdit extends Component
             'lead_process_steps.*.fields.*.placeholder' => ['nullable', 'string', 'max:150'],
             'lead_process_steps.*.fields.*.help_text' => ['nullable', 'string', 'max:250'],
             'lead_process_steps.*.fields.*.options_text' => ['nullable', 'string', 'max:2000'],
-            'selectedInGroupIds'   => ['array'],
+            'selectedInGroupIds' => ['array'],
             'selectedInGroupIds.*' => ['integer', 'exists:in_groups,id'],
         ]);
 
@@ -160,6 +184,7 @@ class CampaignEdit extends Component
                         "lead_process_steps.{$stepIndex}.fields.{$fieldIndex}.key",
                         'Field key and label are required.'
                     );
+
                     continue;
                 }
 
@@ -168,6 +193,7 @@ class CampaignEdit extends Component
                         "lead_process_steps.{$stepIndex}.fields.{$fieldIndex}.key",
                         'Field keys must be unique across the full lead process.'
                     );
+
                     continue;
                 }
 
@@ -197,7 +223,7 @@ class CampaignEdit extends Component
 
             if (count($stepFields) > 0) {
                 $steps[] = [
-                    'title' => $title !== '' ? $title : ('Step ' . (count($steps) + 1)),
+                    'title' => $title !== '' ? $title : ('Step '.(count($steps) + 1)),
                     'fields' => $stepFields,
                 ];
             }
@@ -213,31 +239,31 @@ class CampaignEdit extends Component
         ];
 
         $this->campaign->update([
-            'name'         => $this->name,
-            'description'  => $this->description ?: null,
-            'is_active'    => $this->is_active,
-            'type'         => $this->type,
-            'dial_mode'    => $this->dial_mode,
-            'dial_level'   => $this->dial_level,
-            'caller_id'    => $this->caller_id ?: null,
-            'cid_rotation'  => $this->cid_rotation,
-            'cid_group_id'  => $this->cid_group_id,
-            'script'       => $this->script ?: null,
-            'acw_seconds'  => $this->acw_seconds,
+            'name' => $this->name,
+            'description' => $this->description ?: null,
+            'is_active' => $this->is_active,
+            'type' => $this->type,
+            'dial_mode' => $this->dial_mode,
+            'dial_level' => $this->dial_level,
+            'caller_id' => $this->caller_id ?: null,
+            'cid_rotation' => $this->cid_rotation,
+            'cid_group_id' => $this->cid_group_id,
+            'script' => $this->script ?: null,
+            'acw_seconds' => $this->acw_seconds,
             'hopper_level' => $this->hopper_level,
-            'max_calls'    => $this->max_calls,
-            'tts_voice'          => $this->tts_voice,
-            'tts_language'       => $this->tts_language,
-            'tts_completed'      => $this->tts_completed,
-            'tts_busy'           => $this->tts_busy,
-            'tts_no_answer'      => $this->tts_no_answer,
-            'tts_failed'         => $this->tts_failed,
-            'tts_canceled'       => $this->tts_canceled,
-            'greeting_message'   => $this->greeting_message ?: null,
-            'hold_music_url'     => $this->hold_music_url ?: null,
-            'recording_enabled'  => $this->recording_enabled,
+            'max_calls' => $this->max_calls,
+            'tts_voice' => $this->tts_voice,
+            'tts_language' => $this->tts_language,
+            'tts_completed' => $this->tts_completed,
+            'tts_busy' => $this->tts_busy,
+            'tts_no_answer' => $this->tts_no_answer,
+            'tts_failed' => $this->tts_failed,
+            'tts_canceled' => $this->tts_canceled,
+            'greeting_message' => $this->greeting_message ?: null,
+            'hold_music_url' => $this->hold_music_url ?: null,
+            'recording_enabled' => $this->recording_enabled,
             'recording_channels' => $this->recording_channels,
-            'lead_process'       => count($steps) > 0 ? $leadProcess : null,
+            'lead_process' => count($steps) > 0 ? $leadProcess : null,
         ]);
 
         // Sync in-group assignments via campaign_id FK
@@ -262,7 +288,7 @@ class CampaignEdit extends Component
 
         // Collect all users in the campaign's user groups before deleting
         $groupIds = $this->campaign->userGroups()->pluck('id');
-        $userIds  = User::whereIn('user_group_id', $groupIds)->pluck('id');
+        $userIds = User::whereIn('user_group_id', $groupIds)->pluck('id');
 
         $this->campaign->delete();
 
@@ -278,7 +304,7 @@ class CampaignEdit extends Component
     {
         return view('livewire.campaign.campaign-edit', [
             'allInGroups' => InGroup::orderBy('name')->get(),
-            'allCidGroups' => \App\Models\CidGroup::with('campaign:id,name')
+            'allCidGroups' => CidGroup::with('campaign:id,name')
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
@@ -288,7 +314,7 @@ class CampaignEdit extends Component
     public function addLeadStep(): void
     {
         $this->lead_process_steps[] = [
-            'title' => 'Step ' . (count($this->lead_process_steps) + 1),
+            'title' => 'Step '.(count($this->lead_process_steps) + 1),
             'fields' => [
                 $this->newLeadField(),
             ],
@@ -303,7 +329,7 @@ class CampaignEdit extends Component
 
     public function addLeadField(int $stepIndex): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex])) {
+        if (! isset($this->lead_process_steps[$stepIndex])) {
             return;
         }
 
@@ -312,7 +338,7 @@ class CampaignEdit extends Component
 
     public function addLeadFieldOfType(int $stepIndex, string $type): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex])) {
+        if (! isset($this->lead_process_steps[$stepIndex])) {
             return;
         }
 
@@ -321,7 +347,7 @@ class CampaignEdit extends Component
 
     public function insertLeadFieldAt(int $stepIndex, int $fieldIndex, string $type): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex])) {
+        if (! isset($this->lead_process_steps[$stepIndex])) {
             return;
         }
 
@@ -334,7 +360,7 @@ class CampaignEdit extends Component
 
     public function removeLeadField(int $stepIndex, int $fieldIndex): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
+        if (! isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
             return;
         }
 
@@ -344,7 +370,7 @@ class CampaignEdit extends Component
 
     public function moveLeadStepUp(int $stepIndex): void
     {
-        if ($stepIndex <= 0 || !isset($this->lead_process_steps[$stepIndex])) {
+        if ($stepIndex <= 0 || ! isset($this->lead_process_steps[$stepIndex])) {
             return;
         }
 
@@ -355,7 +381,7 @@ class CampaignEdit extends Component
 
     public function moveLeadStepDown(int $stepIndex): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex + 1])) {
+        if (! isset($this->lead_process_steps[$stepIndex + 1])) {
             return;
         }
 
@@ -366,7 +392,7 @@ class CampaignEdit extends Component
 
     public function moveLeadFieldUp(int $stepIndex, int $fieldIndex): void
     {
-        if ($fieldIndex <= 0 || !isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
+        if ($fieldIndex <= 0 || ! isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex])) {
             return;
         }
 
@@ -377,7 +403,7 @@ class CampaignEdit extends Component
 
     public function moveLeadFieldDown(int $stepIndex, int $fieldIndex): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex + 1])) {
+        if (! isset($this->lead_process_steps[$stepIndex]['fields'][$fieldIndex + 1])) {
             return;
         }
 
@@ -388,7 +414,7 @@ class CampaignEdit extends Component
 
     public function moveLeadStepTo(int $fromIndex, int $toIndex): void
     {
-        if (!isset($this->lead_process_steps[$fromIndex])) {
+        if (! isset($this->lead_process_steps[$fromIndex])) {
             return;
         }
 
@@ -405,7 +431,7 @@ class CampaignEdit extends Component
 
     public function moveLeadFieldTo(int $stepIndex, int $fromIndex, int $toIndex): void
     {
-        if (!isset($this->lead_process_steps[$stepIndex]['fields'][$fromIndex])) {
+        if (! isset($this->lead_process_steps[$stepIndex]['fields'][$fromIndex])) {
             return;
         }
 
@@ -424,11 +450,11 @@ class CampaignEdit extends Component
 
     public function moveLeadFieldAcrossSteps(int $fromStepIndex, int $fromIndex, int $toStepIndex, int $toIndex): void
     {
-        if (!isset($this->lead_process_steps[$fromStepIndex]['fields'][$fromIndex])) {
+        if (! isset($this->lead_process_steps[$fromStepIndex]['fields'][$fromIndex])) {
             return;
         }
 
-        if (!isset($this->lead_process_steps[$toStepIndex]['fields'])) {
+        if (! isset($this->lead_process_steps[$toStepIndex]['fields'])) {
             return;
         }
 
@@ -451,7 +477,7 @@ class CampaignEdit extends Component
 
     private function normalizeLeadProcess(mixed $process): array
     {
-        if (!is_array($process)) {
+        if (! is_array($process)) {
             return [
                 'mode' => 'single',
                 'steps' => [],
@@ -464,13 +490,13 @@ class CampaignEdit extends Component
 
         $steps = [];
         foreach (($process['steps'] ?? []) as $rawStep) {
-            if (!is_array($rawStep)) {
+            if (! is_array($rawStep)) {
                 continue;
             }
 
             $fields = [];
             foreach (($rawStep['fields'] ?? []) as $rawField) {
-                if (!is_array($rawField)) {
+                if (! is_array($rawField)) {
                     continue;
                 }
 

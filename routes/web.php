@@ -260,5 +260,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/logout', [\App\Http\Controllers\Admin\AdminAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Campaign management
+        Route::get('/campaigns/create', \App\Livewire\Admin\AdminCampaignCreate::class)->name('campaigns.create');
+        Route::resource('campaigns', \App\Http\Controllers\Admin\AdminCampaignController::class)
+            ->except(['show', 'create']);
     });
 });

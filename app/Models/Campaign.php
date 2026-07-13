@@ -9,6 +9,12 @@ class Campaign extends Model
 {
   use HasFactory;
 
+  // ── Enum options (single source of truth) ─────────────────────────────────
+  const TYPES           = ['OUTBOUND', 'INBOUND', 'BLENDED'];
+  const DIAL_MODES      = ['MANUAL', 'PREVIEW', 'PROGRESSIVE', 'PREDICTIVE'];
+  const TTS_VOICES      = ['alice', 'man', 'woman'];
+  const REC_CHANNELS    = ['both', 'inbound', 'outbound'];
+
   protected $fillable = [
     "name", "description", "is_active",
     "type", "dial_mode", "dial_level", "caller_id", "cid_rotation", "cid_group_id",
