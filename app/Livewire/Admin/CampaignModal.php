@@ -58,7 +58,8 @@ class CampaignModal extends Component
     public bool   $recording_enabled  = false;
     public string $recording_channels = 'both';
 
-    // ── Event listeners ──────────────────────────────────────────────────────
+    // ── Step 5: Modules ─────────────────────────────────────────────────────
+    public array  $modules = [];
 
     #[On('open-create')]
     public function openCreate(): void
@@ -71,8 +72,14 @@ class CampaignModal extends Component
             'tts_voice', 'tts_language', 'greeting_message', 'hold_music_url',
             'tts_completed', 'tts_busy', 'tts_no_answer', 'tts_failed', 'tts_canceled',
             'recording_enabled', 'recording_channels',
+            'modules',
         ]);
         $this->resetErrorBag();
+
+        // Set module defaults from Campaign::MODULES
+        $this->modules = collect(Campaign::MODULES)
+            ->map(fn ($m) => $m['default'])
+            ->toArray();
 
         $this->is_active          = true;
         $this->dial_mode          = 'MANUAL';
@@ -138,6 +145,12 @@ class CampaignModal extends Component
         $this->recording_enabled  = (bool) ($campaign->recording_enabled ?? false);
         $this->recording_channels = $campaign->recording_channels ?? 'both';
 
+        // Load modules — merge saved values with defaults for any new modules
+        $saved = $campaign->modules ?? [];
+        $this->modules = collect(Campaign::MODULES)
+            ->mapWithKeys(fn ($m, $key) => [$key => (bool) ($saved[$key] ?? $m['default'])])
+            ->toArray();
+
         $this->resetErrorBag();
         $this->mode = 'edit';
         $this->step = 1;
@@ -157,7 +170,7 @@ class CampaignModal extends Component
             $this->validateOnly('name', ['name' => 'required|string|max:255']);
             if ($this->getErrorBag()->has('name')) return;
         }
-        if ($this->step < 4) $this->step++;
+        if ($this->step < 5) $this->step++;
     }
 
     public function prevStep(): void
@@ -167,7 +180,7 @@ class CampaignModal extends Component
 
     public function goToStep(int $s): void
     {
-        if ($s >= 1 && $s <= 4) $this->step = $s;
+        if ($s >= 1 && $s <= 5) $this->step = $s;
     }
 
     // ── Save ─────────────────────────────────────────────────────────────────
@@ -244,6 +257,7 @@ class CampaignModal extends Component
             'tts_canceled'       => $this->tts_canceled,
             'recording_enabled'  => $this->recording_enabled,
             'recording_channels' => $this->recording_channels,
+            'modules'            => $this->modules,
         ];
 
         if ($this->mode === 'create') {

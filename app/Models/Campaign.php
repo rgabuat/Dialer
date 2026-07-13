@@ -15,6 +15,18 @@ class Campaign extends Model
   const TTS_VOICES      = ['alice', 'man', 'woman'];
   const REC_CHANNELS    = ['both', 'inbound', 'outbound'];
 
+  // ── Available modules (key => default enabled) ───────────────────────────
+  const MODULES = [
+      'call_lists'    => ['label' => 'Call Lists',           'desc' => 'Upload and manage outbound call lists.',          'default' => true],
+      'dispositions'  => ['label' => 'Dispositions',         'desc' => 'Track call outcomes with disposition codes.',      'default' => true],
+      'callbacks'     => ['label' => 'Callback Scheduling',  'desc' => 'Allow agents to schedule follow-up callbacks.',    'default' => true],
+      'lead_capture'  => ['label' => 'Lead Capture Form',    'desc' => 'Show lead data-entry form to agents on calls.',    'default' => true],
+      'inbound_queue' => ['label' => 'Inbound Queue',        'desc' => 'Route inbound calls to this campaign.',            'default' => true],
+      'reports'       => ['label' => 'Reports & Analytics',  'desc' => 'Access campaign performance reports.',             'default' => true],
+      'dnc_check'     => ['label' => 'DNC Check',            'desc' => 'Auto-check Do Not Call registry before dialing.', 'default' => false],
+      'sms'           => ['label' => 'SMS Messaging',        'desc' => 'Send and receive SMS from agents.',                'default' => false],
+  ];
+
   protected $fillable = [
     "name", "description", "is_active",
     "type", "dial_mode", "dial_level", "caller_id", "cid_rotation", "cid_group_id",
@@ -23,8 +35,10 @@ class Campaign extends Model
     "tts_voice", "tts_language",
     "tts_completed", "tts_busy", "tts_no_answer", "tts_failed", "tts_canceled",
     "greeting_message", "hold_music_url",
-    "recording_enabled", "recording_channels",
+    "recording_enabled",
+    "recording_channels",
     "lead_process",
+    "modules",
   ];
 
   protected $casts = [
@@ -38,11 +52,20 @@ class Campaign extends Model
     "max_calls"          => "integer",
     "recording_enabled"  => "boolean",
     "lead_process"       => "array",
+    "modules"            => "array",
   ];
 
   public function userGroups()
   {
     return $this->belongsToMany(UserGroup::class);
+  }
+
+  /** Check if a module is enabled for this campaign (falls back to the module's default). */
+  public function moduleEnabled(string $key): bool
+  {
+      $modules = $this->modules ?? [];
+      $def     = self::MODULES[$key]['default'] ?? true;
+      return (bool) ($modules[$key] ?? $def);
   }
 
   public function users()

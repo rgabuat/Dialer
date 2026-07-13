@@ -4,6 +4,7 @@
         ['n' => 2, 'label' => 'Dialer & Routing'],
         ['n' => 3, 'label' => 'Lead Form'],
         ['n' => 4, 'label' => 'Voice & Recording'],
+        ['n' => 5, 'label' => 'Modules'],
     ];
 @endphp
 
@@ -26,15 +27,6 @@
                     <span class="text-sm font-semibold text-fg">{{ $mode === 'create' ? 'New Campaign' : $name }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    @if ($step < 4)
-                        <button wire:click="nextStep" type="button"
-                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-surface bg-surface-2 hover:bg-hover text-sm font-medium text-fg-muted hover:text-fg transition">
-                            Next <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </button>
-                    @endif
                     <button wire:click="save" wire:loading.attr="disabled" type="button"
                         class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition">
                         <span wire:loading.remove wire:target="save">
@@ -47,10 +39,11 @@
                         <span wire:loading wire:target="save">Saving…</span>
                     </button>
                     <button wire:click="close" type="button"
-                        class="p-1.5 rounded-lg text-fg-muted hover:text-fg hover:bg-hover transition">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-red-400 hover:text-white hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-sm font-medium transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -174,14 +167,16 @@
                                         </label>
                                     </div>
                                     @if ($script_enabled)
-                                        <div x-data="{
+                                        <div wire:ignore x-data="{
                                             editor: null,
                                             init() {
                                                 this.$nextTick(() => this.boot());
                                             },
                                             boot() {
-                                                if (this.editor) { this.editor.destroy().catch(() => {});
-                                                    this.editor = null; }
+                                                if (this.editor) {
+                                                    this.editor.destroy().catch(() => {});
+                                                    this.editor = null;
+                                                }
                                                 ClassicEditor.create(this.$refs.ckEl, {
                                                     toolbar: {
                                                         items: ['heading', '|', 'bold', 'italic', 'underline', 'strikethrough', '|',
@@ -205,8 +200,10 @@
                                                 }).catch(err => console.error(err));
                                             },
                                             destroy() {
-                                                if (this.editor) { this.editor.destroy().catch(() => {});
-                                                    this.editor = null; }
+                                                if (this.editor) {
+                                                    this.editor.destroy().catch(() => {});
+                                                    this.editor = null;
+                                                }
                                             }
                                         }" x-init="init()" @keydown.stop>
                                             <div x-ref="ckEl"></div>
@@ -714,6 +711,56 @@
                             </div>
                         @endif
 
+                        {{-- ════════════════════════════════ STEP 5: MODULES ════════════════════════════════ --}}
+                        @if ($step === 5)
+                            <div class="space-y-5">
+                                <div>
+                                    <h2 class="font-bold text-fg">Campaign Modules</h2>
+                                    <p class="text-xs text-fg-muted mt-0.5">Enable or disable features and pages for
+                                        this campaign.</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    @foreach (\App\Models\Campaign::MODULES as $key => $mod)
+                                        <div @class([
+                                            'flex items-start justify-between gap-4 p-4 rounded-xl border transition',
+                                            'border-indigo-500/40 bg-indigo-500/5' => $modules[$key] ?? $mod['default'],
+                                            'border-surface bg-surface' => !($modules[$key] ?? $mod['default']),
+                                        ])>
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-semibold text-fg">{{ $mod['label'] }}</p>
+                                                <p class="text-[11px] text-fg-muted mt-0.5 leading-relaxed">
+                                                    {{ $mod['desc'] }}</p>
+                                            </div>
+                                            <label
+                                                class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                                                <input wire:model.live="modules.{{ $key }}" type="checkbox"
+                                                    class="sr-only peer">
+                                                <div
+                                                    class="w-9 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-indigo-600 transition after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
+                                                </div>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="flex justify-end pt-2">
+                                    <button wire:click="save" wire:loading.attr="disabled" type="button"
+                                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+                                        <span wire:loading.remove wire:target="save">
+                                            <svg class="w-4 h-4 inline -mt-0.5 mr-0.5" fill="none"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            {{ $mode === 'create' ? 'Create Campaign' : 'Save Changes' }}
+                                        </span>
+                                        <span wire:loading wire:target="save">Saving…</span>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Step footer --}}
                         <div class="flex items-center justify-between pt-4 border-t border-surface">
                             <button @class([
@@ -728,8 +775,8 @@
                                 </svg>
                                 Back
                             </button>
-                            <span class="text-xs text-fg-muted">Step {{ $step }} of 4</span>
-                            @if ($step < 4)
+                            <span class="text-xs text-fg-muted">Step {{ $step }} of 5</span>
+                            @if ($step < 5)
                                 <button wire:click="nextStep" type="button"
                                     class="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg px-4 py-2 rounded-lg border border-surface hover:bg-hover transition">
                                     Next <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
