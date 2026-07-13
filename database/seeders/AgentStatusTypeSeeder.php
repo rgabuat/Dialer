@@ -22,7 +22,7 @@ class AgentStatusTypeSeeder extends Seeder
                 'is_productive' => true,
                 'is_break' => false,
                 'handles_inbound' => true,
-                'handles_outbound' => true,
+                'handles_outbound' => false,
             ],
             [
                 'name' => 'Outbound',

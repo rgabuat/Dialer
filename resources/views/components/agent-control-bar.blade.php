@@ -5,6 +5,17 @@
      ══════════════════════════════════════════════════════════════════ --}}
 @php
     $authStatusType = auth()->user()?->agentStatus?->statusType;
+
+    // Numbers that belong to this platform — agents must never dial these directly
+    // as it would loop the call back through the IVR/routing system.
+    $platformNumbers = \App\Models\Did::where('is_active', true)
+        ->pluck('phone_number')
+        ->push(config('services.twilio.phone_number'))
+        ->push(config('services.twilio.caller_id'))
+        ->filter()
+        ->map(fn($n) => preg_replace('/\D/', '', $n)) // strip to digits only for comparison
+        ->unique()
+        ->values();
 @endphp
 @persist('agent-phone-bar')
     <div x-data="agentPhone()" @make-call.window="makeCall($event.detail)"
@@ -470,6 +481,10 @@
         if (!('_twilioHeldCallSid' in window)) window._twilioHeldCallSid = null;
         if (!('_twilioAutoAcceptNextIncoming' in window)) window._twilioAutoAcceptNextIncoming = false;
 
+        // Digits-only list of numbers that belong to this platform.
+        // Agents are blocked from dialling these to prevent IVR loops.
+        const _platformNumbers = @json($platformNumbers);
+
         function agentPhone() {
             return {
                 token: null,
@@ -825,6 +840,15 @@
                             hasDevice: !!window._twilioDevice,
                             number
                         });
+                        return;
+                    }
+
+                    // Block calls to platform-owned numbers (would loop through IVR)
+                    const digitsOnly = number.replace(/\D/g, '');
+                    if (_platformNumbers.some(n => digitsOnly.endsWith(n) || n.endsWith(digitsOnly))) {
+                        console.warn('[AgentPhone] makeCall: blocked — number belongs to this platform', number);
+                        window.Toast.show('You cannot dial a platform number. Use the transfer feature instead.',
+                        'warning');
                         return;
                     }
                     this.callStatus = 'Dialling…';
