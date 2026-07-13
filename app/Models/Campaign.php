@@ -18,7 +18,7 @@ class Campaign extends Model
   protected $fillable = [
     "name", "description", "is_active",
     "type", "dial_mode", "dial_level", "caller_id", "cid_rotation", "cid_group_id",
-    "script", "acw_seconds", "hopper_level", "max_calls",
+    "script", "acw_seconds", "hopper_level", "max_calls", "script_enabled",
     // Voice & recording
     "tts_voice", "tts_language",
     "tts_completed", "tts_busy", "tts_no_answer", "tts_failed", "tts_canceled",
@@ -29,6 +29,7 @@ class Campaign extends Model
 
   protected $casts = [
     "is_active"          => "boolean",
+    "script_enabled"     => "boolean",
     "cid_rotation"       => "boolean",
     "cid_group_id"       => "integer",
     "dial_level"         => "decimal:2",

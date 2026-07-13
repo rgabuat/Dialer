@@ -24,6 +24,7 @@ class CampaignModal extends Component
     public bool   $is_active   = true;
     public string $type        = 'OUTBOUND';
     public string $script      = '';
+    public bool   $script_enabled = false;
 
     // ── Step 2: Dialer ───────────────────────────────────────────────────────
     public string $dial_mode    = 'MANUAL';
@@ -63,7 +64,7 @@ class CampaignModal extends Component
     public function openCreate(): void
     {
         $this->reset([
-            'campaignId', 'name', 'description', 'type', 'script',
+            'campaignId', 'name', 'description', 'type', 'script', 'script_enabled',
             'dial_mode', 'dial_level', 'acw_seconds', 'hopper_level', 'max_calls',
             'lead_process_mode', 'lead_process_steps', 'selectedInGroupIds',
             'caller_id', 'cid_rotation', 'cid_group_id',
@@ -104,6 +105,7 @@ class CampaignModal extends Component
         $this->is_active     = (bool) $campaign->is_active;
         $this->type          = $campaign->type ?? 'OUTBOUND';
         $this->script        = $campaign->script ?? '';
+        $this->script_enabled = (bool) ($campaign->script_enabled ?? false);
 
         $this->dial_mode     = $campaign->dial_mode ?? 'MANUAL';
         $this->dial_level    = (string) ($campaign->dial_level ?? '1.00');
@@ -220,7 +222,8 @@ class CampaignModal extends Component
             'description'        => $this->description ?: null,
             'is_active'          => $this->is_active,
             'type'               => $this->type,
-            'script'             => $this->script ?: null,
+            'script'             => $this->script_enabled ? ($this->script ?: null) : null,
+            'script_enabled'     => $this->script_enabled,
             'dial_mode'          => $this->dial_mode,
             'dial_level'         => $this->dial_level,
             'acw_seconds'        => $this->acw_seconds,

@@ -7,6 +7,45 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Panel — csrpro' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+    <style>
+        /* CKEditor dark-mode overrides */
+        .ck.ck-editor__main>.ck-editor__editable,
+        .ck.ck-toolbar {
+            background: var(--color-surface-2, #1e1e2e) !important;
+            color: var(--color-fg, #e4e4ef) !important;
+            border-color: var(--color-surface, #2a2a3a) !important;
+        }
+
+        .ck.ck-toolbar {
+            border-bottom-color: var(--color-surface, #2a2a3a) !important;
+        }
+
+        .ck.ck-button,
+        .ck.ck-button .ck-icon {
+            color: var(--color-fg-muted, #a0a0b8) !important;
+        }
+
+        .ck.ck-button:hover,
+        .ck.ck-button.ck-on {
+            background: var(--color-hover, #2e2e40) !important;
+            color: var(--color-fg, #e4e4ef) !important;
+        }
+
+        .ck.ck-editor {
+            border-radius: 0.5rem !important;
+            overflow: hidden;
+            border: 1px solid var(--color-surface, #2a2a3a) !important;
+        }
+
+        .ck.ck-editor__main>.ck-editor__editable {
+            min-height: 200px;
+        }
+
+        .ck.ck-editor__editable p {
+            margin: 0 0 0.5em;
+        }
+    </style>
 </head>
 
 <body class="bg-base min-h-screen antialiased">
