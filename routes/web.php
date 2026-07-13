@@ -244,3 +244,21 @@ Route::middleware(['auth'])->group(function () {
         ])->name('twilio.getAccessToken');
     });
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  Admin Panel
+// ──────────────────────────────────────────────────────────────────────────────
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    // Guest-only: show login page
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [\App\Http\Controllers\Admin\AdminAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [\App\Http\Controllers\Admin\AdminAuthController::class, 'login'])->name('login.post');
+    });
+
+    // Authenticated + Super Admin only
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::post('/logout', [\App\Http\Controllers\Admin\AdminAuthController::class, 'logout'])->name('logout');
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    });
+});
