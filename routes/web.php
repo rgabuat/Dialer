@@ -265,5 +265,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/campaigns/create', \App\Livewire\Admin\AdminCampaignCreate::class)->name('campaigns.create');
         Route::resource('campaigns', \App\Http\Controllers\Admin\AdminCampaignController::class)
             ->except(['show', 'create']);
+
+        // Lead template management
+        Route::get('/lead-templates', [\App\Http\Controllers\Admin\AdminLeadTemplateController::class, 'index'])->name('lead-templates.index');
+        Route::delete('/lead-templates/{leadTemplate}', [\App\Http\Controllers\Admin\AdminLeadTemplateController::class, 'destroy'])->name('lead-templates.destroy');
     });
 });

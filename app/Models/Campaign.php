@@ -39,6 +39,7 @@ class Campaign extends Model
     "recording_channels",
     "lead_process",
     "modules",
+    "lead_template_id",
   ];
 
   protected $casts = [
@@ -53,6 +54,7 @@ class Campaign extends Model
     "recording_enabled"  => "boolean",
     "lead_process"       => "array",
     "modules"            => "array",
+    "lead_template_id"   => "integer",
   ];
 
   public function userGroups()
@@ -96,6 +98,11 @@ class Campaign extends Model
   public function cidGroup()
   {
     return $this->belongsTo(\App\Models\CidGroup::class);
+  }
+
+  public function leadTemplate()
+  {
+    return $this->belongsTo(\App\Models\LeadTemplate::class);
   }
 
   /**

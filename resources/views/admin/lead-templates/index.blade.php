@@ -1,36 +1,30 @@
-﻿@extends('admin.layouts.app', ['heading' => 'Campaigns'])
+@extends('admin.layouts.app', ['heading' => 'Lead Templates'])
 
 @section('content')
-    {{-- Livewire modal component (handles open/close via dispatched events) --}}
-    @livewire('admin.campaign-modal')
+    @livewire('admin.lead-template-modal')
 
-    {{-- Reload table after campaign saved --}}
     <script>
         document.addEventListener('livewire:init', () => {
-            Livewire.on('campaign-saved', () => {
-                setTimeout(() => window.location.reload(), 600);
-            });
+            Livewire.on('template-saved', () => setTimeout(() => window.location.reload(), 500));
         });
     </script>
 
     <div class="space-y-4">
 
-        {{-- Header --}}
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-lg font-bold text-fg">Campaigns</h2>
-                <p class="text-sm text-fg-muted mt-0.5">Manage all call campaigns in the system.</p>
+                <h2 class="text-lg font-bold text-fg">Lead Templates</h2>
+                <p class="text-sm text-fg-muted mt-0.5">Reusable form definitions assigned to campaigns.</p>
             </div>
-            <button type="button" onclick="Livewire.dispatch('open-create')"
+            <button type="button" onclick="Livewire.dispatch('open-template-create')"
                 class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                New Campaign
+                New Template
             </button>
         </div>
 
-        {{-- Flash --}}
         @if (session('success'))
             <div
                 class="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3 text-green-400 text-sm">
@@ -42,78 +36,61 @@
             </div>
         @endif
 
-        {{-- Table --}}
         <div class="bg-surface border border-surface rounded-xl overflow-hidden">
-
-            {{-- Toolbar --}}
             <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-surface">
-                <form method="GET" action="{{ route('admin.campaigns.index') }}" class="flex items-center gap-2">
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Search campaigns…"
+                <form method="GET" action="{{ route('admin.lead-templates.index') }}" class="flex items-center gap-2">
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Search templates…"
                         class="bg-surface-2 border border-surface focus:border-zinc-500 rounded-lg px-3 py-1.5 text-sm text-fg placeholder-fg-muted focus:outline-none w-52 transition">
                     <button type="submit"
                         class="px-3 py-1.5 bg-surface-2 border border-surface rounded-lg text-sm text-fg-muted hover:text-fg transition">Search</button>
                     @if ($search)
-                        <a href="{{ route('admin.campaigns.index') }}"
+                        <a href="{{ route('admin.lead-templates.index') }}"
                             class="text-xs text-fg-muted hover:text-fg transition">Clear</a>
                     @endif
                 </form>
-                <span class="text-xs text-fg-muted">{{ $campaigns->total() }} total</span>
+                <span class="text-xs text-fg-muted">{{ $templates->total() }} total</span>
             </div>
 
-            {{-- Table --}}
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm text-fg">
                     <thead class="bg-surface">
                         <tr class="border-b border-surface text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                             <th class="px-5 py-3 text-left">Name</th>
-                            <th class="px-5 py-3 text-left">Type</th>
-                            <th class="px-5 py-3 text-left">Dial Mode</th>
-                            <th class="px-5 py-3 text-left">In-Groups</th>
+                            <th class="px-5 py-3 text-left">Mode</th>
+                            <th class="px-5 py-3 text-left">Steps</th>
+                            <th class="px-5 py-3 text-left">Fields</th>
+                            <th class="px-5 py-3 text-left">Used By</th>
                             <th class="px-5 py-3 text-left">Status</th>
-                            <th class="px-5 py-3 text-left">Created</th>
                             <th class="px-5 py-3 text-right w-10"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($campaigns as $campaign)
+                        @forelse ($templates as $tpl)
                             @php
-                                $typeColors = [
-                                    'OUTBOUND' => 'bg-blue-500/10 text-blue-400',
-                                    'INBOUND' => 'bg-emerald-500/10 text-emerald-400',
-                                    'BLENDED' => 'bg-fuchsia-500/10 text-fuchsia-400',
-                                ];
-                                $modeColors = [
-                                    'MANUAL' => 'bg-surface-2 text-fg-muted',
-                                    'PREVIEW' => 'bg-yellow-500/10 text-yellow-400',
-                                    'PROGRESSIVE' => 'bg-indigo-500/10 text-indigo-400',
-                                    'PREDICTIVE' => 'bg-orange-500/10 text-orange-400',
-                                ];
+                                $steps = $tpl->lead_process['steps'] ?? [];
+                                $fields = collect($steps)->sum(fn($s) => count($s['fields'] ?? []));
+                                $mode = $tpl->lead_process['mode'] ?? 'single';
                             @endphp
                             <tr class="border-b border-surface hover:bg-hover transition">
                                 <td class="px-5 py-3">
-                                    <p class="font-semibold text-fg leading-tight">{{ $campaign->name }}</p>
-                                    @if ($campaign->description)
-                                        <p class="text-xs text-fg-muted mt-0.5 truncate max-w-[200px]">
-                                            {{ $campaign->description }}</p>
+                                    <p class="font-semibold text-fg">{{ $tpl->name }}</p>
+                                    @if ($tpl->description)
+                                        <p class="text-xs text-fg-muted mt-0.5 truncate max-w-[240px]">
+                                            {{ $tpl->description }}</p>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3">
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ $typeColors[$campaign->type] ?? 'bg-surface-2 text-fg-muted' }}">
-                                        {{ $campaign->type ?? '—' }}
+                                        class="px-2 py-0.5 rounded text-xs font-semibold {{ $mode === 'stepper' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-surface-2 text-fg-muted' }}">
+                                        {{ ucfirst($mode) }}
                                     </span>
                                 </td>
+                                <td class="px-5 py-3 text-fg-muted text-xs">{{ count($steps) }}</td>
+                                <td class="px-5 py-3 text-fg-muted text-xs">{{ $fields }}</td>
+                                <td class="px-5 py-3 text-xs text-fg-muted">{{ $tpl->campaigns_count }}
+                                    campaign{{ $tpl->campaigns_count !== 1 ? 's' : '' }}</td>
                                 <td class="px-5 py-3">
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ $modeColors[$campaign->dial_mode] ?? 'bg-surface-2 text-fg-muted' }}">
-                                        {{ $campaign->dial_mode ?? '—' }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-3 text-xs text-fg-muted">
-                                    {{ $campaign->inGroups->count() ? $campaign->inGroups->pluck('name')->join(', ') : '—' }}
-                                </td>
-                                <td class="px-5 py-3">
-                                    @if ($campaign->is_active)
+                                    @if ($tpl->is_active)
                                         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Active
                                         </span>
@@ -123,12 +100,10 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 text-xs text-fg-muted whitespace-nowrap">
-                                    {{ $campaign->created_at->format('M d, Y') }}</td>
                                 <td class="px-5 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <button type="button"
-                                            onclick="Livewire.dispatch('open-edit', { id: {{ $campaign->id }} })"
+                                            onclick="Livewire.dispatch('open-template-edit', { id: {{ $tpl->id }} })"
                                             class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-fg-muted hover:text-fg hover:bg-hover border border-transparent hover:border-surface transition">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75"
                                                 stroke="currentColor">
@@ -137,8 +112,8 @@
                                             </svg>
                                             Edit
                                         </button>
-                                        <form method="POST" action="{{ route('admin.campaigns.destroy', $campaign) }}"
-                                            onsubmit="return confirm('Delete \'{{ addslashes($campaign->name) }}\'? Cannot be undone.')">
+                                        <form method="POST" action="{{ route('admin.lead-templates.destroy', $tpl) }}"
+                                            onsubmit="return confirm('Delete \'{{ addslashes($tpl->name) }}\'? Campaigns using it will lose the link.')">
                                             @csrf @method('DELETE')
                                             <button type="submit"
                                                 class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-fg-muted hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition">
@@ -156,13 +131,8 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="px-5 py-16 text-center text-fg-muted">
-                                    <p class="text-sm font-medium">No campaigns found</p>
-                                    @if ($search)
-                                        <p class="text-xs mt-1">Try a different search term.</p>
-                                    @else
-                                        <p class="text-xs mt-1">Click <strong>New Campaign</strong> to create the first one.
-                                        </p>
-                                    @endif
+                                    <p class="text-sm font-medium">No templates yet</p>
+                                    <p class="text-xs mt-1">Click <strong>New Template</strong> to create the first one.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -170,10 +140,8 @@
                 </table>
             </div>
 
-            @if ($campaigns->hasPages())
-                <div class="px-5 py-3 border-t border-surface">
-                    {{ $campaigns->links() }}
-                </div>
+            @if ($templates->hasPages())
+                <div class="px-5 py-3 border-t border-surface">{{ $templates->links() }}</div>
             @endif
         </div>
     </div>

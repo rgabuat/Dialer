@@ -1,10 +1,10 @@
-﻿@php
+@php
     $steps = [
         ['n' => 1, 'label' => 'Details'],
         ['n' => 2, 'label' => 'Dialer & Routing'],
-        ['n' => 3, 'label' => 'Lead Form'],
-        ['n' => 4, 'label' => 'Voice & Recording'],
-        ['n' => 5, 'label' => 'Modules'],
+        ['n' => 3, 'label' => 'Voice & Recording'],
+        ['n' => 4, 'label' => 'Modules'],
+        ['n' => 5, 'label' => 'Review & Confirm'],
     ];
 @endphp
 
@@ -71,7 +71,7 @@
 
                 {{-- Scrollable content --}}
                 <div class="flex-1 overflow-y-auto">
-                    <div class="max-w-3xl mx-auto px-8 py-6 space-y-5">
+                    <div class="{{ $step === 2 ? 'max-w-5xl px-5' : 'max-w-2xl px-8' }} mx-auto py-6 space-y-5">
 
                         @if ($errors->any())
                             <div
@@ -151,6 +151,81 @@
                                     </div>
                                 </div>
 
+                                {{-- Lead Template picker --}}
+                                <div class="bg-surface border border-surface rounded-xl p-5 space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs font-semibold text-fg">Lead Template</p>
+                                            <p class="text-[11px] text-fg-muted mt-0.5">Data capture form shown to
+                                                agents during calls. Optional.</p>
+                                        </div>
+                                        <a href="{{ route('admin.lead-templates.index') }}" target="_blank"
+                                            class="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                            </svg>
+                                            Manage
+                                        </a>
+                                    </div>
+                                    @if ($allTemplates->isEmpty())
+                                        <p class="text-xs text-fg-muted italic">No templates yet. <a
+                                                href="{{ route('admin.lead-templates.index') }}" target="_blank"
+                                                class="text-indigo-400 hover:text-indigo-300">Create one →</a></p>
+                                    @else
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" wire:click="$set('lead_template_id', null)"
+                                                @class([
+                                                    'px-3 py-1.5 rounded-lg border text-xs font-medium transition',
+                                                    'border-zinc-500 bg-zinc-500/10 text-fg' => $lead_template_id === null,
+                                                    'border-surface bg-surface-2 text-fg-muted hover:border-zinc-600 hover:text-fg' =>
+                                                        $lead_template_id !== null,
+                                                ])>
+                                                None
+                                            </button>
+                                            @foreach ($allTemplates as $tpl)
+                                                <button type="button"
+                                                    wire:click="$set('lead_template_id', {{ $tpl->id }})"
+                                                    @class([
+                                                        'px-3 py-1.5 rounded-lg border text-xs font-medium transition',
+                                                        'border-indigo-500 bg-indigo-500/10 text-indigo-400' =>
+                                                            $lead_template_id === $tpl->id,
+                                                        'border-surface bg-surface-2 text-fg-muted hover:border-zinc-600 hover:text-fg' =>
+                                                            $lead_template_id !== $tpl->id,
+                                                    ])>
+                                                    @if ($lead_template_id === $tpl->id)
+                                                        <svg class="w-3 h-3 inline -mt-0.5 mr-0.5" fill="none"
+                                                            viewBox="0 0 24 24" stroke-width="2.5"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="m4.5 12.75 6 6 9-13.5" />
+                                                        </svg>
+                                                    @endif
+                                                    {{ $tpl->name }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                        @if ($lead_template_id)
+                                            @php $tpl = $allTemplates->find($lead_template_id); @endphp
+                                            @if ($tpl)
+                                                @php
+                                                    $tplFields = collect($tpl->lead_process['steps'] ?? [])->sum(
+                                                        fn($s) => count($s['fields'] ?? []),
+                                                    );
+                                                @endphp
+                                                <p class="text-[11px] text-fg-muted">
+                                                    {{ $tpl->lead_process['mode'] ?? 'single' }} &middot;
+                                                    {{ count($tpl->lead_process['steps'] ?? []) }}
+                                                    step{{ count($tpl->lead_process['steps'] ?? []) !== 1 ? 's' : '' }}
+                                                    &middot; {{ $tplFields }}
+                                                    field{{ $tplFields !== 1 ? 's' : '' }}
+                                                </p>
+                                            @endif
+                                        @endif
+                                    @endif
+                                </div>
+
                                 <div class="bg-surface border border-surface rounded-xl p-5 space-y-3">
                                     <div class="flex items-center justify-between">
                                         <div>
@@ -205,7 +280,8 @@
                                                     this.editor = null;
                                                 }
                                             }
-                                        }" x-init="init()" @keydown.stop>
+                                        }" x-init="init()"
+                                            @keydown.stop>
                                             <div x-ref="ckEl"></div>
                                         </div>
                                     @else
@@ -367,234 +443,8 @@
                             </div>
                         @endif
 
-                        {{-- ════════════════════════════════ STEP 3: LEAD FORM ════════════════════════════════ --}}
+                        {{-- ════════════════════════════════ STEP 3: VOICE & RECORDING ════════════════════════════════ --}}
                         @if ($step === 3)
-                            @php
-                                $fieldLibrary = [
-                                    ['type' => 'text', 'label' => 'Text'],
-                                    ['type' => 'textarea', 'label' => 'Long Text'],
-                                    ['type' => 'email', 'label' => 'Email'],
-                                    ['type' => 'phone', 'label' => 'Phone'],
-                                    ['type' => 'number', 'label' => 'Number'],
-                                    ['type' => 'date', 'label' => 'Date'],
-                                    ['type' => 'select', 'label' => 'Dropdown'],
-                                    ['type' => 'checkbox', 'label' => 'Checkbox'],
-                                ];
-                            @endphp
-                            <div x-data="{
-                                sel: { step: 0, field: null },
-                                drag: { step: null, field: null },
-                                palette: null,
-                                clearDrag() {
-                                    this.drag = { step: null, field: null };
-                                    this.palette = null
-                                },
-                                dropField(s, f) {
-                                    if (this.palette) {
-                                        $wire.insertLeadFieldAt(s, f, this.palette);
-                                        this.sel = { step: s, field: f };
-                                        this.clearDrag();
-                                        return
-                                    }
-                                    if (this.drag.field === null) return;
-                                    if (this.drag.step === s) { if (this.drag.field !== f) $wire.moveLeadFieldTo(s, this.drag.field, f); } else $wire.moveLeadFieldAcrossSteps(this.drag.step, this.drag.field, s, f);
-                                    this.sel = { step: s, field: f };
-                                    this.clearDrag();
-                                },
-                                dropEnd(s, end) {
-                                    if (this.palette) {
-                                        $wire.insertLeadFieldAt(s, end, this.palette);
-                                        this.sel = { step: s, field: Math.max(0, end) };
-                                        this.clearDrag();
-                                        return
-                                    }
-                                    if (this.drag.field === null) return;
-                                    if (this.drag.step === s) $wire.moveLeadFieldTo(s, this.drag.field, end - 1);
-                                    else $wire.moveLeadFieldAcrossSteps(this.drag.step, this.drag.field, s, end);
-                                    this.sel = { step: s, field: Math.max(0, end - 1) };
-                                    this.clearDrag();
-                                }
-                            }" class="space-y-4">
-                                <div class="flex items-end justify-between gap-3">
-                                    <div>
-                                        <h2 class="font-bold text-fg">Lead Form Builder</h2>
-                                        <p class="text-xs text-fg-muted mt-0.5">Design the data capture form. Skip if
-                                            not needed.</p>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="space-y-0.5">
-                                            <label class="text-[11px] text-fg-muted">Mode</label>
-                                            <select wire:model.live="lead_process_mode"
-                                                class="bg-surface-2 border border-surface rounded-lg px-2.5 py-1.5 text-xs text-fg focus:outline-none focus:border-zinc-500 transition">
-                                                <option value="single">Single Form</option>
-                                                <option value="stepper">Multi-Step</option>
-                                            </select>
-                                        </div>
-                                        @if ($lead_process_mode === 'stepper' || count($lead_process_steps) === 0)
-                                            <button type="button" wire:click="addLeadStep"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 transition text-xs">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M12 4.5v15m7.5-7.5h-15" />
-                                                </svg>
-                                                Add Step
-                                            </button>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                @if (count($lead_process_steps) === 0)
-                                    <div
-                                        class="border-2 border-dashed border-surface rounded-xl p-10 text-center space-y-3">
-                                        <p class="text-sm text-fg-muted">No form steps yet — add a step to start
-                                            building.</p>
-                                        <button type="button" wire:click="addLeadStep"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 transition text-sm">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M12 4.5v15m7.5-7.5h-15" />
-                                            </svg>
-                                            Add First Step
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="grid grid-cols-[160px_minmax(0,1fr)_240px] gap-4 items-start">
-                                        {{-- Palette --}}
-                                        <div
-                                            class="bg-surface border border-surface rounded-xl p-3 space-y-2 sticky top-0">
-                                            <p class="text-xs font-semibold text-fg">Input Library</p>
-                                            <p class="text-[11px] text-fg-muted">Drag or click to add</p>
-                                            <div class="space-y-1">
-                                                @foreach ($fieldLibrary as $lf)
-                                                    <button type="button" draggable="true"
-                                                        @dragstart="palette='{{ $lf['type'] }}'"
-                                                        @dragend="clearDrag()"
-                                                        @click="$wire.addLeadFieldOfType(sel.step,'{{ $lf['type'] }}')"
-                                                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-surface bg-surface-2 hover:bg-hover text-xs text-fg transition cursor-grab">
-                                                        {{ $lf['label'] }}
-                                                        <svg class="w-3 h-3 text-fg-muted" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.75"
-                                                            stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                                                        </svg>
-                                                    </button>
-                                                @endforeach
-                                            </div>
-                                        </div>
-
-                                        {{-- Canvas --}}
-                                        <div class="space-y-3">
-                                            @foreach ($lead_process_steps as $si => $stepData)
-                                                <div class="bg-surface border border-surface rounded-xl p-3 space-y-3"
-                                                    wire:key="lp-step-{{ $si }}"
-                                                    @click="sel.step={{ $si }}"
-                                                    :class="sel.step === {{ $si }} ? 'border-cyan-500/50' : ''">
-                                                    <div class="flex items-center gap-2">
-                                                        <input type="text"
-                                                            wire:model.blur="lead_process_steps.{{ $si }}.title"
-                                                            placeholder="Step title"
-                                                            class="flex-1 bg-surface-2 border border-surface rounded-lg px-2.5 py-1.5 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-cyan-500">
-                                                        <button type="button"
-                                                            wire:click="removeLeadStep({{ $si }})"
-                                                            class="text-xs text-red-400 hover:text-red-300 px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition">Remove</button>
-                                                    </div>
-                                                    <div class="space-y-2 min-h-[50px] border border-dashed border-surface rounded-lg p-2"
-                                                        @dragover.prevent
-                                                        @drop.prevent="dropEnd({{ $si }},{{ count($stepData['fields'] ?? []) }})"
-                                                        :class="(drag.field !== null || palette) ?
-                                                        'border-cyan-500/40 bg-cyan-500/5' : ''">
-                                                        @foreach ($stepData['fields'] ?? [] as $fi => $field)
-                                                            <div wire:key="lp-field-{{ $si }}-{{ $field['uid'] ?? $fi }}"
-                                                                draggable="true"
-                                                                @click.stop="sel={step:{{ $si }},field:{{ $fi }}}"
-                                                                @dragstart="drag={step:{{ $si }},field:{{ $fi }}}"
-                                                                @dragend="clearDrag()" @dragover.prevent
-                                                                @drop.prevent="dropField({{ $si }},{{ $fi }})"
-                                                                class="flex items-center justify-between px-2.5 py-2 rounded-lg border border-surface bg-surface/50 cursor-pointer text-xs"
-                                                                :class="sel.step === {{ $si }} && sel.field ===
-                                                                    {{ $fi }} ?
-                                                                    'ring-1 ring-indigo-500/60 border-indigo-500/40' :
-                                                                    ''">
-                                                                <div class="flex items-center gap-2 min-w-0">
-                                                                    <span
-                                                                        class="text-[10px] text-fg-muted uppercase shrink-0">{{ $field['type'] ?? 'text' }}</span>
-                                                                    <span
-                                                                        class="text-fg truncate">{{ $field['label'] ?? '' ?: 'Untitled' }}{{ $field['required'] ?? false ? ' *' : '' }}</span>
-                                                                </div>
-                                                                <button type="button"
-                                                                    wire:click.stop="removeLeadField({{ $si }},{{ $fi }})"
-                                                                    class="text-[10px] text-red-400 hover:text-red-300 ml-2 shrink-0">✕</button>
-                                                            </div>
-                                                        @endforeach
-                                                        @if (empty($stepData['fields']))
-                                                            <p class="text-[11px] text-fg-muted text-center py-3">Drop
-                                                                inputs here</p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-
-                                        {{-- Properties --}}
-                                        <div
-                                            class="bg-surface border border-surface rounded-xl p-3 space-y-3 sticky top-0">
-                                            <p class="text-xs font-semibold text-fg">Field Properties</p>
-                                            @foreach ($lead_process_steps as $si => $s)
-                                                @foreach ($s['fields'] ?? [] as $fi => $field)
-                                                    <div x-show="sel.step==={{ $si }}&&sel.field==={{ $fi }}"
-                                                        wire:key="lp-props-{{ $si }}-{{ $field['uid'] ?? $fi }}"
-                                                        class="space-y-2.5">
-                                                        <div><label class="text-[11px] text-fg-muted">Key</label>
-                                                            <input type="text"
-                                                                wire:model.blur="lead_process_steps.{{ $si }}.fields.{{ $fi }}.key"
-                                                                placeholder="e.g. first_name"
-                                                                class="w-full bg-surface-2 border border-surface rounded px-2 py-1 text-xs font-mono text-fg focus:outline-none focus:ring-1 focus:ring-indigo-500 mt-0.5">
-                                                            @error("lead_process_steps.{$si}.fields.{$fi}.key")
-                                                                <p class="text-[10px] text-red-400">{{ $message }}
-                                                                </p>
-                                                            @enderror
-                                                        </div>
-                                                        <div><label class="text-[11px] text-fg-muted">Label</label>
-                                                            <input type="text"
-                                                                wire:model.blur="lead_process_steps.{{ $si }}.fields.{{ $fi }}.label"
-                                                                class="w-full bg-surface-2 border border-surface rounded px-2 py-1 text-xs text-fg focus:outline-none focus:ring-1 focus:ring-indigo-500 mt-0.5">
-                                                        </div>
-                                                        <div><label
-                                                                class="text-[11px] text-fg-muted">Placeholder</label>
-                                                            <input type="text"
-                                                                wire:model.blur="lead_process_steps.{{ $si }}.fields.{{ $fi }}.placeholder"
-                                                                class="w-full bg-surface-2 border border-surface rounded px-2 py-1 text-xs text-fg focus:outline-none focus:ring-1 focus:ring-indigo-500 mt-0.5">
-                                                        </div>
-                                                        @if (($field['type'] ?? '') === 'select')
-                                                            <div><label class="text-[11px] text-fg-muted">Options (one
-                                                                    per line)</label>
-                                                                <textarea wire:model.blur="lead_process_steps.{{ $si }}.fields.{{ $fi }}.options_text"
-                                                                    rows="3"
-                                                                    class="w-full bg-surface-2 border border-surface rounded px-2 py-1 text-xs text-fg focus:outline-none focus:ring-1 focus:ring-indigo-500 mt-0.5 resize-none"></textarea>
-                                                            </div>
-                                                        @endif
-                                                        <label class="flex items-center gap-2 cursor-pointer">
-                                                            <input type="checkbox"
-                                                                wire:model="lead_process_steps.{{ $si }}.fields.{{ $fi }}.required"
-                                                                class="rounded border-surface text-indigo-600 w-3.5 h-3.5">
-                                                            <span class="text-xs text-fg">Required</span>
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                            @endforeach
-                                            <p x-show="sel.field===null" class="text-xs text-fg-muted">Click a field
-                                                to edit properties.</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- ════════════════════════════════ STEP 4: VOICE & RECORDING ════════════════════════════════ --}}
-                        @if ($step === 4)
                             <div class="space-y-5">
                                 <div>
                                     <h2 class="font-bold text-fg">Voice & Recording</h2>
@@ -693,33 +543,17 @@
                                         </div>
                                     @endif
                                 </div>
-
-                                <div class="flex justify-end pt-2">
-                                    <button wire:click="save" wire:loading.attr="disabled" type="button"
-                                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
-                                        <span wire:loading.remove wire:target="save">
-                                            <svg class="w-4 h-4 inline -mt-0.5 mr-0.5" fill="none"
-                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="m4.5 12.75 6 6 9-13.5" />
-                                            </svg>
-                                            {{ $mode === 'create' ? 'Create Campaign' : 'Save Changes' }}
-                                        </span>
-                                        <span wire:loading wire:target="save">Saving…</span>
-                                    </button>
-                                </div>
                             </div>
                         @endif
 
-                        {{-- ════════════════════════════════ STEP 5: MODULES ════════════════════════════════ --}}
-                        @if ($step === 5)
+                        {{-- ════════════════════════════════ STEP 4: MODULES ════════════════════════════════ --}}
+                        @if ($step === 4)
                             <div class="space-y-5">
                                 <div>
                                     <h2 class="font-bold text-fg">Campaign Modules</h2>
                                     <p class="text-xs text-fg-muted mt-0.5">Enable or disable features and pages for
                                         this campaign.</p>
                                 </div>
-
                                 <div class="grid grid-cols-2 gap-3">
                                     @foreach (\App\Models\Campaign::MODULES as $key => $mod)
                                         <div @class([
@@ -743,17 +577,157 @@
                                         </div>
                                     @endforeach
                                 </div>
+                            </div>
+                        @endif
 
-                                <div class="flex justify-end pt-2">
+                        {{-- ════════════════════════════════ STEP 5: REVIEW & CONFIRM ════════════════════════════════ --}}
+                        @if ($step === 5)
+                            <div class="space-y-5">
+                                <div>
+                                    <h2 class="font-bold text-fg">Review & Confirm</h2>
+                                    <p class="text-xs text-fg-muted mt-0.5">Check everything before
+                                        {{ $mode === 'create' ? 'creating' : 'saving' }} the campaign.</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+
+                                    {{-- Details --}}
+                                    <div class="bg-surface border border-surface rounded-xl p-4 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-xs font-semibold text-fg-muted uppercase tracking-wide">
+                                                Details</p>
+                                            <button type="button" wire:click="goToStep(1)"
+                                                class="text-[11px] text-indigo-400 hover:text-indigo-300 transition">Edit</button>
+                                        </div>
+                                        <p class="text-sm font-bold text-fg">{{ $name ?: '—' }}</p>
+                                        @if ($description)
+                                            <p class="text-xs text-fg-muted truncate">{{ $description }}</p>
+                                        @endif
+                                        <div class="flex items-center gap-2 flex-wrap pt-1">
+                                            @php $tc=['OUTBOUND'=>'bg-blue-500/10 text-blue-400','INBOUND'=>'bg-emerald-500/10 text-emerald-400','BLENDED'=>'bg-fuchsia-500/10 text-fuchsia-400']; @endphp
+                                            <span
+                                                class="px-2 py-0.5 rounded text-xs font-semibold {{ $tc[$type] ?? 'bg-surface-2 text-fg-muted' }}">{{ $type }}</span>
+                                            @if ($is_active)
+                                                <span
+                                                    class="inline-flex items-center gap-1 text-xs text-emerald-400"><span
+                                                        class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Active</span>
+                                            @else
+                                                <span
+                                                    class="inline-flex items-center gap-1 text-xs text-fg-muted"><span
+                                                        class="w-1.5 h-1.5 rounded-full bg-zinc-600 inline-block"></span>Inactive</span>
+                                            @endif
+                                            @if ($script_enabled)
+                                                <span class="text-xs text-fg-muted">Script on</span>
+                                            @endif
+                                            @if ($lead_template_id)
+                                                @php $tplName = $allTemplates->find($lead_template_id)?->name; @endphp
+                                                @if ($tplName)
+                                                    <span class="text-xs text-indigo-400">{{ $tplName }}</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Dialer --}}
+                                    <div class="bg-surface border border-surface rounded-xl p-4 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-xs font-semibold text-fg-muted uppercase tracking-wide">
+                                                Dialer & Routing</p>
+                                            <button type="button" wire:click="goToStep(2)"
+                                                class="text-[11px] text-indigo-400 hover:text-indigo-300 transition">Edit</button>
+                                        </div>
+                                        <div class="space-y-1 text-xs text-fg-muted">
+                                            <div class="flex justify-between"><span>Mode</span><span
+                                                    class="text-fg font-medium">{{ $dial_mode }}</span></div>
+                                            <div class="flex justify-between"><span>Dial Level</span><span
+                                                    class="text-fg font-medium">{{ $dial_level }}</span></div>
+                                            <div class="flex justify-between"><span>Hopper</span><span
+                                                    class="text-fg font-medium">{{ $hopper_level }}</span></div>
+                                            <div class="flex justify-between"><span>ACW</span><span
+                                                    class="text-fg font-medium">{{ $acw_seconds }}s</span></div>
+                                            @if ($caller_id)
+                                                <div class="flex justify-between"><span>Caller ID</span><span
+                                                        class="text-fg font-mono font-medium">{{ $caller_id }}</span>
+                                                </div>
+                                            @endif
+                                            @if (count($selectedInGroupIds))
+                                                <div class="flex justify-between"><span>In-Groups</span><span
+                                                        class="text-fg font-medium">{{ count($selectedInGroupIds) }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Voice & Recording --}}
+                                    <div class="bg-surface border border-surface rounded-xl p-4 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-xs font-semibold text-fg-muted uppercase tracking-wide">
+                                                Voice & Recording</p>
+                                            <button type="button" wire:click="goToStep(3)"
+                                                class="text-[11px] text-indigo-400 hover:text-indigo-300 transition">Edit</button>
+                                        </div>
+                                        <div class="space-y-1 text-xs text-fg-muted">
+                                            <div class="flex justify-between"><span>Voice</span><span
+                                                    class="text-fg font-medium capitalize">{{ $tts_voice }}</span>
+                                            </div>
+                                            <div class="flex justify-between"><span>Language</span><span
+                                                    class="text-fg font-medium">{{ $tts_language }}</span></div>
+                                            <div class="flex justify-between">
+                                                <span>Recording</span>
+                                                @if ($recording_enabled)
+                                                    <span class="text-emerald-400 font-medium">On
+                                                        ({{ $recording_channels }})</span>
+                                                @else
+                                                    <span class="text-fg-muted font-medium">Off</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Modules --}}
+                                    <div class="bg-surface border border-surface rounded-xl p-4 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-xs font-semibold text-fg-muted uppercase tracking-wide">
+                                                Modules</p>
+                                            <button type="button" wire:click="goToStep(4)"
+                                                class="text-[11px] text-indigo-400 hover:text-indigo-300 transition">Edit</button>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5 pt-1">
+                                            @foreach (\App\Models\Campaign::MODULES as $key => $mod)
+                                                @if ($modules[$key] ?? $mod['default'])
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-xs font-medium">
+                                                        <span
+                                                            class="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"></span>{{ $mod['label'] }}
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-md bg-surface-2 text-fg-muted text-xs line-through">{{ $mod['label'] }}</span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="flex items-center justify-between pt-3 border-t border-surface">
+                                    <p class="text-xs text-fg-muted">
+                                        @if ($mode === 'create')
+                                            This will create a new campaign with the above settings.
+                                        @else
+                                            This will update <span
+                                                class="font-semibold text-fg">{{ $name }}</span>.
+                                        @endif
+                                    </p>
                                     <button wire:click="save" wire:loading.attr="disabled" type="button"
-                                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+                                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-bold px-6 py-2.5 rounded-lg transition">
                                         <span wire:loading.remove wire:target="save">
                                             <svg class="w-4 h-4 inline -mt-0.5 mr-0.5" fill="none"
                                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
-                                            {{ $mode === 'create' ? 'Create Campaign' : 'Save Changes' }}
+                                            {{ $mode === 'create' ? 'Confirm & Create Campaign' : 'Confirm & Save Changes' }}
                                         </span>
                                         <span wire:loading wire:target="save">Saving…</span>
                                     </button>
@@ -779,7 +753,8 @@
                             @if ($step < 5)
                                 <button wire:click="nextStep" type="button"
                                     class="inline-flex items-center gap-2 text-sm text-fg-muted hover:text-fg px-4 py-2 rounded-lg border border-surface hover:bg-hover transition">
-                                    Next <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    Next
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -794,5 +769,6 @@
                 </div>
             </div>
         </div>
-    @endif
+</div>
+@endif
 </div>
