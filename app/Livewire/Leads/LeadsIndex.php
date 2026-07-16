@@ -10,87 +10,114 @@ use Livewire\WithPagination;
 
 class LeadsIndex extends Component
 {
-  use WithPagination;
+    use WithPagination;
 
-  protected $paginationTheme = "tailwind";
+    protected $paginationTheme = 'tailwind';
 
-  public int    $perPage      = 20;
-  public string $search       = '';
-  public array  $filterStatus = [];
-  public string $filterType   = '';
-  public string $filterStore  = '';
-  public string $filterUser   = '';
+    public int $perPage = 20;
 
-  protected $queryString = [
-    'search'       => ['except' => ''],
-    'filterType'   => ['except' => ''],
-    'filterStore'  => ['except' => ''],
-    'filterUser'   => ['except' => ''],
-  ];
+    public string $search = '';
 
-  public function updatingSearch(): void       { $this->resetPage(); }
-  public function updatingFilterStatus(): void { $this->resetPage(); }
-  public function updatingFilterType(): void   { $this->resetPage(); }
-  public function updatingFilterStore(): void  { $this->resetPage(); }
-  public function updatingFilterUser(): void   { $this->resetPage(); }
-  public function updatingPerPage(): void      { $this->resetPage(); }
+    public array $filterStatus = [];
 
-  public function resetFilters(): void
-  {
-    $this->reset(['search', 'filterType', 'filterStore', 'filterUser']);
-    $this->filterStatus = [];
-    $this->resetPage();
-  }
+    public string $filterType = '';
 
-  public function removeStatusFilter(string $status): void
-  {
-    $this->filterStatus = array_values(array_filter($this->filterStatus, fn($s) => $s !== $status));
-    $this->resetPage();
-  }
+    public string $filterStore = '';
 
-  public function render()
-  {
-    $campaignId = session('active_campaign_id');
+    public string $filterUser = '';
 
-    $query = Lead::with(['store', 'creator', 'lastActionedBy'])
-      ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
-      ->latest();
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filterType' => ['except' => ''],
+        'filterStore' => ['except' => ''],
+        'filterUser' => ['except' => ''],
+    ];
 
-    if ($this->search) {
-      $q = '%' . $this->search . '%';
-      $query->where(fn($b) =>
-        $b->where('first_name', 'like', $q)
-          ->orWhere('last_name', 'like', $q)
-          ->orWhere('phone', 'like', $q)
-          ->orWhere('email', 'like', $q)
-      );
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
     }
 
-    if (!empty($this->filterStatus)) {
-      $statuses = array_map('strtoupper', $this->filterStatus);
-      $query->whereIn('status', $statuses);
+    public function updatingFilterStatus(): void
+    {
+        $this->resetPage();
     }
 
-    if ($this->filterType) {
-      $query->where('lead_type', $this->filterType);
+    public function updatingFilterType(): void
+    {
+        $this->resetPage();
     }
 
-    if ($this->filterStore) {
-      $query->where('store_id', $this->filterStore);
+    public function updatingFilterStore(): void
+    {
+        $this->resetPage();
     }
 
-    if ($this->filterUser) {
-      $query->where('created_by', $this->filterUser);
+    public function updatingFilterUser(): void
+    {
+        $this->resetPage();
     }
 
-    $leads  = $query->paginate($this->perPage);
-    $stores = Store::orderBy('name')->get(['id', 'name']);
-    $users  = User::orderBy('name')->get(['id', 'name']);
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
 
-    return view('livewire.leads.leads-index', [
-      'leads'  => $leads,
-      'stores' => $stores,
-      'users'  => $users,
-    ])->layout('components.layouts.app');
-  }
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'filterType', 'filterStore', 'filterUser']);
+        $this->filterStatus = [];
+        $this->resetPage();
+    }
+
+    public function removeStatusFilter(string $status): void
+    {
+        $this->filterStatus = array_values(array_filter($this->filterStatus, fn ($s) => $s !== $status));
+        $this->resetPage();
+    }
+
+    public function render()
+    {
+        $campaignId = session('active_campaign_id');
+
+        $query = Lead::with(['store', 'creator', 'lastActionedBy'])
+            ->when($campaignId, fn ($q) => $q->where('campaign_id', $campaignId))
+            ->latest();
+
+        if ($this->search) {
+            $q = '%'.$this->search.'%';
+            $query->where(fn ($b) => $b->where('first_name', 'like', $q)
+                ->orWhere('last_name', 'like', $q)
+                ->orWhere('phone', 'like', $q)
+                ->orWhere('email', 'like', $q)
+            );
+        }
+
+        if (! empty($this->filterStatus)) {
+            $statuses = array_map('strtoupper', $this->filterStatus);
+            $query->whereIn('status', $statuses);
+        }
+
+        if ($this->filterType) {
+            $query->where('lead_type', $this->filterType);
+        }
+
+        if ($this->filterStore) {
+            $query->where('store_id', $this->filterStore);
+        }
+
+        if ($this->filterUser) {
+            $query->where('created_by', $this->filterUser);
+        }
+
+        $leads = $query->paginate($this->perPage);
+        $stores = Store::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
+
+        return view('livewire.leads.leads-index', [
+            'leads' => $leads,
+            'stores' => $stores,
+            'users' => $users,
+        ])->layout('components.layouts.app');
+    }
 }

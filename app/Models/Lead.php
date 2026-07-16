@@ -17,6 +17,7 @@ class Lead extends Model
         'store_id',
         'conversation_id',
         'call_list_id',
+        'campaign_id',
         'status',
         'last_called_at',
         'call_count',
@@ -66,6 +67,11 @@ class Lead extends Model
     public function conversation()
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(\App\Models\Campaign::class);
     }
 
     public function callList()

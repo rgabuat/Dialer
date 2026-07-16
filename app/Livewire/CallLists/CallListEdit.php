@@ -87,6 +87,7 @@ class CallListEdit extends Component
 
             Lead::create([
                 'call_list_id'    => $this->callList->id,
+                'campaign_id'     => $this->callList->campaign_id,
                 'store_id'        => $this->callList->campaign->userGroups()->first()?->id ?? 1,
                 'first_name'      => $firstName ?: 'Unknown',
                 'last_name'       => $lastName ?: '',

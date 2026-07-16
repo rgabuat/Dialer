@@ -93,6 +93,7 @@ class ConversationShow extends Component
 
     $leadPayload = [
       'conversation_id' => $this->conversation->id,
+      'campaign_id'     => $this->conversation->campaign_id,
       'created_by' => auth()->id(),
       'last_actioned_by' => auth()->id(),
       'status' => 'NEW',

@@ -82,6 +82,7 @@ class LeadCreate extends Component
         $leadPayload = [
             'created_by' => auth()->id(),
             'last_actioned_by' => auth()->id(),
+            'campaign_id' => $this->campaign?->id,
             'dynamic_data' => $this->normalizedDynamicData(),
         ];
 
