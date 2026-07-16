@@ -144,10 +144,20 @@
                                     <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
-                            <div class="flex items-center gap-3">
-                                <input wire:model.defer="is_active" type="checkbox" id="ug_is_active"
-                                    class="rounded bg-surface-2 border-surface text-indigo-500 focus:ring-indigo-500" />
-                                <label for="ug_is_active" class="text-sm text-fg-muted">Active</label>
+                            {{-- Active toggle --}}
+                            <div
+                                class="flex items-center justify-between px-4 py-3 bg-surface-2 rounded-lg border border-surface">
+                                <div>
+                                    <p class="text-sm font-medium text-fg">Active</p>
+                                    <p class="text-xs text-fg-muted">Group is visible and assignable to users.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input wire:model.defer="is_active" type="checkbox" id="ug_is_active"
+                                        class="sr-only peer">
+                                    <div
+                                        class="after:top-0.5 after:left-0.5 after:absolute relative bg-zinc-700 after:bg-white peer-checked:bg-indigo-500 rounded-full after:rounded-full w-9 after:w-4 h-5 after:h-4 after:content-[''] transition-colors after:transition-transform peer-checked:after:translate-x-4 duration-200 after:duration-200">
+                                    </div>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -155,22 +165,62 @@
                     <div class="border-t border-surface"></div>
 
                     {{-- Campaigns --}}
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wider text-fg-muted mb-3">Campaigns</h3>
-                        <p class="text-xs text-fg-muted mb-3">Select which campaigns this group can access.</p>
-                        <div class="space-y-2">
-                            @foreach ($campaigns as $campaign)
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" value="{{ $campaign['id'] }}"
-                                        wire:model.defer="selectedCampaigns"
-                                        class="rounded bg-surface-2 border-surface text-indigo-500 focus:ring-indigo-500" />
-                                    <span class="text-sm text-fg">{{ $campaign['name'] }}</span>
-                                </label>
-                            @endforeach
-                            @error('selectedCampaigns')
-                                <p class="text-xs text-red-400 mt-1">{{ $message }}</p>
-                            @enderror
+                    <div x-data="{}" wire:ignore.self>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-xs font-semibold uppercase tracking-wider text-fg-muted">Campaigns</h3>
+                                <p class="text-xs text-zinc-500 mt-0.5">Select which campaigns this group can access.
+                                </p>
+                            </div>
+                            {{-- Select All pill --}}
+                            @php $allIds = collect($campaigns)->pluck('id')->map(fn($id) => (string)$id)->values()->toArray(); @endphp
+                            <button type="button"
+                                x-on:click="
+                                    const ids = {{ json_encode($allIds) }};
+                                    const allSel = $wire.selectedCampaigns.length === ids.length;
+                                    $wire.selectedCampaigns = allSel ? [] : ids;
+                                "
+                                :class="$wire.selectedCampaigns.length === {{ count($campaigns) }} && {{ count($campaigns) }} >
+                                    0 ?
+                                    'bg-indigo-600 border-indigo-500 text-white' :
+                                    'bg-surface-2 border-surface text-zinc-400 hover:text-fg hover:border-zinc-500'"
+                                class="inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium transition">
+                                All
+                            </button>
                         </div>
+
+                        @if (count($campaigns) > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($campaigns as $campaign)
+                                    @php $cid = (string) $campaign['id']; @endphp
+                                    <button type="button" wire:key="ug-campaign-{{ $cid }}"
+                                        x-on:click="
+                                            const id = '{{ $cid }}';
+                                            const idx = $wire.selectedCampaigns.indexOf(id);
+                                            if (idx === -1) {
+                                                $wire.selectedCampaigns = [...$wire.selectedCampaigns, id];
+                                            } else {
+                                                $wire.selectedCampaigns = $wire.selectedCampaigns.filter(c => c !== id);
+                                            }
+                                        "
+                                        :class="{{ json_encode($selectedCampaigns) }}.includes('{{ $cid }}') ?
+                                            'bg-indigo-600 border-indigo-500 text-white' :
+                                            'bg-surface-2 border-surface text-zinc-400 hover:text-fg hover:border-zinc-500'"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition cursor-pointer select-none">
+                                        <span
+                                            :class="{{ json_encode($selectedCampaigns) }}.includes('{{ $cid }}') ?
+                                                'opacity-100' : 'opacity-0'"
+                                            class="w-1.5 h-1.5 rounded-full bg-white transition-opacity shrink-0"></span>
+                                        {{ $campaign['name'] }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-zinc-600 italic">No campaigns available.</p>
+                        @endif
+                        @error('selectedCampaigns')
+                            <p class="text-xs text-red-400 mt-2">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     {{-- Danger zone (edit only) --}}
