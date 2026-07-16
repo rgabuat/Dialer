@@ -224,6 +224,7 @@ return [
     "icon" => "heroicon-o-cog-6-tooth",
     "segments" => ["settings"],
     "permission" => "page.settings",
+    "hidden" => true,
     "bottom" => true,
     "children" => [],
   ],
