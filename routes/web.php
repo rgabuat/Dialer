@@ -51,6 +51,7 @@ use App\Livewire\UserGroups\UserGroupEdit;
 use App\Livewire\UserGroups\UserGroupsIndex;
 use App\Livewire\Users\UserCreate;
 use App\Livewire\Users\UserEdit;
+use App\Livewire\Users\UserShow;
 use App\Livewire\Users\UsersIndex;
 use App\Livewire\Workforce\RosterCreate;
 use App\Livewire\Workforce\RosterIndex;
@@ -88,6 +89,29 @@ Route::middleware(['auth'])->group(function () {
         'campaign.select'
     );
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Users — no campaign context needed (accessible from admin panel)
+    Route::middleware('permission:page.users')->group(function () {
+        Route::get('/users', UsersIndex::class)->name('users.index');
+        Route::get('/user/create', UserCreate::class)->name('user.create');
+        Route::get('/user/{user}', UserShow::class)->name('user.show');
+        Route::get('/user/{user}/edit', UserEdit::class)->name('user.edit');
+    });
+
+    // Roles & Permissions — no campaign context needed
+    Route::middleware('permission:page.roles')->group(function () {
+        Route::get('/roles', RolesIndex::class)->name('roles.index');
+        Route::get('/role/create', RolesCreate::class)->name('roles.create');
+        Route::get('/role/{role}/edit', RolesEdit::class)->name('roles.edit');
+        Route::get('/permissions', PermissionsIndex::class)->name('permissions.index');
+    });
+
+    // User Groups — no campaign context needed
+    Route::middleware('permission:page.user_groups')->group(function () {
+        Route::get('/user-groups', UserGroupsIndex::class)->name('user-groups.index');
+        Route::get('/user-group/create', UserGroupCreate::class)->name('user-group.create');
+        Route::get('/user-group/{group}/edit', UserGroupEdit::class)->name('user-group.edit');
+    });
 
     // All other authenticated routes require a campaign to be selected
     Route::middleware(['campaign.selected'])->group(function () {
@@ -127,28 +151,6 @@ Route::middleware(['auth'])->group(function () {
         // Callbacks
         Route::middleware('permission:page.callbacks')->group(function () {
             Route::get('/callbacks', CallbackPanel::class)->name('callbacks.index');
-        });
-
-        // Users
-        Route::middleware('permission:page.users')->group(function () {
-            Route::get('/users', UsersIndex::class)->name('users.index');
-            Route::get('/user/create', UserCreate::class)->name('user.create');
-            Route::get('/user/{user}/edit', UserEdit::class)->name('user.edit');
-        });
-
-        // Roles & Permissions
-        Route::middleware('permission:page.roles')->group(function () {
-            Route::get('/roles', RolesIndex::class)->name('roles.index');
-            Route::get('/role/create', RolesCreate::class)->name('roles.create');
-            Route::get('/role/{role}/edit', RolesEdit::class)->name('roles.edit');
-            Route::get('/permissions', PermissionsIndex::class)->name('permissions.index');
-        });
-
-        // User Groups
-        Route::middleware('permission:page.user_groups')->group(function () {
-            Route::get('/user-groups', UserGroupsIndex::class)->name('user-groups.index');
-            Route::get('/user-group/create', UserGroupCreate::class)->name('user-group.create');
-            Route::get('/user-group/{group}/edit', UserGroupEdit::class)->name('user-group.edit');
         });
 
         // Activity Overview

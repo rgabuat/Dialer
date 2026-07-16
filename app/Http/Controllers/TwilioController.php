@@ -797,6 +797,100 @@ class TwilioController extends Controller
         return response()->json($agents);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Supervisor monitoring  POST /api/call/monitor
+    //  Allows a supervisor to listen (muted) or barge (unmuted) into a live
+    //  agent call by moving both legs into a named Twilio conference room.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function monitorCall(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'mode'    => 'required|in:listen,barge',
+        ]);
+
+        $agentId     = (int) $request->input('user_id');
+        $mode        = $request->input('mode');   // 'listen' | 'barge'
+        $supervisorId = auth()->id();
+
+        // Find the agent's current active conversation
+        $conversation = Conversation::where('assigned_to', $agentId)
+            ->where('status', 'in_progress')
+            ->latest('started_at')
+            ->first();
+
+        if (! $conversation || ! $conversation->call_sid) {
+            return response()->json(['message' => 'Agent is not on an active call.'], 404);
+        }
+
+        $callSid       = $conversation->call_sid;
+        $conferenceName = 'monitor_' . $callSid;
+        $client         = $this->twilioClient();
+        $callbackUrl    = rtrim(config('app.url'), '/') . '/api/call/complete';
+
+        // ── Step 1: Move the existing call into a conference ──────────────────
+        // This replaces the current <Dial><Client> TwiML so the customer & agent
+        // are connected through a conference room instead of a direct dial.
+        $agentConferenceTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response><Dial>'
+            . '<Conference beep="false" startConferenceOnEnter="true" endConferenceOnExit="true"'
+            . ' statusCallback="' . $callbackUrl . '" statusCallbackEvent="end">'
+            . htmlspecialchars($conferenceName)
+            . '</Conference></Dial></Response>';
+
+        try {
+            $client->calls($callSid)->update(['twiml' => $agentConferenceTwiml]);
+        } catch (\Exception $e) {
+            \Log::error('[Monitor] Failed to redirect agent call to conference', [
+                'call_sid' => $callSid,
+                'error'    => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Could not redirect call. ' . $e->getMessage()], 500);
+        }
+
+        // ── Step 2: Dial the supervisor into the same conference ──────────────
+        $muted = $mode === 'listen' ? 'true' : 'false';
+
+        $supervisorTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response><Dial>'
+            . '<Conference beep="false" startConferenceOnEnter="false" endConferenceOnExit="false"'
+            . ' muted="' . $muted . '">'
+            . htmlspecialchars($conferenceName)
+            . '</Conference></Dial></Response>';
+
+        try {
+            $client->calls->create(
+                'client:user_' . $supervisorId,
+                config('services.twilio.caller_id'),
+                [
+                    'twiml'  => $supervisorTwiml,
+                    'method' => 'POST',
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::error('[Monitor] Failed to dial supervisor into conference', [
+                'supervisor_id' => $supervisorId,
+                'conference'    => $conferenceName,
+                'error'         => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Could not dial supervisor. ' . $e->getMessage()], 500);
+        }
+
+        \Log::info('[Monitor] Supervisor monitoring started', [
+            'supervisor_id'   => $supervisorId,
+            'agent_id'        => $agentId,
+            'call_sid'        => $callSid,
+            'conference_name' => $conferenceName,
+            'mode'            => $mode,
+        ]);
+
+        return response()->json([
+            'message'         => ucfirst($mode) . ' session started.',
+            'conference_name' => $conferenceName,
+        ]);
+    }
+
     /**
      * POST /api/dialer/autodial
      * PROGRESSIVE/PREDICTIVE: server pulls next lead from hopper and dials it.

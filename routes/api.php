@@ -52,6 +52,11 @@ Route::middleware("auth:sanctum")->group(function () {
     TwilioController::class,
     "availableAgents",
   ])->name("twilio.availableAgents");
+
+  Route::post("/call/monitor", [
+    TwilioController::class,
+    "monitorCall",
+  ])->name("twilio.monitorCall");
 });
 
 // ── Twilio webhooks — no auth, called directly by Twilio ─────────────────
