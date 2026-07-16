@@ -21,19 +21,17 @@
 
             {{-- Type filter --}}
             <x-select-dropdown wire-model="filterType" :value="$filterType" placeholder="Type" :options="[
-                ['value' => 'quote',       'label' => 'Self Storage Quote'],
+                ['value' => 'quote', 'label' => 'Self Storage Quote'],
                 ['value' => 'reservation', 'label' => 'Reservation'],
-                ['value' => 'waitlist',    'label' => 'Waitlist'],
-                ['value' => 'rental',      'label' => 'Rental'],
+                ['value' => 'waitlist', 'label' => 'Waitlist'],
+                ['value' => 'rental', 'label' => 'Rental'],
             ]" />
 
             {{-- Store filter --}}
-            <x-select-dropdown wire-model="filterStore" :value="$filterStore" placeholder="Store"
-                :options="$stores->map(fn($s) => ['value' => $s->id, 'label' => $s->name])->values()->all()" />
+            <x-select-dropdown wire-model="filterStore" :value="$filterStore" placeholder="Store" :options="$stores->map(fn($s) => ['value' => $s->id, 'label' => $s->name])->values()->all()" />
 
             {{-- User filter --}}
-            <x-select-dropdown wire-model="filterUser" :value="$filterUser" placeholder="Agent"
-                :options="$users->map(fn($u) => ['value' => $u->id, 'label' => $u->name])->values()->all()" />
+            <x-select-dropdown wire-model="filterUser" :value="$filterUser" placeholder="Agent" :options="$users->map(fn($u) => ['value' => $u->id, 'label' => $u->name])->values()->all()" />
 
             {{-- Clear filters --}}
             @if ($search || $filterType || $filterStore || $filterUser || !empty($filterStatus))
@@ -65,31 +63,43 @@
                 <thead class="top-0 z-10 sticky bg-surface">
                     <tr class="border-surface border-b font-semibold text-fg-muted text-xs uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Contact</th>
-                        <th class="px-4 py-3 text-left">Type</th>
-                        <th class="px-4 py-3 text-left">Store</th>
+                        <th class="px-4 py-3 text-left">Details</th>
                         <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-left">Stage</th>
-                        <th class="px-4 py-3 text-left">Value</th>
-                        <th class="px-4 py-3 text-left">Target Close</th>
-                        <th class="px-4 py-3 text-left">Age</th>
-                        <th class="px-4 py-3 text-left">Last Actioned</th>
-                        <th class="px-4 py-3 text-left">Created By</th>
+                        <th class="px-4 py-3 text-left">Target Date</th>
+                        <th class="px-4 py-3 text-left">Created</th>
+                        <th class="px-4 py-3 text-left">Agent</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($leads as $lead)
                         @php
-                            $typeLabel = match($lead->lead_type) {
-                                'quote'       => 'Self Storage Quote',
+                            $typeLabel = match ($lead->lead_type) {
+                                'quote' => 'Quote',
                                 'reservation' => 'Reservation',
-                                'waitlist'    => 'Waitlist',
-                                'rental'      => 'Rental',
-                                default       => ucfirst($lead->lead_type ?? 'Lead'),
+                                'waitlist' => 'Waitlist',
+                                'rental' => 'Rental',
+                                default => ucfirst($lead->lead_type ?? 'Lead'),
                             };
-                            $totalValue = collect($lead->selected_units ?? [])
-                                ->sum(fn($u) => ($u['push_rate'] ?? 0) * max(1, $u['qty'] ?? 1));
-                            $stage = ucfirst(str_replace('_', ' ', $lead->pipeline_stage ?? 'interested'));
-
+                            $typeColor = match ($lead->lead_type) {
+                                'quote' => 'bg-blue-500/10 text-blue-400',
+                                'reservation' => 'bg-indigo-500/10 text-indigo-400',
+                                'waitlist' => 'bg-orange-500/10 text-orange-400',
+                                'rental' => 'bg-green-500/10 text-green-400',
+                                default => 'bg-surface-2 text-fg-muted',
+                            };
+                            $totalValue = collect($lead->selected_units ?? [])->sum(
+                                fn($u) => ($u['push_rate'] ?? 0) * max(1, $u['qty'] ?? 1),
+                            );
+                            $stage = match ($lead->pipeline_stage ?? 'interested') {
+                                'interested' => ['label' => 'Interested', 'class' => 'text-yellow-400'],
+                                'converted' => ['label' => 'Converted', 'class' => 'text-green-400'],
+                                'expired' => ['label' => 'Expired', 'class' => 'text-fg-muted'],
+                                'no_longer_interested' => ['label' => 'Not Interested', 'class' => 'text-red-400'],
+                                default => [
+                                    'label' => ucfirst(str_replace('_', ' ', $lead->pipeline_stage ?? '')),
+                                    'class' => 'text-fg-muted',
+                                ],
+                            };
                             $avatarColors = [
                                 'bg-fuchsia-500/30 text-fuchsia-200',
                                 'bg-blue-500/30 text-blue-200',
@@ -99,114 +109,112 @@
                                 'bg-cyan-500/30 text-cyan-200',
                                 'bg-rose-500/30 text-rose-200',
                                 'bg-violet-500/30 text-violet-200',
-                                'bg-teal-500/30 text-teal-200',
-                                'bg-pink-500/30 text-pink-200',
                             ];
                             $contactColor = $avatarColors[$lead->id % count($avatarColors)];
                             $creatorColor = $avatarColors[($lead->created_by ?? 0) % count($avatarColors)];
-                            $actorColor   = $avatarColors[($lead->last_actioned_by ?? $lead->id) % count($avatarColors)];
-
-                            $contactInitials = strtoupper(substr($lead->first_name ?? '?', 0, 1)) . strtoupper(substr($lead->last_name ?? '', 0, 1));
-                            $creatorInitials = strtoupper(substr($lead->creator?->name ?? '?', 0, 1)) . strtoupper(substr(strstr($lead->creator?->name ?? '', ' ') ?: '', 1, 1));
-                            $actorInitials   = strtoupper(substr($lead->lastActionedBy?->name ?? $lead->creator?->name ?? '?', 0, 1)) . strtoupper(substr(strstr($lead->lastActionedBy?->name ?? $lead->creator?->name ?? '', ' ') ?: '', 1, 1));
-
-                            $targetDate   = $lead->move_in_date ?? $lead->expires_at;
+                            $contactInitials =
+                                strtoupper(substr($lead->first_name ?? '?', 0, 1)) .
+                                strtoupper(substr($lead->last_name ?? '', 0, 1));
+                            $creatorInitials =
+                                strtoupper(substr($lead->creator?->name ?? '?', 0, 1)) .
+                                strtoupper(substr(strstr($lead->creator?->name ?? '', ' ') ?: '', 1, 1));
+                            $targetDate = $lead->move_in_date ?? $lead->expires_at;
                             $targetFuture = $targetDate && $targetDate->isFuture();
-
-                            $statusClass = match(strtolower($lead->status ?? '')) {
-                                'open', 'new' => 'bg-yellow-400/20 text-yellow-300',
-                                'won'         => 'bg-green-400/20 text-green-300',
-                                'lost'        => 'bg-red-400/20 text-red-300',
-                                default       => 'bg-surface-2 text-fg-muted',
+                            $statusClass = match (strtolower($lead->status ?? '')) {
+                                'open', 'new' => 'bg-yellow-400/15 text-yellow-300 border-yellow-400/20',
+                                'won' => 'bg-green-400/15 text-green-300 border-green-400/20',
+                                'lost' => 'bg-red-400/15 text-red-300 border-red-400/20',
+                                default => 'bg-surface-2 text-fg-muted border-surface',
                             };
+                            $dynData = collect($lead->dynamic_data ?? [])
+                                ->filter(fn($v) => $v !== '' && $v !== null)
+                                ->take(3);
                         @endphp
                         <tr wire:key="lead-{{ $lead->id }}"
                             onclick="window.location.href='{{ route('lead.edit', $lead->id) }}'"
-                            class="hover:bg-hover border-surface border-b transition cursor-pointer">
+                            class="hover:bg-hover border-surface border-b transition cursor-pointer group">
 
                             {{-- Contact --}}
                             <td class="px-5 py-3">
-                                <div class="flex items-center gap-2.5 min-w-[160px]">
-                                    <div class="flex items-center justify-center {{ $contactColor }} rounded-full w-8 h-8 font-bold text-xs shrink-0">
+                                <div class="flex items-center gap-2.5">
+                                    <div
+                                        class="flex items-center justify-center {{ $contactColor }} rounded-full w-8 h-8 font-bold text-xs shrink-0">
                                         {{ $contactInitials ?: '?' }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-semibold text-fg text-xs truncate">{{ $lead->first_name }} {{ $lead->last_name }}</p>
-                                        <p class="text-fg-muted text-xs truncate">{{ $lead->phone ?? $lead->email ?? '—' }}</p>
+                                        <p class="font-semibold text-fg text-sm leading-tight">
+                                            {{ trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')) ?: '—' }}
+                                        </p>
+                                        <p class="text-fg-muted text-xs truncate max-w-[160px]">
+                                            {{ $lead->phone ?? ($lead->email ?? '—') }}</p>
                                     </div>
                                 </div>
                             </td>
 
-                            {{-- Type --}}
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <p class="font-semibold text-fg text-xs">{{ $typeLabel }}</p>
-                                <p class="text-fg-muted text-xs">{{ $lead->source ?? 'CSRScape' }}</p>
-                            </td>
-
-                            {{-- Store --}}
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                @if ($lead->store)
-                                    <p class="font-medium text-fuchsia-400 text-xs">{{ $lead->store->name }}</p>
-                                    <p class="text-fg-muted text-xs">{{ $lead->store->brand ?? '' }}</p>
-                                @else
-                                    <span class="text-fg-muted text-xs">—</span>
+                            {{-- Details --}}
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {{ $typeColor }}">
+                                        {{ $typeLabel }}
+                                    </span>
+                                    @if ($lead->store)
+                                        <span
+                                            class="text-xs text-fuchsia-400 font-medium">{{ $lead->store->name }}</span>
+                                    @endif
+                                    @if ($totalValue > 0)
+                                        <span
+                                            class="text-xs font-semibold text-fg">${{ number_format($totalValue) }}</span>
+                                    @endif
+                                </div>
+                                @if ($dynData->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1 mt-1.5">
+                                        @foreach ($dynData as $dk => $dv)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-2 border border-surface text-[10px] text-fg-muted">
+                                                <span
+                                                    class="text-fg-muted/60">{{ ucfirst(str_replace('_', ' ', $dk)) }}:</span>
+                                                <span class="text-fg">{{ Str::limit((string) $dv, 20) }}</span>
+                                            </span>
+                                        @endforeach
+                                    </div>
                                 @endif
                             </td>
 
                             {{-- Status --}}
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full font-semibold text-xs {{ $statusClass }}">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded border font-semibold text-xs {{ $statusClass }}">
                                     {{ ucfirst(strtolower($lead->status ?? 'New')) }}
                                 </span>
+                                <p class="mt-1 text-xs {{ $stage['class'] }}">{{ $stage['label'] }}</p>
                             </td>
 
-                            {{-- Stage --}}
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="text-fg-muted text-xs">{{ $stage }}</span>
-                            </td>
-
-                            {{-- Value --}}
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                @if ($totalValue > 0)
-                                    <span class="font-semibold text-fg text-xs">${{ number_format($totalValue) }}</span>
-                                @else
-                                    <span class="text-fg-muted text-xs">—</span>
-                                @endif
-                            </td>
-
-                            {{-- Target Close --}}
+                            {{-- Target Date --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 @if ($targetDate)
-                                    <p class="font-medium text-xs {{ $targetFuture ? 'text-green-400' : 'text-fg-muted' }}">
-                                        {{ $targetDate->diffForHumans(null, true, false, 1) }}
+                                    <p
+                                        class="font-medium text-xs {{ $targetFuture ? 'text-emerald-400' : 'text-fg-muted line-through' }}">
+                                        {{ $targetDate->format('j M Y') }}
                                     </p>
-                                    <p class="text-fg-muted text-xs">{{ $targetDate->format('j M Y') }}</p>
+                                    <p class="text-fg-muted text-xs">{{ $targetDate->diffForHumans() }}</p>
                                 @else
                                     <span class="text-fg-muted text-xs">—</span>
                                 @endif
                             </td>
 
-                            {{-- Age --}}
+                            {{-- Created --}}
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <p class="font-medium text-fg text-xs">{{ $lead->created_at->diffForHumans(null, true, false, 1) }}</p>
-                                <p class="text-fg-muted text-xs">{{ $lead->created_at->format('d M Y') }}</p>
+                                <p class="text-fg text-xs font-medium">{{ $lead->created_at->format('j M Y') }}</p>
+                                <p class="text-fg-muted text-xs">{{ $lead->created_at->diffForHumans() }}</p>
                             </td>
 
-                            {{-- Last Actioned --}}
+                            {{-- Agent --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="flex items-center justify-center {{ $actorColor }} rounded-full w-6 h-6 font-bold text-xs shrink-0">
-                                        {{ $actorInitials }}
-                                    </div>
-                                    <span class="text-fg-muted text-xs">{{ ($lead->last_called_at ?? $lead->updated_at)->format('d M Y') }}</span>
-                                </div>
-                            </td>
-
-                            {{-- Created By --}}
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-                                    <div class="flex items-center justify-center {{ $creatorColor }} rounded-full w-6 h-6 font-bold text-xs shrink-0">
-                                        {{ $creatorInitials }}
+                                    <div
+                                        class="flex items-center justify-center {{ $creatorColor }} rounded-full w-6 h-6 font-bold text-xs shrink-0">
+                                        {{ $creatorInitials ?: '?' }}
                                     </div>
                                     <span class="text-fg-muted text-xs">{{ $lead->creator?->name ?? '—' }}</span>
                                 </div>
@@ -215,11 +223,17 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-5 py-20 text-center">
-                                <x-heroicon-o-document-text class="mx-auto mb-3 w-10 h-10 text-fg-muted/40" />
-                                <p class="text-fg-muted text-sm">No leads found.</p>
+                            <td colspan="6" class="px-5 py-20 text-center">
+                                <svg class="mx-auto mb-3 w-10 h-10 text-fg-muted/25" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                                <p class="font-medium text-fg-muted text-sm">No leads found</p>
                                 @if ($search || $filterType || $filterStore || $filterUser)
-                                    <p class="mt-1 text-fg-muted/60 text-xs">Try adjusting your search or filters.</p>
+                                    <p class="mt-1 text-fg-muted/60 text-xs">Try clearing your filters.</p>
+                                @else
+                                    <p class="mt-1 text-fg-muted/60 text-xs">Create a new lead to get started.</p>
                                 @endif
                             </td>
                         </tr>

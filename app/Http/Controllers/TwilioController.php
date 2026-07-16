@@ -1176,6 +1176,7 @@ class TwilioController extends Controller
                     'status' => 'in_progress',
                     'contact_phone' => $from,
                     'in_group_id' => $inGroup?->id,
+                    'campaign_id' => $inGroup?->campaign_id,
                     'started_at' => now(),
                 ], $twilioMeta)
             );
