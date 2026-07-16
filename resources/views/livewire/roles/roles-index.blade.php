@@ -100,9 +100,9 @@
 
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════════
+    {{-- --------------------------------------------------------------
          FULL-SCREEN SLIDE-OVER MODAL (create / edit role)
-    ══════════════════════════════════════════════════════════════ --}}
+    -------------------------------------------------------------- --}}
     @if ($showModal)
         @php
             $sectionIcons = [
@@ -162,7 +162,8 @@
                     </div>
 
                     {{-- Campaigns --}}
-                    <div class="bg-surface border border-surface rounded-xl overflow-hidden" x-data="{ open: true }">
+                    <div class="bg-surface border border-surface rounded-xl overflow-hidden" x-data="{ open: true }"
+                        wire:ignore.self>
                         <div class="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none hover:bg-surface-2/5 transition-colors"
                             :class="open ? 'border-b border-surface' : ''" @click="open = !open">
                             <div>
@@ -170,20 +171,19 @@
                                 <p class="mt-0.5 text-zinc-500 text-xs">Restrict this role to specific campaigns.</p>
                             </div>
                             <div class="flex items-center gap-3 shrink-0">
-                                <label class="flex items-center gap-1.5 cursor-pointer select-none" @click.stop>
-                                    <span class="text-xs text-zinc-500">All</span>
-                                    <div class="relative inline-flex items-center">
-                                        <input type="checkbox" id="role_all_campaigns" @checked(count($allCampaigns) > 0 && count($selectedCampaigns) === count($allCampaigns))
-                                            x-on:change="
-                                                const ids = {{ json_encode(collect($allCampaigns)->pluck('id')->map(fn($id) => (string) $id)->values()->toArray()) }};
-                                                $wire.selectedCampaigns = $el.checked ? ids : [];
-                                            "
-                                            class="sr-only peer">
-                                        <div
-                                            class="after:top-0.5 after:left-0.5 after:absolute relative bg-zinc-700 after:bg-white peer-checked:bg-indigo-500 rounded-full after:rounded-full w-9 after:w-4 h-5 after:h-4 after:content-[''] transition-colors after:transition-transform peer-checked:after:translate-x-4 duration-200 after:duration-200">
-                                        </div>
-                                    </div>
-                                </label>
+                                <button type="button" @click.stop
+                                    x-on:click="
+                                        const ids = {{ json_encode(collect($allCampaigns)->pluck('id')->map(fn($id) => (string) $id)->values()->toArray()) }};
+                                        const allSelected = $wire.selectedCampaigns.length === ids.length;
+                                        $wire.selectedCampaigns = allSelected ? [] : ids;
+                                    "
+                                    class="text-xs px-2.5 py-1 rounded-full border transition"
+                                    :class="({{ json_encode(count($allCampaigns)) }} > 0 && $wire.selectedCampaigns.length ===
+                                        {{ json_encode(count($allCampaigns)) }}) ?
+                                    'bg-indigo-600 border-indigo-500 text-white' :
+                                    'bg-surface-2 border-surface text-zinc-400 hover:text-fg hover:border-zinc-500'">
+                                    All
+                                </button>
                                 <x-heroicon-o-chevron-down
                                     class="w-4 h-4 text-zinc-600 shrink-0 transition-transform duration-200"
                                     ::class="open ? 'rotate-180' : ''" />
@@ -195,16 +195,29 @@
                             x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100"
                             x-transition:leave-end="opacity-0">
                             @if (count($allCampaigns) > 0)
-                                <div class="px-5 py-3 space-y-1.5 max-h-56 overflow-y-auto">
+                                <div class="px-5 py-4 flex flex-wrap gap-2">
                                     @foreach ($allCampaigns as $campaign)
-                                        <label
-                                            class="flex items-center gap-3 cursor-pointer py-1.5 rounded-lg hover:bg-surface-2/20 px-2 transition group">
-                                            <input type="checkbox" value="{{ $campaign['id'] }}"
-                                                wire:model="selectedCampaigns"
-                                                class="rounded bg-zinc-700 border-zinc-600 text-indigo-500 focus:ring-indigo-500" />
+                                        @php $cid = (string) $campaign['id']; @endphp
+                                        <button type="button" wire:key="campaign-pill-{{ $cid }}"
+                                            x-on:click="
+                                                const id = '{{ $cid }}';
+                                                const idx = $wire.selectedCampaigns.indexOf(id);
+                                                if (idx === -1) {
+                                                    $wire.selectedCampaigns = [...$wire.selectedCampaigns, id];
+                                                } else {
+                                                    $wire.selectedCampaigns = $wire.selectedCampaigns.filter(c => c !== id);
+                                                }
+                                            "
+                                            :class="{{ json_encode($selectedCampaigns) }}.includes('{{ $cid }}') ?
+                                                'bg-indigo-600 border-indigo-500 text-white' :
+                                                'bg-surface-2 border-surface text-zinc-400 hover:text-fg hover:border-zinc-500'"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition cursor-pointer select-none">
                                             <span
-                                                class="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors">{{ $campaign['name'] }}</span>
-                                        </label>
+                                                :class="{{ json_encode($selectedCampaigns) }}.includes(
+                                                    '{{ $cid }}') ? 'opacity-100' : 'opacity-0'"
+                                                class="w-1.5 h-1.5 rounded-full bg-white transition-opacity shrink-0"></span>
+                                            {{ $campaign['name'] }}
+                                        </button>
                                     @endforeach
                                 </div>
                             @else
@@ -300,7 +313,7 @@
                                                         class="text-sm text-zinc-400 group-hover/pg:text-zinc-200 transition-colors truncate">{{ $label }}</span>
                                                 </div>
                                                 <div class="relative inline-flex items-center shrink-0" @click.stop>
-                                                    <input type="checkbox" wire:model="permissions"
+                                                    <input type="checkbox" wire:model.defer="permissions"
                                                         value="{{ $perm }}" class="sr-only peer">
                                                     <div
                                                         class="after:top-0.5 after:left-0.5 after:absolute relative bg-zinc-700 after:bg-white peer-checked:bg-indigo-500 rounded-full after:rounded-full w-9 after:w-4 h-5 after:h-4 after:content-[''] transition-colors after:transition-transform peer-checked:after:translate-x-4 duration-200 after:duration-200">
@@ -354,7 +367,7 @@
                                                             </div>
                                                             <div class="relative inline-flex items-center shrink-0"
                                                                 @click.stop>
-                                                                <input type="checkbox" wire:model="permissions"
+                                                                <input type="checkbox" wire:model.defer="permissions"
                                                                     value="{{ $perm->name }}" class="sr-only peer">
                                                                 <div
                                                                     class="after:top-0.5 after:left-0.5 after:absolute relative bg-zinc-700 after:bg-white peer-checked:bg-indigo-500 rounded-full after:rounded-full w-9 after:w-4 h-5 after:h-4 after:content-[''] transition-colors after:transition-transform peer-checked:after:translate-x-4 duration-200 after:duration-200">

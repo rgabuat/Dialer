@@ -1,4 +1,4 @@
-<div class="space-y-4 p-6 stagger-children">
+<div class="space-y-4 p-6 stagger-children" wire:poll.5s="$refresh">
 
     {{-- Page title --}}
     <div>
@@ -11,8 +11,16 @@
 
         {{-- Header --}}
         <div class="flex sm:flex-row flex-col justify-between sm:items-center gap-3 px-5 py-4 border-surface border-b">
-            <h2 class="font-bold text-fg text-base">Accounts</h2>
+            <div>
+                <h2 class="font-bold text-fg text-base">Accounts</h2>
+                <p class="text-xs text-zinc-500 mt-0.5">Listen &amp; Barge buttons appear automatically when an agent is
+                    on a live call.</p>
+            </div>
             <div class="flex items-center gap-2">
+                <button wire:click="$refresh" title="Refresh call status"
+                    class="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-hover transition">
+                    <x-heroicon-o-arrow-path class="w-4 h-4" wire:loading.class="animate-spin" />
+                </button>
                 <input wire:model.live.debounce.500ms="search" type="text" placeholder="Search users..."
                     class="bg-surface-2 px-3 py-1.5 border border-surface focus:border-zinc-600 rounded-lg focus:outline-none focus:ring-0 w-44 text-fg text-sm transition placeholder-fg-muted">
                 <button wire:click="openCreate"
