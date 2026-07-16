@@ -137,6 +137,6 @@ class UserEdit extends Component
     public function render()
     {
         return view('livewire.users.user-edit')
-            ->layout('components.layouts.app');
+            ->layout('components.layouts.admin', ['heading' => 'Edit User']);
     }
 }

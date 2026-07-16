@@ -47,42 +47,6 @@ return [
   ],
 
   [
-    "label" => "People",
-    "icon" => "heroicon-o-users",
-    "segments" => [
-      "users",
-      "user",
-      "roles",
-      "role",
-      "permissions",
-      "user-groups",
-      "user-group",
-    ],
-    "permission" => null,
-    "bottom" => false,
-    "children" => [
-      [
-        "label" => "Users",
-        "route" => "users.index",
-        "segment" => "users",
-        "permission" => "page.users",
-      ],
-      [
-        "label" => "Roles & Permissions",
-        "route" => "roles.index",
-        "segment" => "roles",
-        "permission" => "page.roles",
-      ],
-      [
-        "label" => "User Groups",
-        "route" => "user-groups.index",
-        "segment" => "user-groups",
-        "permission" => "page.user_groups",
-      ],
-    ],
-  ],
-
-  [
     "label" => "Activity",
     "icon" => "heroicon-o-signal",
     "segments" => [

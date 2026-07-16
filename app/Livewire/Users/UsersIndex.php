@@ -31,6 +31,6 @@ class UsersIndex extends Component
         })
         ->latest()
         ->paginate($this->perPage),
-    ])->layout("components.layouts.app");
+    ])->layout("components.layouts.admin", ['heading' => 'Users']);
   }
 }

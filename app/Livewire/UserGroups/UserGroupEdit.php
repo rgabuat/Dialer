@@ -70,6 +70,6 @@ class UserGroupEdit extends Component
     public function render()
     {
         return view('livewire.user-groups.user-group-edit')
-            ->layout('components.layouts.app', ['title' => 'Edit User Group']);
+            ->layout('components.layouts.admin', ['heading' => 'Edit User Group']);
     }
 }

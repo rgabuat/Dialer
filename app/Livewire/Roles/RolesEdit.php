@@ -103,6 +103,6 @@ class RolesEdit extends Component
                 ->get()
                 ->groupBy(fn ($p) => explode('.', $p->name)[0])
                 ->toBase(),
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.admin', ['heading' => 'Edit Role']);
     }
 }

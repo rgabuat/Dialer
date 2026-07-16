@@ -49,6 +49,6 @@ class UserGroupCreate extends Component
     public function render()
     {
         return view('livewire.user-groups.user-group-create')
-            ->layout('components.layouts.app', ['title' => 'New User Group']);
+            ->layout('components.layouts.admin', ['heading' => 'New User Group']);
     }
 }

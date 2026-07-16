@@ -88,6 +88,6 @@ class RolesCreate extends Component
         ->get()
         ->groupBy(fn($p) => explode(".", $p->name)[0])
         ->toBase(),
-    ])->layout("components.layouts.app");
+    ])->layout("components.layouts.admin", ['heading' => 'Create Role']);
   }
 }

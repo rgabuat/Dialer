@@ -37,6 +37,6 @@ class UserGroupsIndex extends Component
     return view(
       "livewire.user-groups.user-groups-index",
       compact("groups")
-    )->layout("components.layouts.app", ["title" => "User Groups"]);
+    )->layout("components.layouts.admin", ['heading' => 'User Groups']);
   }
 }

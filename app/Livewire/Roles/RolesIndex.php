@@ -26,6 +26,6 @@ class RolesIndex extends Component
   {
     return view("livewire.roles.roles-index", [
       "roles" => Role::withCount("permissions")->paginate($this->perPage),
-    ])->layout("components.layouts.app");
+    ])->layout("components.layouts.admin", ['heading' => 'Roles & Permissions']);
   }
 }

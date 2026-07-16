@@ -99,4 +99,10 @@ class UserCreate extends Component
 
         $this->redirectRoute('users.index');
     }
+
+    public function render()
+    {
+        return view('livewire.users.user-create')
+            ->layout('components.layouts.admin', ['heading' => 'Create User']);
+    }
 }

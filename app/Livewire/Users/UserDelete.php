@@ -34,6 +34,6 @@ class UserDelete extends Component
 
     public function render()
     {
-        return view('livewire.users.user-delete')->layout('components.layouts.app');
+        return view('livewire.users.user-delete')->layout('components.layouts.admin', ['heading' => 'Delete User']);
     }
 }

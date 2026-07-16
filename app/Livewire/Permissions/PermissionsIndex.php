@@ -23,6 +23,6 @@ class PermissionsIndex extends Component
   {
     return view("livewire.permissions.permissions-index", [
       "permissions" => Permission::all(),
-    ])->layout("components.layouts.app");
+    ])->layout("components.layouts.admin", ['heading' => 'Permissions']);
   }
 }
