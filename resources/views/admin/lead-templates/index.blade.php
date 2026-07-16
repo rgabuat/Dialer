@@ -61,6 +61,7 @@
                             <th class="px-5 py-3 text-left">Fields</th>
                             <th class="px-5 py-3 text-left">Used By</th>
                             <th class="px-5 py-3 text-left">Status</th>
+                            <th class="px-5 py-3 text-left">Last Updated</th>
                             <th class="px-5 py-3 text-right w-10"></th>
                         </tr>
                     </thead>
@@ -99,6 +100,10 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-zinc-600 inline-block"></span>Inactive
                                         </span>
                                     @endif
+                                </td>
+                                <td class="px-5 py-3 text-xs text-fg-muted"
+                                    title="{{ $tpl->updated_at->format('Y-m-d H:i') }}">
+                                    {{ $tpl->updated_at->diffForHumans() }}
                                 </td>
                                 <td class="px-5 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">

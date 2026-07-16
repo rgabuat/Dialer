@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\ActivityLog;
 use App\Models\Conversation;
 use App\Models\Lead;
+use App\Models\LeadTemplate;
 use App\Models\Store;
 use App\Models\StoreUnit;
 use Illuminate\Support\Facades\Validator;
@@ -53,7 +54,7 @@ class ConversationShow extends Component
   {
     $this->leadCreateErrors = [];
 
-    $process = $this->resolveLeadProcess($this->conversation->campaign?->lead_process);
+    $process = $this->resolveLeadProcess($this->effectiveCampaignLeadProcess());
     $fieldMap = [];
     foreach (($process['steps'] ?? []) as $step) {
       foreach (($step['fields'] ?? []) as $field) {
@@ -210,7 +211,7 @@ class ConversationShow extends Component
   public function render()
   {
     $this->conversation->loadMissing([
-      "campaign",
+      "campaign.leadTemplate",
       "assignedAgent",
       "completedByAgent",
       "disposition",
@@ -220,7 +221,7 @@ class ConversationShow extends Component
     $notes = $this->conversation->notes()->with("author")->get();
 
     $leadCreateStores = Store::orderBy('name')->get(['id', 'name']);
-    $leadCreateProcess = $this->resolveLeadProcess($this->conversation->campaign?->lead_process);
+    $leadCreateProcess = $this->resolveLeadProcess($this->effectiveCampaignLeadProcess());
 
     $leads = Lead::where('conversation_id', $this->conversation->id)
       ->with('creator', 'store')
@@ -242,6 +243,24 @@ class ConversationShow extends Component
       "accountStore" => $accountStore,
       "selectedLead" => $selectedLead,
     ])->layout("components.layouts.app");
+  }
+
+  private function effectiveCampaignLeadProcess(): mixed
+  {
+    $campaign = $this->conversation->campaign;
+
+    // Campaign with an assigned template — use the template's process
+    if ($campaign?->lead_template_id && $campaign->leadTemplate) {
+      return $campaign->leadTemplate->lead_process;
+    }
+
+    // Campaign with its own inline lead_process
+    if ($campaign?->lead_process) {
+      return $campaign->lead_process;
+    }
+
+    // No campaign or no process on campaign — fall back to first active template
+    return LeadTemplate::where('is_active', true)->orderBy('id')->value('lead_process');
   }
 
   private function resolveLeadProcess(mixed $process): array

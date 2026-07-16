@@ -472,7 +472,7 @@
 
         // Digits-only list of numbers that belong to this platform.
         // Agents are blocked from dialling these to prevent IVR loops.
-        const _platformNumbers = [];
+        if (!('_platformNumbers' in window)) window._platformNumbers = [];
 
         function agentPhone() {
             return {

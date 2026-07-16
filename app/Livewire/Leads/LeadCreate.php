@@ -19,9 +19,12 @@ class LeadCreate extends Component
     public function mount(): void
     {
         $campaignId = (int) session('active_campaign_id');
-        $this->campaign = $campaignId ? Campaign::find($campaignId) : null;
+        $this->campaign = $campaignId ? Campaign::with('leadTemplate')->find($campaignId) : null;
 
-        $this->process = $this->resolveProcess($this->campaign?->lead_process);
+        $effectiveProcess = ($this->campaign?->lead_template_id && $this->campaign?->leadTemplate)
+            ? $this->campaign->leadTemplate->lead_process
+            : $this->campaign?->lead_process;
+        $this->process = $this->resolveProcess($effectiveProcess);
         $this->processMode = $this->process['mode'];
 
         foreach ($this->process['steps'] as $step) {

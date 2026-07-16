@@ -65,6 +65,8 @@ class ConversationsIndex extends Component
 
   public function render()
   {
+    $campaignId = session('active_campaign_id');
+
     $query = Conversation::with([
       "assignedAgent",
       "completedByAgent",
@@ -72,6 +74,10 @@ class ConversationsIndex extends Component
     ])
       ->select('conversations.*')
       ->distinct()
+      ->when(
+        $campaignId,
+        fn($q) => $q->where('campaign_id', $campaignId)
+      )
       ->when(
         $this->tab === "assigned",
         fn($q) => $q->where("assigned_to", auth()->id())

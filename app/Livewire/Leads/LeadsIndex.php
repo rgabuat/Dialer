@@ -50,7 +50,10 @@ class LeadsIndex extends Component
 
   public function render()
   {
+    $campaignId = session('active_campaign_id');
+
     $query = Lead::with(['store', 'creator', 'lastActionedBy'])
+      ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
       ->latest();
 
     if ($this->search) {

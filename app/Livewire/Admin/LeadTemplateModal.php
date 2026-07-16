@@ -245,6 +245,9 @@ class LeadTemplateModal extends Component
             if (count($stepFields) > 0) {
                 $title   = trim((string) ($step['title'] ?? ''));
                 $steps[] = ['title' => $title ?: ('Step ' . (count($steps) + 1)), 'fields' => $stepFields];
+            } elseif (count($step['fields'] ?? []) > 0) {
+                // Step has fields but all were skipped (empty key+label) — flag as error so nothing is silently lost
+                $this->addError("lead_process_steps.{$si}.title", 'Each step must have at least one field with a key and label filled in.');
             }
         }
 
