@@ -55,11 +55,23 @@ class LeadEdit extends Component
 
     public function render()
     {
-        $this->lead->loadMissing(['store', 'creator', 'lastActionedBy', 'conversation']);
+        $this->lead->loadMissing(['store', 'creator', 'lastActionedBy', 'conversation', 'campaign.leadTemplate']);
 
-        $notes = $this->lead->conversation
-            ? $this->lead->conversation->notes()->with('author')->orderBy('created_at')->get()
-            : collect();
+        // Resolve template field definitions for this lead's campaign
+        $campaign       = $this->lead->campaign;
+        $process        = $campaign?->leadTemplate?->lead_process ?? $campaign?->lead_process;
+        $templateFields = [];
+        foreach (($process['steps'] ?? []) as $step) {
+            foreach (($step['fields'] ?? []) as $field) {
+                if (!empty($field['key'])) {
+                    $templateFields[$field['key']] = [
+                        'label' => $field['label'] ?? ucfirst(str_replace('_', ' ', $field['key'])),
+                        'type'  => $field['type'] ?? 'text',
+                        'step'  => $step['title'] ?? null,
+                    ];
+                }
+            }
+        }
 
         $activityLogs = ActivityLog::where('subject_type', 'App\\Models\\Lead')
             ->where('subject_id', $this->lead->id)
@@ -67,8 +79,8 @@ class LeadEdit extends Component
             ->get();
 
         return view('livewire.leads.lead-edit', [
-            'notes'        => $notes,
-            'activityLogs' => $activityLogs,
+            'activityLogs'   => $activityLogs,
+            'templateFields' => $templateFields,
         ])->layout('components.layouts.app');
     }
 }

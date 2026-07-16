@@ -78,25 +78,38 @@
                     @forelse ($leads as $lead)
                         @php
                             $avatarColors = [
-                                'bg-fuchsia-500/30 text-fuchsia-200', 'bg-blue-500/30 text-blue-200',
-                                'bg-green-500/30 text-green-200', 'bg-yellow-500/30 text-yellow-200',
-                                'bg-orange-500/30 text-orange-200', 'bg-cyan-500/30 text-cyan-200',
-                                'bg-rose-500/30 text-rose-200', 'bg-violet-500/30 text-violet-200',
+                                'bg-fuchsia-500/30 text-fuchsia-200',
+                                'bg-blue-500/30 text-blue-200',
+                                'bg-green-500/30 text-green-200',
+                                'bg-yellow-500/30 text-yellow-200',
+                                'bg-orange-500/30 text-orange-200',
+                                'bg-cyan-500/30 text-cyan-200',
+                                'bg-rose-500/30 text-rose-200',
+                                'bg-violet-500/30 text-violet-200',
                             ];
-                            $contactColor    = $avatarColors[$lead->id % count($avatarColors)];
-                            $creatorColor    = $avatarColors[($lead->created_by ?? 0) % count($avatarColors)];
-                            $dynData         = $lead->dynamic_data ?? [];
-                            $contactInitials = strtoupper(substr($dynData['first_name'] ?? $lead->first_name ?? '?', 0, 1))
-                                             . strtoupper(substr($dynData['last_name']  ?? $lead->last_name  ?? '',  0, 1));
-                            $creatorInitials = strtoupper(substr($lead->creator?->name ?? '?', 0, 1))
-                                             . strtoupper(substr(strstr($lead->creator?->name ?? '', ' ') ?: '', 1, 1));
-                            $name            = trim(($dynData['first_name'] ?? $lead->first_name ?? '') . ' ' . ($dynData['last_name'] ?? $lead->last_name ?? ''));
-                            $contact         = $dynData['phone'] ?? $dynData['phone_number'] ?? $lead->phone ?? $dynData['email'] ?? $lead->email ?? null;
+                            $contactColor = $avatarColors[$lead->id % count($avatarColors)];
+                            $creatorColor = $avatarColors[($lead->created_by ?? 0) % count($avatarColors)];
+                            $dynData = $lead->dynamic_data ?? [];
+                            $contactInitials =
+                                strtoupper(substr($dynData['first_name'] ?? ($lead->first_name ?? '?'), 0, 1)) .
+                                strtoupper(substr($dynData['last_name'] ?? ($lead->last_name ?? ''), 0, 1));
+                            $creatorInitials =
+                                strtoupper(substr($lead->creator?->name ?? '?', 0, 1)) .
+                                strtoupper(substr(strstr($lead->creator?->name ?? '', ' ') ?: '', 1, 1));
+                            $name = trim(
+                                ($dynData['first_name'] ?? ($lead->first_name ?? '')) .
+                                    ' ' .
+                                    ($dynData['last_name'] ?? ($lead->last_name ?? '')),
+                            );
+                            $contact =
+                                $dynData['phone'] ??
+                                ($dynData['phone_number'] ??
+                                    ($lead->phone ?? ($dynData['email'] ?? ($lead->email ?? null))));
                             $statusClass = match (strtolower($lead->status ?? '')) {
                                 'open', 'new' => 'bg-yellow-400/15 text-yellow-300 border-yellow-400/20',
-                                'won'         => 'bg-green-400/15 text-green-300 border-green-400/20',
-                                'lost'        => 'bg-red-400/15 text-red-300 border-red-400/20',
-                                default       => 'bg-surface-2 text-fg-muted border-surface',
+                                'won' => 'bg-green-400/15 text-green-300 border-green-400/20',
+                                'lost' => 'bg-red-400/15 text-red-300 border-red-400/20',
+                                default => 'bg-surface-2 text-fg-muted border-surface',
                             };
                         @endphp
                         <tr wire:key="lead-{{ $lead->id }}"
@@ -106,13 +119,15 @@
                             {{-- Contact --}}
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="flex items-center justify-center {{ $contactColor }} rounded-full w-8 h-8 font-bold text-xs shrink-0">
+                                    <div
+                                        class="flex items-center justify-center {{ $contactColor }} rounded-full w-8 h-8 font-bold text-xs shrink-0">
                                         {{ $contactInitials ?: '?' }}
                                     </div>
                                     <div class="min-w-0">
                                         <p class="font-semibold text-fg text-sm leading-tight">{{ $name ?: '—' }}</p>
                                         @if ($contact)
-                                            <p class="text-fg-muted text-xs truncate max-w-[150px]">{{ $contact }}</p>
+                                            <p class="text-fg-muted text-xs truncate max-w-[150px]">{{ $contact }}
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
@@ -132,7 +147,8 @@
                                                 <a href="mailto:{{ $val }}" onclick="event.stopPropagation()"
                                                     class="text-xs text-indigo-400 hover:underline truncate block">{{ $val }}</a>
                                             @else
-                                                <span class="text-xs text-fg truncate block" title="{{ $val }}">{{ Str::limit((string) $val, 35) }}</span>
+                                                <span class="text-xs text-fg truncate block"
+                                                    title="{{ $val }}">{{ Str::limit((string) $val, 35) }}</span>
                                             @endif
                                         @else
                                             <span class="text-fg-muted/30 text-xs">—</span>
@@ -144,8 +160,10 @@
                                     @if (!empty($dynData))
                                         <div class="flex flex-wrap gap-1">
                                             @foreach (collect($dynData)->filter()->take(4) as $k => $v)
-                                                <span class="inline-flex gap-1 px-1.5 py-0.5 rounded bg-surface-2 border border-surface text-[10px] text-fg-muted">
-                                                    <span class="opacity-60">{{ ucfirst(str_replace('_', ' ', $k)) }}:</span>
+                                                <span
+                                                    class="inline-flex gap-1 px-1.5 py-0.5 rounded bg-surface-2 border border-surface text-[10px] text-fg-muted">
+                                                    <span
+                                                        class="opacity-60">{{ ucfirst(str_replace('_', ' ', $k)) }}:</span>
                                                     <span class="text-fg">{{ Str::limit((string) $v, 20) }}</span>
                                                 </span>
                                             @endforeach
@@ -158,7 +176,8 @@
 
                             {{-- Status --}}
                             <td class="px-4 py-3.5 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded border font-semibold text-xs {{ $statusClass }}">
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded border font-semibold text-xs {{ $statusClass }}">
                                     {{ ucfirst(strtolower($lead->status ?? 'New')) }}
                                 </span>
                             </td>
@@ -172,7 +191,8 @@
                             {{-- Agent --}}
                             <td class="px-4 py-3.5 whitespace-nowrap">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="flex items-center justify-center {{ $creatorColor }} rounded-full w-6 h-6 font-bold text-[10px] shrink-0">
+                                    <div
+                                        class="flex items-center justify-center {{ $creatorColor }} rounded-full w-6 h-6 font-bold text-[10px] shrink-0">
                                         {{ $creatorInitials ?: '?' }}
                                     </div>
                                     <span class="text-fg-muted text-xs">{{ $lead->creator?->name ?? '—' }}</span>
@@ -182,8 +202,10 @@
                     @empty
                         <tr>
                             <td colspan="{{ 4 + max(count($templateFields), 1) }}" class="px-5 py-20 text-center">
-                                <svg class="mx-auto mb-3 w-10 h-10 text-fg-muted/25" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                <svg class="mx-auto mb-3 w-10 h-10 text-fg-muted/25" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                 </svg>
                                 <p class="font-medium text-fg-muted text-sm">No leads found</p>
                                 @if ($search || $filterType || $filterStore || $filterUser)

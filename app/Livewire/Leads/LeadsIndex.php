@@ -118,13 +118,13 @@ class LeadsIndex extends Component
         $templateFields = [];
         if ($campaignId) {
             $campaign = \App\Models\Campaign::with('leadTemplate')->find($campaignId);
-            $process  = $campaign?->leadTemplate?->lead_process ?? $campaign?->lead_process;
+            $process = $campaign?->leadTemplate?->lead_process ?? $campaign?->lead_process;
             foreach (($process['steps'] ?? []) as $step) {
                 foreach (($step['fields'] ?? []) as $field) {
-                    if (!empty($field['key'])) {
+                    if (! empty($field['key'])) {
                         $templateFields[$field['key']] = [
                             'label' => $field['label'] ?? ucfirst(str_replace('_', ' ', $field['key'])),
-                            'type'  => $field['type'] ?? 'text',
+                            'type' => $field['type'] ?? 'text',
                         ];
                     }
                 }
@@ -132,9 +132,9 @@ class LeadsIndex extends Component
         }
 
         return view('livewire.leads.leads-index', [
-            'leads'          => $leads,
-            'stores'         => $stores,
-            'users'          => $users,
+            'leads' => $leads,
+            'stores' => $stores,
+            'users' => $users,
             'templateFields' => $templateFields,
         ])->layout('components.layouts.app');
     }
