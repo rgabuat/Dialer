@@ -588,6 +588,16 @@
                             this.$nextTick(() => this.enableCalling());
                         }
                     }
+
+                    // Listen for supervisor monitoring prep — sets auto-accept so the
+                    // agent seamlessly rejoins when moved into a conference.
+                    if (window.Echo) {
+                        window.Echo.private('App.Models.User.{{ auth()->id() }}')
+                            .listen('.MonitorPrepare', (e) => {
+                                console.log('[AgentPhone] MonitorPrepare — enabling auto-accept for conference', e);
+                                window._twilioAutoAcceptNextIncoming = true;
+                            });
+                    }
                 },
 
                 // ── initialisation ──────────────────────────────────────

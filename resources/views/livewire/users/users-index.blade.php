@@ -1,4 +1,32 @@
-<div class="space-y-4 p-6 stagger-children" wire:poll.5s="$refresh">
+<div class="space-y-4 p-6 stagger-children" x-data="{
+    monitoring: false,
+    monitorMode: '',
+    monitorData: {},
+    duration: '00:00',
+    _monitorTimer: null,
+    _monitorStart: null,
+    stopMonitoring() {
+        if (window._twilioActiveCall) window._twilioActiveCall.disconnect();
+        clearInterval(this._monitorTimer);
+        this.monitoring = false;
+        this._monitorTimer = null;
+    },
+    startMonitorTimer() {
+        this._monitorStart = Date.now();
+        this.duration = '00:00';
+        this._monitorTimer = setInterval(() => {
+            const s = Math.floor((Date.now() - this._monitorStart) / 1000);
+            this.duration = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        }, 1000);
+    }
+}" x-init="window.Echo.private('agent-status').listen('.AgentStatusUpdated', () => { $wire.$refresh(); });
+$wire.$on('monitoring-started', (data) => {
+    clearInterval(this._monitorTimer);
+    this.monitorMode = data.mode;
+    this.monitorData = data;
+    this.monitoring = true;
+    this.startMonitorTimer();
+});">
 
     {{-- Page title --}}
     <div>
@@ -389,5 +417,80 @@
             </div>
         @endif
     @endif
+
+    {{-- ══════════════════════════════════════════════════════════════
+         MONITORING OVERLAY
+    ══════════════════════════════════════════════════════════════ --}}
+    <div x-show="monitoring" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style="display:none">
+
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="stopMonitoring()"></div>
+
+        <div class="relative w-full max-w-sm bg-surface border border-surface rounded-xl shadow-2xl"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4"
+            x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-5 py-4 border-b border-surface">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-2 w-2 rounded-full animate-pulse"
+                        :class="monitorMode === 'listen' ? 'bg-blue-400' : 'bg-amber-400'"></span>
+                    <h3 class="font-semibold text-fg text-sm"
+                        x-text="monitorMode === 'listen' ? 'Listening silently' : 'Barged in'"></h3>
+                </div>
+                <span class="text-xs px-2 py-0.5 rounded-md font-medium"
+                    :class="monitorMode === 'listen' ? 'bg-blue-600/15 text-blue-400' : 'bg-amber-500/15 text-amber-400'"
+                    x-text="monitorMode === 'listen' ? 'Listen' : 'Barge'"></span>
+            </div>
+
+            {{-- Agent info --}}
+            <div class="px-5 py-4 space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                        <x-heroicon-o-user class="w-4 h-4 text-indigo-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-fg" x-text="monitorData.agent_name"></p>
+                        <p class="text-xs text-zinc-500">Agent on call</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div class="bg-surface-2 rounded-lg px-3 py-2.5">
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">Direction</p>
+                        <p class="text-xs font-medium text-fg"
+                            x-text="monitorData.direction === 'inbound' ? '&#x2199; Inbound' : '&#x2197; Outbound'">
+                        </p>
+                    </div>
+                    <div class="bg-surface-2 rounded-lg px-3 py-2.5">
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">Number</p>
+                        <p class="text-xs font-medium text-fg truncate" x-text="monitorData.contact_phone || '—'"></p>
+                    </div>
+                    <div class="bg-surface-2 rounded-lg px-3 py-2.5 col-span-2">
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-wider mb-0.5">Monitoring duration</p>
+                        <p class="text-xs font-medium text-fg font-mono" x-text="duration"></p>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-zinc-600 leading-relaxed"
+                    x-text="monitorMode === 'listen' ? 'The agent and caller cannot hear you.' : 'You are an active participant — both parties can hear you.'">
+                </p>
+            </div>
+
+            {{-- Controls --}}
+            <div class="flex items-center gap-2 px-5 py-4 border-t border-surface">
+                <button @click="stopMonitoring()"
+                    class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600/15 hover:bg-red-600/30 text-red-400 text-sm font-medium transition">
+                    <x-heroicon-o-phone-x-mark class="w-4 h-4" />
+                    Stop Monitoring
+                </button>
+            </div>
+
+        </div>
+    </div>
 
 </div>

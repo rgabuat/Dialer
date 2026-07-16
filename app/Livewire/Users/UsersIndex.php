@@ -235,8 +235,15 @@ class UsersIndex extends Component
             $body = json_decode($response->getContent(), true);
 
             if ($response->getStatusCode() === 200) {
-                $label = $mode === 'listen' ? 'Listening to call — agent and caller cannot hear you.' : 'Barged in — you are now part of the call.';
-                $this->dispatch('toast', message: $label, type: 'success');
+                $agent = User::findOrFail($userId);
+                $this->dispatch('monitoring-started',
+                    mode: $mode,
+                    agent_name: $agent->first_name.' '.$agent->last_name,
+                    direction: $conversation->direction,
+                    contact_phone: $conversation->contact_phone ?? '—',
+                    started_at: $conversation->started_at?->toIso8601String(),
+                    conference_name: $body['conference_name'] ?? null,
+                );
             } else {
                 $this->dispatch('toast', message: $body['message'] ?? 'Monitor session failed.', type: 'error');
             }

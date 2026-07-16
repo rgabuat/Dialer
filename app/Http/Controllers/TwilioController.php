@@ -75,6 +75,9 @@ class TwilioController extends Controller
                         'status' => 'abandoned',
                         'ended_at' => now(),
                     ]);
+                if ($affected) {
+                    $this->broadcastConversationStatus($callSid);
+                }
             }
 
             \Log::info('[Twilio] handleCallRouting: terminal status early-exit', [
@@ -279,9 +282,49 @@ class TwilioController extends Controller
             return response()->json(['url' => null]);
         }
 
+        // Stamp assigned_to on inbound calls that weren't pre-assigned
+        // (inbound queue calls are created without an assigned agent).
+        if (! $conversation->assigned_to && auth()->check()) {
+            $conversation->update(['assigned_to' => auth()->id()]);
+            event(new \App\Events\AgentStatusUpdated(['user_id' => auth()->id()]));
+        }
+
         return response()->json([
             'url' => route('conversations.show', $conversation),
         ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Broadcast helper — fires CallQueueUpdated + AgentStatusUpdated after a
+    //  mass DB update (mass updates bypass the ConversationObserver).
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function broadcastConversationStatus(string $callSid, ?int $agentUserId = null): void
+    {
+        dispatch(function () use ($callSid, $agentUserId) {
+            $conversation = Conversation::where('call_sid', $callSid)->first();
+            if (! $conversation) {
+                return;
+            }
+            try {
+                event(new \App\Events\CallQueueUpdated([
+                    'action'          => 'updated',
+                    'conversation_id' => $conversation->id,
+                    'status'          => $conversation->status,
+                    'in_group_id'     => $conversation->in_group_id,
+                    'assigned_to'     => $conversation->assigned_to,
+                ]));
+                $uid = $agentUserId ?? $conversation->assigned_to;
+                if ($uid) {
+                    event(new \App\Events\AgentStatusUpdated(['user_id' => $uid]));
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('[TwilioController] broadcastConversationStatus failed', [
+                    'call_sid' => $callSid,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        })->afterResponse();
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -293,6 +336,22 @@ class TwilioController extends Controller
         \Log::info('[Twilio] callComplete', $request->all());
 
         $callSid = $request->input('CallSid');
+
+        // Guard: Twilio conference statusCallbacks have ConferenceSid but NO
+        // CallSid. Proceeding with null would execute WHERE call_sid IS NULL
+        // and mass-update every unassigned conversation row. Instead, extract
+        // the original call SID from the FriendlyName (format: monitor_CAXXXX),
+        // broadcast the update, and return early.
+        if (! $callSid) {
+            if ($request->has('ConferenceSid')) {
+                $friendlyName = (string) $request->input('FriendlyName', '');
+                if (preg_match('/^monitor_(CA[a-f0-9]+)$/i', $friendlyName, $m)) {
+                    $this->broadcastConversationStatus($m[1]);
+                }
+            }
+            return response('<?xml version="1.0" encoding="UTF-8"?><Response/>', 200)
+                ->header('Content-Type', 'text/xml');
+        }
         $dialStatus = $request->input('DialCallStatus', 'completed');
         $dialDuration = (int) $request->input('DialCallDuration', 0);
 
@@ -341,6 +400,9 @@ class TwilioController extends Controller
             'rows_affected' => $affected,
             'skipped_if_zero' => $affected === 0 ? 'conversation was queued (re-queued caller), skipped intentionally' : null,
         ]);
+
+        // Broadcast to queue monitor and users table (mass updates bypass the observer).
+        $this->broadcastConversationStatus($callSid, $agentUserId);
 
         // statusCallback response body is ignored by Twilio — return empty TwiML.
         return response('<?xml version="1.0" encoding="UTF-8"?><Response/>', 200)
@@ -408,6 +470,7 @@ class TwilioController extends Controller
                     'status' => 'queued',
                     'ended_at' => null,
                 ]);
+                $this->broadcastConversationStatus($callSid);
 
                 $holdMusic = $campaign?->hold_music_url ?: 'https://demo.twilio.com/docs/classic.mp3';
                 $queueCheckUrl = rtrim(config('app.url'), '/')
@@ -460,6 +523,7 @@ class TwilioController extends Controller
             'status' => 'abandoned',
             'ended_at' => now(),
         ]);
+        $this->broadcastConversationStatus($callSid);
 
         \Log::info('[Twilio] callNoAnswer: abandoning call', [
             'call_sid' => $callSid,
@@ -512,6 +576,7 @@ class TwilioController extends Controller
             Conversation::where('call_sid', $callSid)
                 ->whereIn('status', ['queued', 'in_progress'])
                 ->update(['status' => 'abandoned', 'ended_at' => now()]);
+            $this->broadcastConversationStatus($callSid);
             \Log::info('[Twilio] callQueueCheck: caller hung up during hold', [
                 'call_sid' => $callSid,
                 'call_status' => $callStatus,
@@ -544,6 +609,7 @@ class TwilioController extends Controller
                 'status' => 'abandoned',
                 'ended_at' => now(),
             ]);
+            $this->broadcastConversationStatus($callSid);
             \Log::info('[Twilio] callQueueCheck: queue wait exceeded, executing drop action', [
                 'call_sid' => $callSid,
                 'in_group_id' => $inGroupId,
@@ -590,6 +656,7 @@ class TwilioController extends Controller
 
             // Lift status back to in_progress now that we're dialing
             Conversation::where('call_sid', $callSid)->update(['status' => 'in_progress']);
+            $this->broadcastConversationStatus($callSid);
 
             $dial = $voice->dial('', [
                 'callerId' => config('services.twilio.caller_id'),
@@ -621,6 +688,7 @@ class TwilioController extends Controller
         // post back to this endpoint via <Gather> action (fires on timeout AND
         // on caller hangup, giving us immediate hangup detection).
         Conversation::where('call_sid', $callSid)->update(['status' => 'queued']);
+        $this->broadcastConversationStatus($callSid);
 
         \Log::info('[Twilio] callQueueCheck: still no agents, looping hold', [
             'call_sid' => $callSid,
@@ -810,13 +878,14 @@ class TwilioController extends Controller
             'mode'    => 'required|in:listen,barge',
         ]);
 
-        $agentId     = (int) $request->input('user_id');
-        $mode        = $request->input('mode');   // 'listen' | 'barge'
+        $agentId      = (int) $request->input('user_id');
+        $mode         = $request->input('mode');   // 'listen' | 'barge'
         $supervisorId = auth()->id();
 
         // Find the agent's current active conversation
         $conversation = Conversation::where('assigned_to', $agentId)
             ->where('status', 'in_progress')
+            ->whereNotNull('call_sid')
             ->latest('started_at')
             ->first();
 
@@ -824,15 +893,42 @@ class TwilioController extends Controller
             return response()->json(['message' => 'Agent is not on an active call.'], 404);
         }
 
-        $callSid       = $conversation->call_sid;
+        $callSid        = $conversation->call_sid;
         $conferenceName = 'monitor_' . $callSid;
         $client         = $this->twilioClient();
         $callbackUrl    = rtrim(config('app.url'), '/') . '/api/call/complete';
 
-        // ── Step 1: Move the existing call into a conference ──────────────────
-        // This replaces the current <Dial><Client> TwiML so the customer & agent
-        // are connected through a conference room instead of a direct dial.
-        $agentConferenceTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
+        // ── Step 1: Notify the agent's browser to auto-accept the next incoming call
+        // Twilio does NOT allow redirecting the child "dialed leg" of a <Dial>, so
+        // the agent's original call leg will be disconnected when the caller is moved
+        // to the conference. Broadcasting MonitorPrepare sets _twilioAutoAcceptNextIncoming
+        // on the agent's browser so they seamlessly rejoin the conference without a
+        // manual accept.
+        event(new \App\Events\MonitorPrepare($agentId, $conferenceName));
+
+        // ── Step 2: Redirect the CALLER to the conference ─────────────────────────
+        // This ends the <Dial>, which disconnects the agent's original call leg.
+        // The agent will be re-dialled into the same conference in step 3.
+        $callerTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response><Dial>'
+            . '<Conference beep="false" startConferenceOnEnter="true" endConferenceOnExit="false">'
+            . htmlspecialchars($conferenceName)
+            . '</Conference></Dial></Response>';
+
+        try {
+            $client->calls($callSid)->update(['twiml' => $callerTwiml]);
+        } catch (\Exception $e) {
+            \Log::error('[Monitor] Failed to redirect caller to conference', [
+                'call_sid' => $callSid,
+                'error'    => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Could not redirect call. ' . $e->getMessage()], 500);
+        }
+
+        // ── Step 3: Re-dial the agent into the same conference ────────────────────
+        // _twilioAutoAcceptNextIncoming is already set on the agent's browser so this
+        // call will be accepted automatically. The agent's exit ends the conference.
+        $agentTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
             . '<Response><Dial>'
             . '<Conference beep="false" startConferenceOnEnter="true" endConferenceOnExit="true"'
             . ' statusCallback="' . $callbackUrl . '" statusCallbackEvent="end">'
@@ -840,16 +936,21 @@ class TwilioController extends Controller
             . '</Conference></Dial></Response>';
 
         try {
-            $client->calls($callSid)->update(['twiml' => $agentConferenceTwiml]);
+            $client->calls->create(
+                'client:user_' . $agentId,
+                config('services.twilio.caller_id'),
+                ['twiml' => $agentTwiml, 'method' => 'POST']
+            );
         } catch (\Exception $e) {
-            \Log::error('[Monitor] Failed to redirect agent call to conference', [
-                'call_sid' => $callSid,
+            \Log::error('[Monitor] Failed to re-dial agent into conference', [
+                'agent_id' => $agentId,
                 'error'    => $e->getMessage(),
             ]);
-            return response()->json(['message' => 'Could not redirect call. ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Could not re-dial agent. ' . $e->getMessage()], 500);
         }
 
-        // ── Step 2: Dial the supervisor into the same conference ──────────────
+        // ── Step 4: Dial the supervisor into the conference ───────────────────────
+        // Supervisor exit does NOT end the conference — they are a silent observer.
         $muted = $mode === 'listen' ? 'true' : 'false';
 
         $supervisorTwiml = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -863,10 +964,7 @@ class TwilioController extends Controller
             $client->calls->create(
                 'client:user_' . $supervisorId,
                 config('services.twilio.caller_id'),
-                [
-                    'twiml'  => $supervisorTwiml,
-                    'method' => 'POST',
-                ]
+                ['twiml' => $supervisorTwiml, 'method' => 'POST']
             );
         } catch (\Exception $e) {
             \Log::error('[Monitor] Failed to dial supervisor into conference', [
@@ -881,6 +979,7 @@ class TwilioController extends Controller
             'supervisor_id'   => $supervisorId,
             'agent_id'        => $agentId,
             'call_sid'        => $callSid,
+            'agent_call_sid'  => $agentCallSid,
             'conference_name' => $conferenceName,
             'mode'            => $mode,
         ]);
