@@ -103,7 +103,7 @@
         });
     </script>
 
-    <title>{{ $title ?? 'Client Area - csrpro' }}</title>
+    <title>{{ $title ?? 'Client Area - ' . config('app.name') }}</title>
 
     {{-- Livewire styles --}}
     @livewireStyles
@@ -264,7 +264,8 @@ x-init="
                     void d.offsetWidth;
                     d.classList.add('animate-fade-up');
                 ">
-                <div class="flex-1 p-2 md:p-4 lg:p-6 min-h-0 overflow-y-auto animate-fade-up" style="scrollbar-gutter: stable">
+                <div class="flex-1 p-2 md:p-4 lg:p-6 min-h-0 overflow-y-auto animate-fade-up"
+                    style="scrollbar-gutter: stable">
                     {{ $slot }}
                 </div>
             </main>
@@ -328,9 +329,11 @@ x-init="
                             }),
                             keepalive: true,
                         }).catch(function() {
-                            /* silently ignore network failures */ });
+                            /* silently ignore network failures */
+                        });
                     } catch (e) {
-                        /* never throw from the logger itself */ }
+                        /* never throw from the logger itself */
+                    }
                 });
             }
 
@@ -383,7 +386,8 @@ x-init="
                             });
                         });
                     } catch (e) {
-                        /* Livewire hook API may vary */ }
+                        /* Livewire hook API may vary */
+                    }
                 }
             });
 
@@ -397,7 +401,8 @@ x-init="
                     });
                     send('error', '[console.error] ' + parts.join(' '));
                 } catch (e) {
-                    /* ignore */ }
+                    /* ignore */
+                }
             };
 
             // ── 5. Expose a global helper for manual ad-hoc logging ──────────

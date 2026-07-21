@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Admin Panel — csrpro' }}</title>
+    <title>{{ $title ?? 'Admin Panel — ' . config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
     <style>
@@ -63,7 +63,7 @@
                 </svg>
             </span>
             <div class="leading-tight">
-                <p class="font-bold text-fg text-sm">csrpro</p>
+                <p class="font-bold text-fg text-sm">{{ config('app.name') }}</p>
                 <p class="text-[10px] text-fg-muted font-medium tracking-wide uppercase">Admin Panel</p>
             </div>
         </div>

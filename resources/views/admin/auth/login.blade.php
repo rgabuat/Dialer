@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — csrpro</title>
+    <title>Admin Login — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -25,7 +25,7 @@
                         d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                 </svg>
             </span>
-            <h1 class="text-fg font-bold text-xl tracking-tight">csrpro Admin</h1>
+            <h1 class="text-fg font-bold text-xl tracking-tight">{{ config('app.name') }} Admin</h1>
             <p class="text-fg-muted text-sm mt-1">Sign in to the administration panel</p>
         </div>
 

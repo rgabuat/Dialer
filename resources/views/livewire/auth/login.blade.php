@@ -1,4 +1,4 @@
-<x-layouts.guest title="Sign in — csrpro">
+<x-layouts.guest title="Sign in — {{ config('app.name') }}">
     <main class="container main-content w-full max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8">
         <form method="POST"action="{{ route('login') }}">
             @csrf

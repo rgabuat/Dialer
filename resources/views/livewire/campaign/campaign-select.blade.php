@@ -1,4 +1,4 @@
-<x-layouts.guest title="Select Campaign — csrpro">
+<x-layouts.guest title="Select Campaign — {{ config('app.name') }}">
     <main class="mx-auto px-4 sm:px-6 lg:px-8 w-full max-w-screen-lg container main-content">
         <x-card class="bg-gradient-to-b from-[#151a20] to-[#0f1115] mx-auto border border-white/5 max-w-md">
             <div class="p-8 md:p-10">
